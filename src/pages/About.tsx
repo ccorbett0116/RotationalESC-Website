@@ -63,7 +63,7 @@ const About = () => {
               <div className="space-y-4 text-muted-foreground">
                 <p>
                   Rotational Equipment Services (RES) is a trusted supplier of industrial pumps and mechanical seals, serving
-                  critical industries like wastewater treatment, petroleum, steel, and food processing. With over 38 years of hands-
+                  critical industries like wastewater treatment, petroleum, steel, and food processing. With over 40 years of hands-
                   on experience and a strong base of repeat business, RES has built a reputation for reliability, technical knowledge,
                   and responsive service.
                 </p>
