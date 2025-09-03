@@ -152,6 +152,28 @@ export const apiService = {
     const response = await api.get(`/orders/${orderNumber}/`);
     return response.data;
   },
+
+  // Contact Form
+  submitContactForm: async (contactData: ContactFormData): Promise<ContactSubmissionResponse> => {
+    const response = await api.post('/contact/submit/', contactData);
+    return response.data;
+  },
 };
+
+// Contact form types
+export interface ContactFormData {
+  name: string;
+  email: string;
+  phone?: string;
+  company?: string;
+  subject: string;
+  message: string;
+}
+
+export interface ContactSubmissionResponse {
+  message: string;
+  submission_id: number;
+  error?: string;
+}
 
 export default apiService;
