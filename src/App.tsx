@@ -14,6 +14,10 @@ import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import NotFound from "./pages/NotFound";
+import Pumps from "@/pages/Pumps.tsx";
+import Service from "@/pages/Service.tsx";
+import Seals from "@/pages/Seals.tsx";
+import Packing from "@/pages/Packing.tsx";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +38,10 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+            <Route path="/pumps" element={<Pumps />} />
+            <Route path="/mechanical-seals" element={<Seals />} />
+            <Route path="/packing" element={<Packing />} />
+            <Route path="/service-repair" element={<Service />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

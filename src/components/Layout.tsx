@@ -135,7 +135,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                         {product.categories.map((category) => (
                           <Link
                             key={category.title}
-                            to={`/products/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
+                            to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
                             className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
                           >
                             {category.title}
@@ -208,7 +208,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           {item.categories.map((category) => (
                             <Link
                               key={category.title}
-                              to={`/products/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
+                              to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
                               className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
                               onClick={() => {
                                 setIsProductsOpen(false);
