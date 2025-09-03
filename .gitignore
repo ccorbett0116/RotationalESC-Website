@@ -42,3 +42,48 @@ coverage/
 # Plug'n'Play and other package manager artifacts
 .pnp.*
 .eslintcache
+
+# Python cache files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Django specific
+media/
+staticfiles/
+local_settings.py
+db.sqlite3-journal
+
+# Poetry
+poetry.lock
+
+# Jupyter Notebook
+.ipynb_checkpoints
+
+# pyenv
+.python-version
+
+# Celery
+celerybeat-schedule
+celerybeat.pid
+
+# SageMath parsed files
+*.sage.py
+
+# dotenv
+.env
+
+# virtualenv
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
