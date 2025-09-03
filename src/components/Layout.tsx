@@ -24,24 +24,16 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       isDropdown: true,
       categories: [
         {
-          title: 'Pumps',
-          description: 'High-performance pumps for demanding applications',
-          items: ['Centrifugal Pumps', 'Positive Displacement Pumps', 'Submersible Pumps']
+          title: 'Pumps'
         },
         {
-          title: 'Mechanical Seals',
-          description: 'Specialized solutions for unique requirements',
-          items: ['Custom Pumps', 'Pump Systems', 'Control Systems']
+          title: 'Mechanical Seals'
         },
         {
-          title: 'Packing',
-          description: 'Expert maintenance and support',
-          items: ['Installation', 'Maintenance', 'Repairs']
+          title: 'Packing'
         },
         {
-         title: 'Service & Repair',
-          description: 'Expert maintenance and support',
-          items: ['Installation', 'Maintenance', 'Repairs']
+          title: 'Service & Repair'
         }
       ]
     }
@@ -94,9 +86,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 const product = navigation.find((n) => n.isDropdown);
                 if (!product) return null;
                 return (
-                  <div className="relative" ref={dropdownRef}>
+                  <div 
+                    className="relative group" 
+                    onMouseEnter={() => setIsProductsOpen(true)}
+                    onMouseLeave={() => setIsProductsOpen(false)}
+                  >
                     <button
-                      onClick={() => setIsProductsOpen(!isProductsOpen)}
                       aria-expanded={isProductsOpen}
                       aria-controls="products-dropdown"
                       className={`px-3 py-2 text-xl font-medium transition-colors inline-flex items-center ${
@@ -107,50 +102,30 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       {product.name}
                       <ChevronDown
-                        className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                          isProductsOpen ? 'rotate-180' : ''
-                        }`}
+                        className={`ml-1 h-4 w-4 transition-transform duration-200 group-hover:rotate-180`}
                       />
                     </button>
 
-                    {isProductsOpen && (
-                      <div 
-                        className="absolute left-0 w-screen transform mt-1 z-50" 
-                        id="products-dropdown" 
-                        role="menu"
-                        style={{ left: '50%', transform: 'translateX(-50%)' }}
-                      >
-                        <div className="w-full bg-card border-t border-border shadow-lg">
-                          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-x-8 gap-y-10">
-                              {product.categories.map((category) => (
-                                <div key={category.title} className="space-y-4">
-                                  <h3 className="text-xl font-semibold text-foreground">
-                                    {category.title}
-                                  </h3>
-                                  <p className="text-muted-foreground">
-                                    {category.description}
-                                  </p>
-                                  <ul className="mt-6 space-y-3">
-                                    {category.items.map((sub) => (
-                                      <li key={sub}>
-                                        <Link
-                                          to={`/${sub.toLowerCase().replace(/ /g, '-')}`}
-                                          className="text-base text-muted-foreground hover:text-foreground transition-colors"
-                                          onClick={() => setIsProductsOpen(false)}
-                                        >
-                                          {sub}
-                                        </Link>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </div>
+                    <div 
+                      className={`absolute right-0 mt-1 w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden transition-all duration-200 origin-top-right ${
+                        isProductsOpen ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'
+                      }`}
+                      id="products-dropdown" 
+                      role="menu"
+                    >
+                      <div className="flex flex-col py-2">
+                        {product.categories.map((category) => (
+                          <Link
+                            key={category.title}
+                            to={`/products/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
+                            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            onClick={() => setIsProductsOpen(false)}
+                          >
+                            {category.title}
+                          </Link>
+                        ))}
                       </div>
-                    )}
+                    </div>
                   </div>
                 );
               })()}
@@ -194,11 +169,14 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           {isMobileMenuOpen && (
             <div className="md:hidden py-4 border-t border-border">
               <nav className="flex flex-col space-y-2">
-                {navigation.map((item) => (
-                  <div key={item.name} className="relative">
+                {/* Regular nav items */}
+                {navigation
+                  .filter(item => !item.isDropdown)
+                  .map((item) => (
                     <Link
+                      key={item.name}
                       to={item.href}
-                      className={`block px-3 py-2 text-base font-medium transition-colors ${
+                      className={`block px-4 py-2 text-base font-medium transition-colors ${
                         isActive(item.href)
                           ? 'text-primary bg-primary/10'
                           : 'text-muted-foreground hover:text-foreground'
@@ -207,37 +185,44 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     >
                       {item.name}
                     </Link>
+                  ))}
 
-                    {/* Dropdown for Products in Mobile */}
-                    {item.isDropdown && (
-                      <div className="absolute left-0 z-10 mt-2 w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden">
-                        {item.categories.map((category) => (
-                          <div key={category.title} className="p-4">
-                            <span className="block text-sm font-semibold text-foreground">
+                {/* Products Dropdown for Mobile */}
+                {navigation
+                  .filter(item => item.isDropdown)
+                  .map((item) => (
+                    <div key={item.name} className="space-y-2">
+                      <button
+                        onClick={() => setIsProductsOpen(!isProductsOpen)}
+                        className="w-full flex items-center justify-between px-4 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
+                      >
+                        {item.name}
+                        <ChevronDown
+                          className={`ml-1 h-4 w-4 transition-transform duration-200 ${
+                            isProductsOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </button>
+
+                      {isProductsOpen && (
+                        <div className="bg-muted/50 py-2">
+                          {item.categories.map((category) => (
+                            <Link
+                              key={category.title}
+                              to={`/products/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
+                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                              onClick={() => {
+                                setIsProductsOpen(false);
+                                setIsMobileMenuOpen(false);
+                              }}
+                            >
                               {category.title}
-                            </span>
-                            <span className="block text-xs text-muted-foreground mb-2">
-                              {category.description}
-                            </span>
-                            <ul className="space-y-1">
-                              {category.items.map((subItem) => (
-                                <li key={subItem}>
-                                  <Link
-                                    to={`/${subItem.toLowerCase().replace(/ /g, '-')}`}
-                                    className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                  >
-                                    {subItem}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ))}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
               </nav>
             </div>
           )}
