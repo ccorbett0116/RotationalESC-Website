@@ -5,6 +5,8 @@ import { services } from "@/data/mockData"; // Keep services from mock for now
 import { apiService, CompanyInfo } from "@/services/api";
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
+import AboutUsImage from "@/assets/aboutusImage.jpg"; 
+
 
 const About = () => {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
@@ -54,13 +56,27 @@ const About = () => {
   return (
     <Layout>
       {/* Hero Section */}
-      <section className="py-20 bg-gradient-to-r from-primary/10 to-accent/10">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="relative py-16">
+        {/* Background Image */}
+        <div 
+          className="absolute inset-0 z-0"
+          style={{
+            backgroundImage: `url(${AboutUsImage})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center 25%',
+            backgroundRepeat: 'no-repeat',
+          }}
+        >
+          {/* Dark overlay */}
+          <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]"></div>
+        </div>
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold text-white mb-6">
               About {companyInfo.name}
             </h1>
-            <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+            <p className="text-xl text-gray-200 max-w-3xl mx-auto">
               {companyInfo.description}
             </p>
           </div>
