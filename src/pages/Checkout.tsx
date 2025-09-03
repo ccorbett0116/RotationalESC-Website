@@ -456,7 +456,7 @@ const Checkout = () => {
                       <div className="flex gap-3">
                         <div className="w-12 h-12 bg-muted rounded overflow-hidden">
                           <img
-                            src={item.product.image}
+                            src={item.product.image as string}
                             alt={item.product.name}
                             className="w-full h-full object-cover"
                           />

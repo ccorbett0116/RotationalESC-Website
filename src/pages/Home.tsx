@@ -22,14 +22,14 @@ const Home = () => {
             backgroundRepeat: 'no-repeat',
           }}
         >
-          {/* Overlay */}
-          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+          {/* Overlay - Changed from bg-black/50 to a fixed color value */}
+          <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]"></div>
         </div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-center lg:text-left order-2 lg:order-1">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-6">
+              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">
                  Rotational Equipment
                 <span className="block text-primary">Services</span>
               </h1>
@@ -50,12 +50,7 @@ const Home = () => {
               </div>
             </div>
             <div className="relative order-1 lg:order-2">
-              {/* Remove or comment out the existing image since we're using it as background */}
-              {/* <img
-                src={heroImage}
-                alt="Industrial rotational equipment facility"
-                className="w-full h-[300px] sm:h-[400px] lg:h-[500px] object-cover rounded-lg shadow-2xl"
-              /> */}
+             
             </div>
           </div>
         </div>
@@ -112,7 +107,7 @@ const Home = () => {
               <Card key={product.id} className="h-full flex flex-col">
                 <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                   <img
-                    src={product.image}
+                    src={product.image as string}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
