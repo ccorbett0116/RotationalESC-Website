@@ -2,14 +2,15 @@ import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, User, Menu, X } from "lucide-react";
-import { useState } from "react";
-import { companyInfo } from "@/data/mockData";
+import { useState, useEffect } from "react";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { apiService, CompanyInfo } from "@/services/api";
 import Logo from "@/assets/logo.svg";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   
   const navigation = [
     { name: 'Home', href: '/' },
@@ -19,6 +20,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await apiService.getCompanyInfo();
+        setCompanyInfo(data);
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+        // Don't set fallback data - let it remain null to show loading/empty state
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">
@@ -116,12 +131,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                <span className="font-bold text-lg text-foreground">{companyInfo.name}</span>
+                <span className="font-bold text-lg text-foreground">
+                  {companyInfo?.name || ""}
+                </span>
               </div>
-              <p className="text-muted-foreground mb-4">{companyInfo.tagline}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.address}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.phone}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.email}</p>
+              <p className="text-muted-foreground mb-4">
+                {companyInfo?.tagline || ""}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {companyInfo?.address || ""}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {companyInfo?.phone || ""}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {companyInfo?.email || ""}
+              </p>
             </div>
 
             {/* Quick Links */}
@@ -146,7 +171,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {companyInfo.name}. All rights reserved.
+              © {new Date().getFullYear()} {companyInfo?.name || ""}. All rights reserved.
             </p>
           </div>
         </div>

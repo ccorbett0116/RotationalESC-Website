@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,13 +7,13 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { companyInfo } from "@/data/mockData";
-import { apiService, ContactFormData } from "@/services/api";
+import { apiService, ContactFormData, CompanyInfo } from "@/services/api";
 import Layout from "@/components/Layout";
 
 const Contact = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -22,6 +22,20 @@ const Contact = () => {
     subject: "",
     message: ""
   });
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await apiService.getCompanyInfo();
+        setCompanyInfo(data);
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+        // Don't set fallback data - let it remain null to show loading/empty state
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +122,9 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{companyInfo.address}</p>
+                <p className="text-muted-foreground">
+                  {companyInfo?.address || "Loading..."}
+                </p>
               </CardContent>
             </Card>
 
@@ -120,7 +136,9 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{companyInfo.phone}</p>
+                <p className="text-muted-foreground">
+                  {companyInfo?.phone || "Loading..."}
+                </p>
               </CardContent>
             </Card>
 
@@ -132,7 +150,9 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{companyInfo.email}</p>
+                <p className="text-muted-foreground">
+                  {companyInfo?.email || "Loading..."}
+                </p>
               </CardContent>
             </Card>
 
@@ -144,7 +164,9 @@ const Contact = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{companyInfo.hours}</p>
+                <p className="text-muted-foreground">
+                  {companyInfo?.hours || "Loading..."}
+                </p>
                 <p className="text-muted-foreground mt-2">Emergency services available 24/7</p>
               </CardContent>
             </Card>
@@ -255,7 +277,7 @@ const Contact = () => {
                 <p className="text-muted-foreground">
                   Interactive Map Placeholder
                   <br />
-                  {companyInfo.address}
+                  {companyInfo?.address || "Loading address..."}
                 </p>
               </div>
             </CardContent>

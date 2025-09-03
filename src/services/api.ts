@@ -102,6 +102,20 @@ export interface OrderTotals {
   total_amount: number;
 }
 
+// Company Info types
+export interface CompanyInfo {
+  id?: number;
+  name: string;
+  tagline: string;
+  description: string;
+  address: string;
+  phone: string;
+  email: string;
+  hours: string;
+  founded: string;
+  employees: string;
+}
+
 // API Service Functions
 export const apiService = {
   // Categories
@@ -156,6 +170,12 @@ export const apiService = {
   // Contact Form
   submitContactForm: async (contactData: ContactFormData): Promise<ContactSubmissionResponse> => {
     const response = await api.post('/contact/submit/', contactData);
+    return response.data;
+  },
+
+  // Company Info
+  getCompanyInfo: async (): Promise<CompanyInfo> => {
+    const response = await api.get('/company/info/');
     return response.data;
   },
 };
