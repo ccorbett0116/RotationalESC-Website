@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ShoppingCart, Heart, Share2 } from "lucide-react";
 import { apiService, Product } from "@/services/api";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 
 const ProductDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
+  const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
@@ -42,6 +47,16 @@ const ProductDetail = () => {
 
     fetchProduct();
   }, [id]);
+
+  const handleAddToCart = () => {
+    if (!product) return;
+    
+    addItem(product.id, quantity);
+    toast({
+      title: "Added to cart",
+      description: `${quantity} x ${product.name} added to your cart`,
+    });
+  };
   
   if (loading) {
     return (
@@ -191,6 +206,7 @@ const ProductDetail = () => {
                   className="flex-1" 
                   size="lg"
                   disabled={!product.in_stock}
+                  onClick={handleAddToCart}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   {product.in_stock ? "Add to Cart" : "Out of Stock"}

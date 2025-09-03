@@ -7,17 +7,23 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { CreditCard, Truck, Shield, ArrowLeft } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CreditCard, Truck, Shield, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, Product } from "@/services/api";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const { items: cartItems, clearCart } = useCart();
+  const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [shippingMethod, setShippingMethod] = useState("standard");
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [fetchingProducts, setFetchingProducts] = useState(true);
   const [orderTotals, setOrderTotals] = useState({
     subtotal: 0,
     tax_amount: 0,
@@ -25,11 +31,6 @@ const Checkout = () => {
     total_amount: 0
   });
 
-  // Mock cart items - In a real app, this would come from a cart context/state
-  const [cartItems] = useState([
-    { product_id: 1, quantity: 1, price: 0 },
-    { product_id: 5, quantity: 2, price: 0 }
-  ]);
   const [cartProducts, setCartProducts] = useState<Product[]>([]);
 
   // Form state
@@ -54,31 +55,43 @@ const Checkout = () => {
 
   useEffect(() => {
     const fetchCartProducts = async () => {
+      if (cartItems.length === 0) {
+        setFetchingProducts(false);
+        return;
+      }
+
       try {
+        setFetchingProducts(true);
         const products = await Promise.all(
-          cartItems.map(item => apiService.getProduct(item.product_id))
+          cartItems.map(item => apiService.getProduct(item.productId))
         );
         setCartProducts(products);
         
-        // Update cart items with current prices
-        const updatedItems = cartItems.map((item, index) => ({
-          ...item,
-          price: products[index].price
+        // Calculate totals using the correct property names
+        const orderItems = cartItems.map(item => ({
+          product_id: item.productId,
+          quantity: item.quantity
         }));
         
-        // Calculate totals
         const totalData = await apiService.calculateOrderTotal({
-          items: updatedItems,
+          items: orderItems,
           shipping_method: shippingMethod
         });
         setOrderTotals(totalData);
       } catch (error) {
         console.error('Error fetching cart data:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load cart data. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setFetchingProducts(false);
       }
     };
 
     fetchCartProducts();
-  }, [shippingMethod]);
+  }, [cartItems, shippingMethod, toast]);
 
   const cartWithDetails = cartItems.map((item, index) => ({
     ...item,
@@ -124,17 +137,30 @@ const Checkout = () => {
         payment_method: paymentMethod,
         shipping_method: shippingMethod,
         order_items: cartItems.map((item, index) => ({
-          product_id: item.product_id,
+          product_id: item.productId,
           quantity: item.quantity,
           price: cartProducts[index]?.price || 0
         }))
       };
 
       const order = await apiService.createOrder(orderData);
+      
+      // Clear the cart after successful order
+      clearCart();
+      
+      toast({
+        title: "Order placed successfully!",
+        description: `Order #${order.order_number} has been created.`,
+      });
+      
       navigate(`/order-confirmation/${order.order_number}`);
     } catch (error) {
       console.error('Error creating order:', error);
-      alert('There was an error processing your order. Please try again.');
+      toast({
+        title: "Order failed",
+        description: "There was an error processing your order. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -152,7 +178,20 @@ const Checkout = () => {
 
         <h1 className="text-3xl font-bold text-foreground mb-8">Checkout</h1>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* Empty Cart Check */}
+        {cartItems.length === 0 ? (
+          <div className="text-center py-16">
+            <ShoppingBag className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
+            <h2 className="text-2xl font-bold text-foreground mb-4">Your Cart is Empty</h2>
+            <p className="text-muted-foreground mb-8">
+              You need items in your cart to proceed with checkout.
+            </p>
+            <Link to="/shop">
+              <Button size="lg">Continue Shopping</Button>
+            </Link>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Checkout Form */}
           <div className="space-y-6">
             {/* Shipping Information */}
@@ -455,11 +494,17 @@ const Checkout = () => {
                     <div key={item.productId} className="flex justify-between items-start">
                       <div className="flex gap-3">
                         <div className="w-12 h-12 bg-muted rounded overflow-hidden">
-                          <img
-                            src={item.product.image as string}
-                            alt={item.product.name}
-                            className="w-full h-full object-cover"
-                          />
+                          {item.product.primary_image ? (
+                            <img
+                              src={item.product.primary_image}
+                              alt={item.product.name}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                              <span className="text-xs text-muted-foreground">No Image</span>
+                            </div>
+                          )}
                         </div>
                         <div>
                           <p className="font-medium text-sm">{item.product.name}</p>
@@ -504,8 +549,13 @@ const Checkout = () => {
                   <span>${orderTotals.total_amount.toLocaleString()}</span>
                 </div>
 
-                <Button size="lg" className="w-full" onClick={handleSubmit}>
-                  Place Order
+                <Button 
+                  size="lg" 
+                  className="w-full" 
+                  onClick={handleSubmit}
+                  disabled={loading || cartItems.length === 0}
+                >
+                  {loading ? "Processing..." : "Place Order"}
                 </Button>
 
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
@@ -533,6 +583,7 @@ const Checkout = () => {
             </Card>
           </div>
         </div>
+        )}
       </div>
     </Layout>
   );

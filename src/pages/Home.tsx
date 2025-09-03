@@ -3,11 +3,82 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, Settings, Users, Phone } from "lucide-react";
-import { companyInfo, services, products } from "@/data/mockData";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/hero-industrial.jpg";
+import { apiService, Product, CompanyInfo } from "@/services/api";
+import { useEffect, useState } from "react";
+import { services } from "@/data/mockData"; // Keep services from mock data for now
 
 const Home = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        
+        // Fetch products and company info in parallel
+        const [productsResponse, companyResponse] = await Promise.all([
+          apiService.getProducts({ page: 1 }),
+          apiService.getCompanyInfo()
+        ]);
+        
+        setProducts(productsResponse.results);
+        setCompanyInfo(companyResponse);
+      } catch (err) {
+        console.error('Error fetching data:', err);
+        setError('Failed to load data');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-lg text-red-500">{error}</p>
+            <Button onClick={() => window.location.reload()} className="mt-4">
+              Try Again
+            </Button>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!companyInfo) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg text-muted-foreground">Loading company information...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <Layout>
       {/* Hero Section */}
@@ -107,7 +178,7 @@ const Home = () => {
               <Card key={product.id} className="h-full flex flex-col">
                 <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                   <img
-                    src={product.image as string}
+                    src={product.primary_image || "/api/placeholder/400/300"}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
@@ -117,7 +188,7 @@ const Home = () => {
                     <div className="flex-grow">
                       <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
                       <Badge variant="secondary" className="mt-2 text-xs">
-                        {product.category}
+                        {product.category.name}
                       </Badge>
                     </div>
                     <div className="text-right sm:text-left">
@@ -173,7 +244,7 @@ const Home = () => {
               </div>
               <h3 className="text-lg lg:text-xl font-semibold mb-2">Quality Certified</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
-                {companyInfo.certifications.join(", ")} certified for your peace of mind
+                ISO 9001, API 610, ASME certified for your peace of mind
               </p>
             </div>
             <div className="text-center sm:col-span-2 lg:col-span-1">

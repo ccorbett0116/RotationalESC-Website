@@ -1,10 +1,56 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Award } from "lucide-react";
-import { companyInfo, teamMembers, services } from "@/data/mockData";
+import { services } from "@/data/mockData"; // Keep services from mock for now
+import { apiService, CompanyInfo } from "@/services/api";
+import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 
 const About = () => {
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await apiService.getCompanyInfo();
+        setCompanyInfo(data);
+      } catch (err) {
+        console.error('Error fetching company info:', err);
+        setError('Failed to load company information');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary mx-auto"></div>
+            <p className="mt-4 text-lg text-muted-foreground">Loading...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (error || !companyInfo) {
+    return (
+      <Layout>
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-lg text-red-500">{error || 'Company information not found'}</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <Layout>
       {/* Hero Section */}
@@ -45,9 +91,7 @@ const About = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Award className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">
-                {companyInfo.certifications.length}
-              </h3>
+              <h3 className="text-3xl font-bold text-foreground mb-2">3</h3>
               <p className="text-muted-foreground">Industry Certifications</p>
             </div>
           </div>
@@ -89,9 +133,9 @@ const About = () => {
               We maintain the highest industry standards and certifications to ensure quality and safety
             </p>
           </div>
-          <div className="flex flex-wrap justify-center gap-4">
-            {companyInfo.certifications.map((cert, index) => (
-              <Badge key={index} variant="outline" className="text-lg py-2 px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {["ISO 9001", "API 610", "ASME Certified"].map((cert, index) => (
+              <Badge key={index} variant="outline" className="p-4 text-center justify-center">
                 {cert}
               </Badge>
             ))}

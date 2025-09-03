@@ -1,46 +1,73 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react";
-import { products } from "@/data/mockData";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle } from "lucide-react";
+import { apiService, Product } from "@/services/api";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 
-interface CartItem {
-  productId: string;
-  quantity: number;
-}
-
 const Cart = () => {
-  // Mock cart items - in a real app, this would come from context/state management
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { productId: "pump-001", quantity: 1 },
-    { productId: "motor-001", quantity: 2 }
-  ]);
+  const { items: cartItems, updateQuantity: updateCartQuantity, removeItem: removeCartItem } = useCart();
+  const { toast } = useToast();
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [removedItems, setRemovedItems] = useState<number[]>([]);
 
-  const updateQuantity = (productId: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(productId);
-      return;
-    }
-    setCartItems(items =>
-      items.map(item =>
-        item.productId === productId ? { ...item, quantity: newQuantity } : item
-      )
-    );
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await apiService.getProducts();
+        setProducts(response.results);
+        
+        // Check for items in cart that no longer exist
+        const existingProductIds = new Set(response.results.map(p => p.id));
+        const missingItems = cartItems.filter(item => !existingProductIds.has(item.productId));
+        
+        if (missingItems.length > 0) {
+          setRemovedItems(missingItems.map(item => item.productId));
+          // Show notification about removed items
+          toast({
+            title: "Items removed from cart",
+            description: `${missingItems.length} item(s) no longer available and were removed from your cart`,
+            variant: "destructive",
+          });
+          // Auto-remove missing items from cart
+          missingItems.forEach(item => removeCartItem(item.productId));
+        }
+      } catch (error) {
+        console.error('Error fetching products:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [cartItems, removeCartItem]);
+
+  const updateQuantity = (productId: number, newQuantity: number) => {
+    updateCartQuantity(productId, newQuantity);
   };
 
-  const removeItem = (productId: string) => {
-    setCartItems(items => items.filter(item => item.productId !== productId));
+  const removeItem = (productId: number) => {
+    removeCartItem(productId);
   };
 
-  // Get product details for cart items
-  const cartWithDetails = cartItems.map(item => ({
-    ...item,
-    product: products.find(p => p.id === item.productId)!
-  })).filter(item => item.product);
+  // Get product details for cart items, filter out items that don't exist
+  const cartWithDetails = cartItems
+    .map(item => ({
+      ...item,
+      product: products.find(p => p.id === item.productId)
+    }))
+    .filter(item => item.product !== undefined) as Array<{
+      productId: number;
+      quantity: number;
+      product: Product;
+    }>;
 
   const subtotal = cartWithDetails.reduce(
     (sum, item) => sum + (item.product.price * item.quantity),
@@ -49,6 +76,19 @@ const Cart = () => {
   const tax = subtotal * 0.1; // 10% tax
   const shipping = subtotal > 5000 ? 0 : 150; // Free shipping over $5000
   const total = subtotal + tax + shipping;
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mx-auto mb-4"></div>
+            <p className="text-lg text-muted-foreground">Loading cart...</p>
+          </div>
+        </div>
+      </Layout>
+    );
+  }
 
   if (cartItems.length === 0) {
     return (
@@ -74,6 +114,15 @@ const Cart = () => {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <h1 className="text-3xl font-bold text-foreground mb-8">Shopping Cart</h1>
 
+        {removedItems.length > 0 && (
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              Some items in your cart are no longer available and have been removed.
+            </AlertDescription>
+          </Alert>
+        )}
+
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
@@ -83,11 +132,17 @@ const Cart = () => {
                   <div className="flex gap-4">
                     {/* Product Image */}
                     <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      <img
-                        src={item.product.image as string}
-                        alt={item.product.name}
-                        className="w-full h-full object-cover"
-                      />
+                      {item.product.primary_image ? (
+                        <img
+                          src={item.product.primary_image}
+                          alt={item.product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                          <span className="text-xs text-muted-foreground">No Image</span>
+                        </div>
+                      )}
                     </div>
 
                     {/* Product Details */}
@@ -103,7 +158,7 @@ const Cart = () => {
                             </Link>
                           </h3>
                           <Badge variant="outline" className="mt-1">
-                            {item.product.category}
+                            {item.product.category.name}
                           </Badge>
                         </div>
                         <Button

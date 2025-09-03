@@ -5,11 +5,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, ShoppingCart } from "lucide-react";
 import { apiService, Product, Category } from "@/services/api";
+import { useCart } from "@/contexts/CartContext";
+import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
 
 const Shop = () => {
+  const { addItem } = useCart();
+  const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,6 +71,14 @@ const Shop = () => {
 
     fetchProducts();
   }, [searchTerm, selectedCategory, sortBy]);
+
+  const handleAddToCart = (product: Product) => {
+    addItem(product.id, 1);
+    toast({
+      title: "Added to cart",
+      description: `${product.name} added to your cart`,
+    });
+  };
 
   const allCategories = ["all", ...(Array.isArray(categories) ? categories.map(c => c.name) : [])];
 
@@ -210,7 +222,9 @@ const Shop = () => {
                         <Button 
                           className="w-full" 
                           disabled={!product.in_stock}
+                          onClick={() => handleAddToCart(product)}
                         >
+                          <ShoppingCart className="w-4 h-4 mr-2" />
                           {product.in_stock ? "Add to Cart" : "Out of Stock"}
                         </Button>
                       </div>

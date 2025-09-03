@@ -3,14 +3,16 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { companyInfo } from "@/data/mockData";
+import { apiService, CompanyInfo } from "@/services/api";
+import { useCart } from "@/contexts/CartContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import Logo from "@/assets/logo.svg";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
+  const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
@@ -40,6 +42,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   ];
 
   const isActive = (path: string) => location.pathname === path;
+
+  // Fetch company info on component mount
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await apiService.getCompanyInfo();
+        setCompanyInfo(data);
+      } catch (error) {
+        console.error('Failed to fetch company info:', error);
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -144,9 +160,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <Link to="/cart" className="relative">
                   <Button variant="ghost" size="sm">
                     <ShoppingCart className="h-4 w-4" />
-                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
-                      2
-                    </Badge>
+                    {getTotalItems() > 0 && (
+                      <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
+                        {getTotalItems()}
+                      </Badge>
+                    )}
                     <span className="sr-only">Shopping Cart</span>
                   </Button>
                 </Link>
@@ -192,22 +210,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                             <span className="block text-sm font-semibold text-foreground">
                               {category.title}
                             </span>
-                            <span className="block text-xs text-muted-foreground mb-2">
-                              {category.description}
-                            </span>
-                            <ul className="space-y-1">
-                              {category.items.map((subItem) => (
-                                <li key={subItem}>
-                                  <Link
-                                    to={`/${subItem.toLowerCase().replace(/ /g, '-')}`}
-                                    className="block text-sm text-muted-foreground hover:text-foreground transition-colors"
-                                    onClick={() => setIsMobileMenuOpen(false)}
-                                  >
-                                    {subItem}
-                                  </Link>
-                                </li>
-                              ))}
-                            </ul>
                           </div>
                         ))}
                       </div>
@@ -233,12 +235,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                <span className="font-bold text-lg text-foreground">{companyInfo.name}</span>
+                <span className="font-bold text-lg text-foreground">{companyInfo?.name || "Rotational Equipment Services"}</span>
               </div>
-              <p className="text-muted-foreground mb-4">{companyInfo.tagline}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.address}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.phone}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo.email}</p>
+              <p className="text-muted-foreground mb-4">{companyInfo?.tagline || "Your trusted partner for industrial rotational equipment"}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.address || "Loading..."}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.phone || "Loading..."}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.email || "Loading..."}</p>
             </div>
 
             {/* Quick Links */}
@@ -263,7 +265,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {companyInfo.name}. All rights reserved.
+              © {new Date().getFullYear()} {companyInfo?.name || "Rotational Equipment Services"}. All rights reserved.
             </p>
           </div>
         </div>

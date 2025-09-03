@@ -1,3 +1,4 @@
+from decimal import Decimal
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -44,17 +45,17 @@ def calculate_order_total(request):
             )
     
     # Calculate tax (10%)
-    tax_rate = 0.10
+    tax_rate = Decimal('0.10')
     tax_amount = subtotal * tax_rate
     
     # Calculate shipping
     shipping_method = request.data.get('shipping_method', 'standard')
     if shipping_method == 'express':
-        shipping_amount = 250.00
+        shipping_amount = Decimal('250.00')
     elif subtotal > 5000:
-        shipping_amount = 0.00  # Free shipping over $5000
+        shipping_amount = Decimal('0.00')  # Free shipping over $5000
     else:
-        shipping_amount = 150.00
+        shipping_amount = Decimal('150.00')
     
     total_amount = subtotal + tax_amount + shipping_amount
     
