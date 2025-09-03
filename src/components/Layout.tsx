@@ -101,13 +101,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               {(() => {
                 const product = navigation.find((n) => n.isDropdown);
                 if (!product) return null;
+                let closeTimeout: number;
                 return (
-                  <div 
-                    className="relative group" 
-                    onMouseEnter={() => setIsProductsOpen(true)}
-                    onMouseLeave={() => setIsProductsOpen(false)}
-                  >
-                    <button
+                <div
+                    className="relative group"
+                    onMouseEnter={() => {
+                      clearTimeout(closeTimeout);
+                      setIsProductsOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      closeTimeout = setTimeout(() => setIsProductsOpen(false), 200);
+                    }}
+                >
+                <button
                       className={`px-3 py-2 text-xl font-medium transition-colors inline-flex items-center ${
                         isActive(product.href)
                           ? 'text-primary border-b-2 border-primary'

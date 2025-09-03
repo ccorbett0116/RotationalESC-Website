@@ -177,7 +177,6 @@ const Contact = () => {
                 <p className="text-muted-foreground">
                   {companyInfo?.hours || "Loading..."}
                 </p>
-                <p className="text-muted-foreground mt-2">Emergency services available 24/7</p>
               </CardContent>
             </Card>
           </div>
@@ -274,6 +273,7 @@ const Contact = () => {
         </div>
 
         {/* Map Section */}
+        {/* POTENTIALLY UNNEEDED
         <section className="mt-16">
           <Card>
             <CardHeader>
@@ -293,6 +293,7 @@ const Contact = () => {
             </CardContent>
           </Card>
         </section>
+        */}
       </div>
     </Layout>
   );

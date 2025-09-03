@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle, Settings, Users, Phone } from "lucide-react";
+import {CheckCircle, Settings, Users, Phone, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/hero-industrial.jpg";
 import { apiService, Product, CompanyInfo } from "@/services/api";
@@ -235,25 +235,25 @@ const Home = () => {
               </div>
               <h3 className="text-lg lg:text-xl font-semibold mb-2">Expert Team</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
-                {companyInfo.employees} certified professionals with decades of experience
+                Having over 40 years of experience with pumps, mechanical seals, and other industrial equipment, our team is ready to find the right solution for you
               </p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-primary" />
+                <BookOpenCheck className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg lg:text-xl font-semibold mb-2">Quality Certified</h3>
+              <h3 className="text-lg lg:text-xl font-semibold mb-2">Factory Trained Professionals</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
-                ISO 9001, API 610, ASME certified for your peace of mind
+                Our professionals are factory trained and able to provide expert selection advice, as well as handle installations and repairs.
               </p>
             </div>
             <div className="text-center sm:col-span-2 lg:col-span-1">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Phone className="h-8 w-8 text-primary" />
+                <CheckCircle className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg lg:text-xl font-semibold mb-2">24/7 Support</h3>
+              <h3 className="text-lg lg:text-xl font-semibold mb-2">Industry Experience & Compliance</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
-                Round-the-clock support for emergency repairs and maintenance
+                Our professionals have experience working in highly regulated industries, and we understand the importance of compliance and safety.
               </p>
             </div>
           </div>

@@ -85,14 +85,14 @@ const About = () => {
                 <Users className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-3xl font-bold text-foreground mb-2">{companyInfo.employees}</h3>
-              <p className="text-muted-foreground">Expert Professionals</p>
+              <p className="text-muted-foreground">PLACEHOLDER</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Award className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-3xl font-bold text-foreground mb-2">3</h3>
-              <p className="text-muted-foreground">Industry Certifications</p>
+              <p className="text-muted-foreground">PLACEHOLDER</p>
             </div>
           </div>
         </div>

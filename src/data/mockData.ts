@@ -2,12 +2,12 @@
 export const services: Service[] = [
   {
     id: "maintenance",
-    title: "Preventive Maintenance",
-    description: "Comprehensive maintenance programs to keep your rotational equipment running at peak performance.",
+    title: "PLACEHOLDER",
+    description: "PLACEHOLDER.",
     features: [
-      "Regular equipment inspections",
-      "Scheduled maintenance services",
-      "Performance monitoring",
+      "PLACEHOLDER",
+      "PLACEHOLDER",
+      "PLACEHOLDER",
     ]
   },
   {
@@ -15,7 +15,7 @@ export const services: Service[] = [
     title: "Equipment Repair",
     description: "Expert repair services for all types of rotational equipment with certified technicians.",
     features: [
-      "On-site repair services",
+      "PLACEHOLDER",
       "Workshop rebuilds",
       "Parts replacement",
     ]
@@ -27,7 +27,7 @@ export const services: Service[] = [
     features: [
       "Pump sizing and selection",
       "Mechanical seal selection",
-      "System Overview and Optimization",
+      "System overview and optimization",
     ]
   }
 ];
