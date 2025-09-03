@@ -80,25 +80,6 @@ const About = () => {
         </div>
       </section>
 
-      {/* Certifications */}
-      <section className="py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">Certifications & Standards</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              We maintain the highest industry standards and certifications to ensure quality and safety
-            </p>
-          </div>
-          <div className="flex flex-wrap justify-center gap-4">
-            {companyInfo.certifications.map((cert, index) => (
-              <Badge key={index} variant="outline" className="text-lg py-2 px-4">
-                {cert}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* Services Overview */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
