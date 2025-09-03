@@ -62,18 +62,10 @@ const About = () => {
               <h2 className="text-3xl font-bold text-foreground mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  Founded in {companyInfo.founded}, Rotational Equipment Services began as a small family business 
-                  with a vision to provide reliable, high-quality equipment solutions for industrial applications. 
-                  Over the decades, we've grown into a trusted partner for businesses across the region.
-                </p>
-                <p>
-                  Our commitment to excellence and customer satisfaction has driven our success. We've built 
-                  lasting relationships with clients by delivering not just products, but comprehensive solutions 
-                  that keep their operations running smoothly.
-                </p>
-                <p>
-                  Today, we continue to innovate and expand our services while maintaining the personal touch 
-                  and attention to detail that has defined us from the beginning.
+                  Rotational Equipment Services (RES) is a trusted supplier of industrial pumps and mechanical seals, serving
+                  critical industries like wastewater treatment, petroleum, steel, and food processing. With over 38 years of hands-
+                  on experience and a strong base of repeat business, RES has built a reputation for reliability, technical knowledge,
+                  and responsive service.
                 </p>
               </div>
             </div>
