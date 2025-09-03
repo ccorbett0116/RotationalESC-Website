@@ -131,15 +131,15 @@ const Shop = () => {
                   <Card key={product.id} className="h-full flex flex-col">
                     <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                       <img
-                        src={product.image}
+                        src={product.image as string}
                         alt={product.name}
                         className="w-full h-full object-cover"
                       />
                     </div>
                     <CardHeader className="flex-1">
                       <div className="flex justify-between items-start mb-2">
-                        <Badge 
-                          variant={product.inStock ? "default" : "secondary"}
+                        <Badge
+                            variant={(product.inStock ? "default" : "secondary") as "default" | "secondary"}
                           className={product.inStock ? "bg-green-100 text-green-800" : ""}
                         >
                           {product.inStock ? "In Stock" : "Out of Stock"}

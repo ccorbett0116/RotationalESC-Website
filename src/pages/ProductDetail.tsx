@@ -55,7 +55,7 @@ const ProductDetail = () => {
           {/* Product Image */}
           <div className="aspect-square bg-muted rounded-lg overflow-hidden">
             <img
-              src={product.image}
+              src={product.image as string}
               alt={product.name}
               className="w-full h-full object-cover"
             />
@@ -66,7 +66,7 @@ const ProductDetail = () => {
             <div>
               <div className="flex items-center gap-2 mb-2">
                 <Badge variant="outline">{product.category}</Badge>
-                <Badge variant={product.inStock ? "default" : "secondary"}>
+                <Badge variant={(product.inStock ? "default" : "secondary") as "default" | "secondary"}>
                   {product.inStock ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>
@@ -237,7 +237,7 @@ const ProductDetail = () => {
                 <Card key={relatedProduct.id}>
                   <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                     <img
-                      src={relatedProduct.image}
+                      src={relatedProduct.image as string}
                       alt={relatedProduct.name}
                       className="w-full h-full object-cover"
                     />

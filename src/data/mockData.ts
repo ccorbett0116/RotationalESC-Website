@@ -33,7 +33,7 @@ export interface TeamMember {
 
 // Products Data
 export const products: ({
-  image: {};
+  image: string | object;
   material: string;
   price: number;
   name: string;
@@ -45,7 +45,7 @@ export const products: ({
   specifications: { "Flow Rate": string; Head: string; "Inlet Size": string; "Outlet Size": string; Power: string };
   tags: string[]
 } | {
-  image: string;
+  image: string | object;
   material: string;
   price: number;
   name: string;
@@ -57,7 +57,7 @@ export const products: ({
   specifications: { "Flow Rate": string; "Inlet Size": string; "Outlet Size": string; Pressure: string; Power: string };
   tags: string[]
 } | {
-  image: {};
+  image: string | object;
   material: string;
   price: number;
   name: string;
@@ -76,7 +76,7 @@ export const products: ({
   };
   tags: string[]
 } | {
-  image: string;
+  image: string | object;
   material: string;
   price: number;
   name: string;
@@ -95,7 +95,7 @@ export const products: ({
   };
   tags: string[]
 } | {
-  image: {};
+  image: string | object;
   material: string;
   price: number;
   name: string;

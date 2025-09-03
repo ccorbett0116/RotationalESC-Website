@@ -107,7 +107,7 @@ const Home = () => {
               <Card key={product.id} className="h-full flex flex-col">
                 <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                   <img
-                    src={product.image}
+                    src={product.image as string}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
