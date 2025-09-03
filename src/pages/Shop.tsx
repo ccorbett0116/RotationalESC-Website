@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,41 +6,79 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Search, Filter } from "lucide-react";
-import { products } from "@/data/mockData";
+import { apiService, Product, Category } from "@/services/api";
 import Layout from "@/components/Layout";
 
 const Shop = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("name");
 
-  // Get unique categories
-  const categories = ["all", ...Array.from(new Set(products.map(p => p.category)))];
+  // Fetch data on component mount
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const [categoriesData, productsData] = await Promise.all([
+          apiService.getCategories(),
+          apiService.getProducts({ ordering: sortBy })
+        ]);
+        setCategories(Array.isArray(categoriesData) ? categoriesData : []);
+        setProducts(Array.isArray(productsData?.results) ? productsData.results : []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+        setCategories([]);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  // Filter and sort products
-  const filteredProducts = products
-      .filter(product => {
-        const search = searchTerm.toLowerCase();
-        const matchesSearch =
-            product.name.toLowerCase().includes(search) ||
-            product.partNumber.toString().toLowerCase().includes(search); // ✅ name OR partNumber
-        const matchesCategory =
-            selectedCategory === "all" || product.category === selectedCategory;
-        return matchesSearch && matchesCategory;
-      })
-      .sort((a, b) => {
-        switch (sortBy) {
-          case "price-low":
-            return a.price - b.price;
-          case "price-high":
-            return b.price - a.price;
-          case "category":
-            return a.category.localeCompare(b.category);
-          default:
-            return a.name.localeCompare(b.name);
+    fetchData();
+  }, []);
+
+  // Fetch products when filters change
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoading(true);
+        const params: any = { ordering: sortBy };
+        
+        if (searchTerm) {
+          params.search = searchTerm;
         }
-      });
+        
+        if (selectedCategory !== "all") {
+          params.category_name = selectedCategory;
+        }
 
+        const productsData = await apiService.getProducts(params);
+        setProducts(productsData.results || []);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
+  }, [searchTerm, selectedCategory, sortBy]);
+
+  const allCategories = ["all", ...(Array.isArray(categories) ? categories.map(c => c.name) : [])];
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="flex justify-center items-center min-h-screen">
+          <div className="text-lg">Loading products...</div>
+        </div>
+      </Layout>
+    );
+  }
 
   return (
     <Layout>
@@ -85,7 +123,7 @@ const Shop = () => {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map(category => (
+                  {allCategories.map(category => (
                     <SelectItem key={category} value={category}>
                       {category === "all" ? "All Categories" : category}
                     </SelectItem>
@@ -99,9 +137,9 @@ const Shop = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="name">Name</SelectItem>
-                  <SelectItem value="price-low">Price: Low to High</SelectItem>
-                  <SelectItem value="price-high">Price: High to Low</SelectItem>
-                  <SelectItem value="category">Category</SelectItem>
+                  <SelectItem value="price">Price: Low to High</SelectItem>
+                  <SelectItem value="-price">Price: High to Low</SelectItem>
+                  <SelectItem value="category__name">Category</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -112,7 +150,7 @@ const Shop = () => {
       {/* Products Grid */}
       <section className="py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          {filteredProducts.length === 0 ? (
+          {products.length === 0 ? (
             <div className="text-center py-12">
               <p className="text-muted-foreground text-lg">
                 No products found matching your criteria.
@@ -122,30 +160,36 @@ const Shop = () => {
             <>
               <div className="flex justify-between items-center mb-8">
                 <p className="text-muted-foreground">
-                  Showing {filteredProducts.length} of {products.length} products
+                  Showing {products.length} products
                 </p>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                {filteredProducts.map((product) => (
+                {products.map((product) => (
                   <Card key={product.id} className="h-full flex flex-col">
                     <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                      <img
-                        src={product.image as string}
-                        alt={product.name}
-                        className="w-full h-full object-cover"
-                      />
+                      {product.primary_image ? (
+                        <img
+                          src={product.primary_image}
+                          alt={product.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                          <span className="text-muted-foreground">No Image</span>
+                        </div>
+                      )}
                     </div>
                     <CardHeader className="flex-1">
                       <div className="flex justify-between items-start mb-2">
-                        <Badge
-                            variant={(product.inStock ? "default" : "secondary") as "default" | "secondary"}
-                          className={product.inStock ? "bg-green-100 text-green-800" : ""}
+                        <Badge 
+                          variant={product.in_stock ? "default" : "secondary"}
+                          className={product.in_stock ? "bg-green-100 text-green-800" : ""}
                         >
-                          {product.inStock ? "In Stock" : "Out of Stock"}
+                          {product.in_stock ? "In Stock" : "Out of Stock"}
                         </Badge>
                         <Badge variant="outline">
-                          {product.category}
+                          {product.category.name}
                         </Badge>
                       </div>
                       <CardTitle className="text-lg leading-tight">{product.name}</CardTitle>
@@ -165,9 +209,9 @@ const Shop = () => {
                         </Link>
                         <Button 
                           className="w-full" 
-                          disabled={!product.inStock}
+                          disabled={!product.in_stock}
                         >
-                          {product.inStock ? "Add to Cart" : "Out of Stock"}
+                          {product.in_stock ? "Add to Cart" : "Out of Stock"}
                         </Button>
                       </div>
                     </CardContent>
