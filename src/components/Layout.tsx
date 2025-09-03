@@ -5,6 +5,7 @@ import { ShoppingCart, User, Menu, X } from "lucide-react";
 import { useState } from "react";
 import { companyInfo } from "@/data/mockData";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import Logo from "@/assets/logo.svg";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -26,11 +27,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <Link to="/" className="flex items-center space-x-2 flex-shrink-0">
-              <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">RES</span>
-              </div>
-              <span className="font-bold text-base lg:text-lg text-foreground truncate">{companyInfo.name}</span>
+            <Link to="/" className="flex items-center">
+              <img 
+                src={Logo} 
+                alt="Company Logo" 
+                className="w-96 h-12 object-contain hover:opacity-80 transition-opacity transition-colors" 
+              />
             </Link>
 
             {/* Desktop Navigation */}
@@ -144,28 +146,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               </ul>
             </div>
 
-            {/* Legal */}
-            <div>
-              <h3 className="font-semibold text-foreground mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    to="/privacy"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/refund"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Refund Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          
           </div>
 
           <div className="border-t border-border pt-8 mt-8">
