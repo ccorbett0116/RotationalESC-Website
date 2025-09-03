@@ -263,8 +263,6 @@ export const services: Service[] = [
       "Regular equipment inspections",
       "Scheduled maintenance services",
       "Performance monitoring",
-      "Predictive maintenance analysis",
-      "Emergency repair services"
     ]
   },
   {
@@ -275,8 +273,6 @@ export const services: Service[] = [
       "On-site repair services",
       "Workshop rebuilds",
       "Parts replacement",
-      "Performance testing",
-      "Warranty coverage"
     ]
   },
   {
@@ -284,11 +280,9 @@ export const services: Service[] = [
     title: "Technical Consulting",
     description: "Professional consulting services to optimize your equipment performance and efficiency.",
     features: [
-      "System optimization",
-      "Energy efficiency audits",
-      "Equipment selection",
-      "Process improvement",
-      "Training programs"
+      "Pump sizing and selection",
+      "Mechanical seal selection",
+      "System Overview and Optimization",
     ]
   }
 ];
