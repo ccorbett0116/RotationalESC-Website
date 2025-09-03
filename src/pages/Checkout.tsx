@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,37 +8,136 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard, Truck, Shield, ArrowLeft } from "lucide-react";
-import { Link } from "react-router-dom";
-import { products } from "@/data/mockData";
+import { Link, useNavigate } from "react-router-dom";
+import { apiService, Product } from "@/services/api";
 import Layout from "@/components/Layout";
 
 const Checkout = () => {
+  const navigate = useNavigate();
   const [paymentMethod, setPaymentMethod] = useState("card");
   const [shippingMethod, setShippingMethod] = useState("standard");
+  const [sameAsShipping, setSameAsShipping] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [orderTotals, setOrderTotals] = useState({
+    subtotal: 0,
+    tax_amount: 0,
+    shipping_amount: 0,
+    total_amount: 0
+  });
 
-  // Mock cart items - same as Cart component
-  const cartItems = [
-    { productId: "pump-001", quantity: 1 },
-    { productId: "motor-001", quantity: 2 }
-  ];
+  // Mock cart items - In a real app, this would come from a cart context/state
+  const [cartItems] = useState([
+    { product_id: 1, quantity: 1, price: 0 },
+    { product_id: 5, quantity: 2, price: 0 }
+  ]);
+  const [cartProducts, setCartProducts] = useState<Product[]>([]);
 
-  const cartWithDetails = cartItems.map(item => ({
+  // Form state
+  const [formData, setFormData] = useState({
+    customer_email: "",
+    customer_first_name: "",
+    customer_last_name: "",
+    customer_phone: "",
+    billing_address_line1: "",
+    billing_address_line2: "",
+    billing_city: "",
+    billing_state: "",
+    billing_postal_code: "",
+    billing_country: "US",
+    shipping_address_line1: "",
+    shipping_address_line2: "",
+    shipping_city: "",
+    shipping_state: "",
+    shipping_postal_code: "",
+    shipping_country: "US",
+  });
+
+  useEffect(() => {
+    const fetchCartProducts = async () => {
+      try {
+        const products = await Promise.all(
+          cartItems.map(item => apiService.getProduct(item.product_id))
+        );
+        setCartProducts(products);
+        
+        // Update cart items with current prices
+        const updatedItems = cartItems.map((item, index) => ({
+          ...item,
+          price: products[index].price
+        }));
+        
+        // Calculate totals
+        const totalData = await apiService.calculateOrderTotal({
+          items: updatedItems,
+          shipping_method: shippingMethod
+        });
+        setOrderTotals(totalData);
+      } catch (error) {
+        console.error('Error fetching cart data:', error);
+      }
+    };
+
+    fetchCartProducts();
+  }, [shippingMethod]);
+
+  const cartWithDetails = cartItems.map((item, index) => ({
     ...item,
-    product: products.find(p => p.id === item.productId)!
+    product: cartProducts[index]
   })).filter(item => item.product);
 
-  const subtotal = cartWithDetails.reduce(
-    (sum, item) => sum + (item.product.price * item.quantity),
-    0
-  );
-  const tax = subtotal * 0.1;
-  const shipping = shippingMethod === "express" ? 250 : (subtotal > 5000 ? 0 : 150);
-  const total = subtotal + tax + shipping;
+  const handleInputChange = (field: string, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    
+    // Copy billing address to shipping if same address is checked
+    if (sameAsShipping && field.startsWith('billing_')) {
+      const shippingField = field.replace('billing_', 'shipping_');
+      setFormData(prev => ({ ...prev, [shippingField]: value }));
+    }
+  };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSameAsShippingChange = (checked: boolean) => {
+    setSameAsShipping(checked);
+    if (checked) {
+      setFormData(prev => ({
+        ...prev,
+        shipping_address_line1: prev.billing_address_line1,
+        shipping_address_line2: prev.billing_address_line2,
+        shipping_city: prev.billing_city,
+        shipping_state: prev.billing_state,
+        shipping_postal_code: prev.billing_postal_code,
+        shipping_country: prev.billing_country,
+      }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle order submission
-    console.log("Order submitted");
+    setLoading(true);
+    
+    try {
+      const orderData = {
+        ...formData,
+        subtotal: orderTotals.subtotal,
+        tax_amount: orderTotals.tax_amount,
+        shipping_amount: orderTotals.shipping_amount,
+        total_amount: orderTotals.total_amount,
+        payment_method: paymentMethod,
+        shipping_method: shippingMethod,
+        order_items: cartItems.map((item, index) => ({
+          product_id: item.product_id,
+          quantity: item.quantity,
+          price: cartProducts[index]?.price || 0
+        }))
+      };
+
+      const order = await apiService.createOrder(orderData);
+      navigate(`/order-confirmation/${order.order_number}`);
+    } catch (error) {
+      console.error('Error creating order:', error);
+      alert('There was an error processing your order. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -68,44 +167,177 @@ const Checkout = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="firstName">First Name</Label>
-                    <Input id="firstName" required />
+                    <Input 
+                      id="firstName" 
+                      value={formData.customer_first_name}
+                      onChange={(e) => handleInputChange('customer_first_name', e.target.value)}
+                      required 
+                    />
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName">Last Name</Label>
-                    <Input id="lastName" required />
+                    <Input 
+                      id="lastName" 
+                      value={formData.customer_last_name}
+                      onChange={(e) => handleInputChange('customer_last_name', e.target.value)}
+                      required 
+                    />
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="company">Company</Label>
-                  <Input id="company" />
+                  <Label htmlFor="email">Email</Label>
+                  <Input 
+                    id="email" 
+                    type="email"
+                    value={formData.customer_email}
+                    onChange={(e) => handleInputChange('customer_email', e.target.value)}
+                    required 
+                  />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="address">Address</Label>
-                  <Input id="address" required />
+                  <Label htmlFor="phone">Phone (Optional)</Label>
+                  <Input 
+                    id="phone" 
+                    type="tel"
+                    value={formData.customer_phone}
+                    onChange={(e) => handleInputChange('customer_phone', e.target.value)}
+                  />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Billing Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Billing Address</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="billingAddress">Address</Label>
+                  <Input 
+                    id="billingAddress" 
+                    value={formData.billing_address_line1}
+                    onChange={(e) => handleInputChange('billing_address_line1', e.target.value)}
+                    required 
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billingAddress2">Address Line 2 (Optional)</Label>
+                  <Input 
+                    id="billingAddress2" 
+                    value={formData.billing_address_line2}
+                    onChange={(e) => handleInputChange('billing_address_line2', e.target.value)}
+                  />
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="city">City</Label>
-                    <Input id="city" required />
+                    <Label htmlFor="billingCity">City</Label>
+                    <Input 
+                      id="billingCity" 
+                      value={formData.billing_city}
+                      onChange={(e) => handleInputChange('billing_city', e.target.value)}
+                      required 
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="state">State</Label>
-                    <Select>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select state" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="ca">California</SelectItem>
-                        <SelectItem value="ny">New York</SelectItem>
-                        <SelectItem value="tx">Texas</SelectItem>
-                        {/* Add more states */}
-                      </SelectContent>
-                    </Select>
+                    <Label htmlFor="billingState">State</Label>
+                    <Input 
+                      id="billingState" 
+                      value={formData.billing_state}
+                      onChange={(e) => handleInputChange('billing_state', e.target.value)}
+                      required 
+                    />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="zip">ZIP Code</Label>
-                    <Input id="zip" required />
+                    <Label htmlFor="billingZip">ZIP Code</Label>
+                    <Input 
+                      id="billingZip" 
+                      value={formData.billing_postal_code}
+                      onChange={(e) => handleInputChange('billing_postal_code', e.target.value)}
+                      required 
+                    />
                   </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Shipping Address */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Shipping Address</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="sameAsShipping" 
+                    checked={sameAsShipping}
+                    onCheckedChange={handleSameAsShippingChange}
+                  />
+                  <Label htmlFor="sameAsShipping">Same as billing address</Label>
+                </div>
+                
+                {!sameAsShipping && (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingAddress">Address</Label>
+                      <Input 
+                        id="shippingAddress" 
+                        value={formData.shipping_address_line1}
+                        onChange={(e) => handleInputChange('shipping_address_line1', e.target.value)}
+                        required 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingAddress2">Address Line 2 (Optional)</Label>
+                      <Input 
+                        id="shippingAddress2" 
+                        value={formData.shipping_address_line2}
+                        onChange={(e) => handleInputChange('shipping_address_line2', e.target.value)}
+                      />
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="shippingCity">City</Label>
+                        <Input 
+                          id="shippingCity" 
+                          value={formData.shipping_city}
+                          onChange={(e) => handleInputChange('shipping_city', e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="shippingState">State</Label>
+                        <Input 
+                          id="shippingState" 
+                          value={formData.shipping_state}
+                          onChange={(e) => handleInputChange('shipping_state', e.target.value)}
+                          required 
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="shippingZip">ZIP Code</Label>
+                        <Input 
+                          id="shippingZip" 
+                          value={formData.shipping_postal_code}
+                          onChange={(e) => handleInputChange('shipping_postal_code', e.target.value)}
+                          required 
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Payment Information */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Payment Information</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="zip">ZIP Code</Label>
+                  <Input id="zip" required />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone Number</Label>
@@ -128,7 +360,7 @@ const Checkout = () => {
                         Standard Shipping (5-7 business days)
                       </Label>
                       <p className="text-sm text-muted-foreground">
-                        {subtotal > 5000 ? "FREE" : "$150.00"}
+                        {orderTotals.subtotal > 5000 ? "FREE" : "$150.00"}
                       </p>
                     </div>
                   </div>
@@ -247,21 +479,21 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${subtotal.toLocaleString()}</span>
+                    <span>${orderTotals.subtotal.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
                     <span>
-                      {shipping === 0 ? (
+                      {orderTotals.shipping_amount === 0 ? (
                         <span className="text-green-600">FREE</span>
                       ) : (
-                        `$${shipping.toFixed(2)}`
+                        `$${orderTotals.shipping_amount.toFixed(2)}`
                       )}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${tax.toFixed(2)}</span>
+                    <span>${orderTotals.tax_amount.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -269,7 +501,7 @@ const Checkout = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${total.toLocaleString()}</span>
+                  <span>${orderTotals.total_amount.toLocaleString()}</span>
                 </div>
 
                 <Button size="lg" className="w-full" onClick={handleSubmit}>

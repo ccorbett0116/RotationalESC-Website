@@ -1,0 +1,19 @@
+[tool.poetry]
+name = "rotational-equipment-backend"
+version = "0.1.0"
+description = "Django backend for Rotational Equipment Services"
+authors = ["Your Name <your.email@example.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+django = "^5.2.5"
+djangorestframework = "^3.16.1"
+django-cors-headers = "^4.7.0"
+pillow = "^11.3.0"
+django-filter = "^25.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
