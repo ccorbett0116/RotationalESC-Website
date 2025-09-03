@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 
-const Pumps = () => {
+const Seals = () => {
     return (
         <Layout>
             <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">
@@ -9,11 +9,7 @@ const Pumps = () => {
                         PLACEHOLDER
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        This site should be easy. My dad wants the different types of pumps as sections:
-                        centrifugal, diaphragm, PD, etc (I'll try to get full list from him just make this easily extensible)
-                        Then in each section, he wants the logos for the manufacturers (e.g. Grundfos, Goulds, etc again,
-                        I'll try to get a full list from him)
-                        The logos should be clickable and go to the manufacturer's site (in a new tab?)
+                        Follow same instructions as pumps but with seals (I'll get things from him)
                     </p>
                 </div>
             </section>
@@ -21,4 +17,4 @@ const Pumps = () => {
     );
 };
 
-export default Pumps;
+export default Seals;

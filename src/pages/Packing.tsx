@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 
-const Seals = () => {
+const Packing = () => {
     return (
         <Layout>
             <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">
@@ -9,7 +9,7 @@ const Seals = () => {
                         PLACEHOLDER
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        Follow same instructions as pumps but with seals (I'll get things from him)
+                        I have no idea wtf packing is, but it seems to be same kinda idea as pumps/seals page, let me figure this one out
                     </p>
                 </div>
             </section>
@@ -17,4 +17,4 @@ const Seals = () => {
     );
 };
 
-export default Seals;
+export default Packing;

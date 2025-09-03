@@ -1,6 +1,6 @@
 import Layout from "@/components/Layout";
 
-const Seals = () => {
+const Service = () => {
     return (
         <Layout>
             <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">
@@ -9,7 +9,10 @@ const Seals = () => {
                         PLACEHOLDER
                     </h1>
                     <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        Follow same instructions as pumps but with seals (I'll get things from him)
+                        This page is a little different, he wants some text about being pump repair professionals,
+                        having a warehouse, and providing repairs/service to many different types of pumps
+                        (I think these https://rudikovacko.com/project-type/pumps/) (I'll work on confirming this with him)
+                        and then underneath he wants a gallery page consisting of stock photos of people working on pumps
                     </p>
                 </div>
             </section>
@@ -17,4 +20,4 @@ const Seals = () => {
     );
 };
 
-export default Seals;
+export default Service;
