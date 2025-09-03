@@ -26,22 +26,15 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center">
-              <img 
-                src={Logo} 
-                alt="Company Logo" 
-                className="w-96 h-12 object-contain hover:opacity-80 transition-opacity transition-colors" 
-              />
-            </Link>
+          
 
             {/* Desktop Navigation */}
-            <nav className="hidden md:flex space-x-6 lg:space-x-8">
+            <nav className="hidden md:flex space-x-6 lg:space-x-8 items-center">
               {navigation.map((item) => (
                 <Link
                   key={item.name}
                   to={item.href}
-                  className={`px-3 py-2 text-sm font-medium transition-colors ${
+                  className={`px-3 py-2 text-xl font-medium transition-colors ${
                     isActive(item.href)
                       ? 'text-primary border-b-2 border-primary'
                       : 'text-muted-foreground hover:text-foreground'
@@ -53,35 +46,37 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             </nav>
 
             {/* Right side icons */}
-            <div className="flex items-center space-x-2 lg:space-x-4">
-              <Link to="/account">
-                <Button variant="ghost" size="sm">
-                  <User className="h-4 w-4" />
-                  <span className="sr-only">Account</span>
-                </Button>
-              </Link>
-              <Link to="/cart" className="relative">
-                <Button variant="ghost" size="sm">
-                  <ShoppingCart className="h-4 w-4" />
-                  <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
-                    2
-                  </Badge>
-                  <span className="sr-only">Shopping Cart</span>
-                </Button>
-              </Link>
-              <ThemeToggle />
-
-              {/* Mobile menu button */}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="md:hidden"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              >
-                {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-                <span className="sr-only">Toggle menu</span>
-              </Button>
+            <div className="flex items-center justify-end flex-1">
+              <div className="flex items-center space-x-2 lg:space-x-4">
+                <Link to="/account">
+                  <Button variant="ghost" size="sm">
+                    <User className="h-4 w-4" />
+                    <span className="sr-only">Account</span>
+                  </Button>
+                </Link>
+                <Link to="/cart" className="relative">
+                  <Button variant="ghost" size="sm">
+                    <ShoppingCart className="h-4 w-4" />
+                    <Badge className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center text-xs">
+                      2
+                    </Badge>
+                    <span className="sr-only">Shopping Cart</span>
+                  </Button>
+                </Link>
+                <ThemeToggle />
+              </div>
             </div>
+
+            {/* Mobile menu button - Now separate from other icons */}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden ml-4"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+              {isMobileMenuOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+              <span className="sr-only">Toggle menu</span>
+            </Button>
           </div>
 
           {/* Mobile Navigation */}
@@ -131,8 +126,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Quick Links */}
             <div>
-              <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
-              <ul className="space-y-2">
+              <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
+              <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
                 {navigation.map((item) => (
                   <li key={item.name}>
                     <Link
