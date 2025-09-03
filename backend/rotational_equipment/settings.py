@@ -93,10 +93,19 @@ WSGI_APPLICATION = 'rotational_equipment.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
+# For Docker, database is at /app/database/db.sqlite3
+# For local development, database is at ../database/db.sqlite3 (relative to backend dir)
+if os.path.exists('/app/database'):
+    # Docker environment
+    DATABASE_PATH = Path('/app/database/db.sqlite3')
+else:
+    # Local development environment
+    DATABASE_PATH = BASE_DIR.parent / 'database' / 'db.sqlite3'
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'NAME': DATABASE_PATH,
     }
 }
 

@@ -9,22 +9,22 @@ export default defineConfig({
     port: 8080,
     proxy: {
       '/admin': {
-        target: 'http://127.0.0.1:8000',
+        target: process.env.VITE_API_URL || 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       },
       '/api': {
-        target: 'http://127.0.0.1:8000',
+        target: process.env.VITE_API_URL || 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       },
       '/static': {
-        target: 'http://127.0.0.1:8000',
+        target: process.env.VITE_API_URL || 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       },
       '/media': {
-        target: 'http://127.0.0.1:8000',
+        target: process.env.VITE_API_URL || 'http://backend:8000',
         changeOrigin: true,
         secure: false,
       }

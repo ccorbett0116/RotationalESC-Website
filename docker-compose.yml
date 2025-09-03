@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rotational-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./database:/app/database
+      - ./backend/media:/app/media
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+    networks:
+      - rotational-network
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: rotational-frontend
+    ports:
+      - "8080:8080"
+    depends_on:
+      - backend
+    env_file:
+      - .env
+    networks:
+      - rotational-network
+    environment:
+      - VITE_API_URL=http://localhost:8000
+
+networks:
+  rotational-network:
+    driver: bridge
+
+volumes:
+  database_data:
