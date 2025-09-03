@@ -19,24 +19,28 @@ const Shop = () => {
 
   // Filter and sort products
   const filteredProducts = products
-    .filter(product => {
-      const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                           product.description.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesCategory = selectedCategory === "all" || product.category === selectedCategory;
-      return matchesSearch && matchesCategory;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "price-low":
-          return a.price - b.price;
-        case "price-high":
-          return b.price - a.price;
-        case "category":
-          return a.category.localeCompare(b.category);
-        default:
-          return a.name.localeCompare(b.name);
-      }
-    });
+      .filter(product => {
+        const search = searchTerm.toLowerCase();
+        const matchesSearch =
+            product.name.toLowerCase().includes(search) ||
+            product.partNumber.toString().toLowerCase().includes(search); // ✅ name OR partNumber
+        const matchesCategory =
+            selectedCategory === "all" || product.category === selectedCategory;
+        return matchesSearch && matchesCategory;
+      })
+      .sort((a, b) => {
+        switch (sortBy) {
+          case "price-low":
+            return a.price - b.price;
+          case "price-high":
+            return b.price - a.price;
+          case "category":
+            return a.category.localeCompare(b.category);
+          default:
+            return a.name.localeCompare(b.name);
+        }
+      });
+
 
   return (
     <Layout>

@@ -13,6 +13,7 @@ export interface Product {
   material: string;
   specifications: Record<string, string>;
   tags: string[];
+  partNumber: number; // -1 if not applicable
 }
 
 export interface Service {
@@ -32,12 +33,13 @@ export interface TeamMember {
 
 // Products Data
 export const products: ({
-  image: object;
+  image: {};
   material: string;
   price: number;
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: { "Flow Rate": string; Head: string; "Inlet Size": string; "Outlet Size": string; Power: string };
@@ -49,17 +51,19 @@ export const products: ({
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: { "Flow Rate": string; "Inlet Size": string; "Outlet Size": string; Pressure: string; Power: string };
   tags: string[]
 } | {
-  image: object;
+  image: {};
   material: string;
   price: number;
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: {
@@ -78,6 +82,7 @@ export const products: ({
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: {
@@ -90,12 +95,13 @@ export const products: ({
   };
   tags: string[]
 } | {
-  image: object;
+  image: {};
   material: string;
   price: number;
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: {
@@ -114,6 +120,7 @@ export const products: ({
   name: string;
   description: string;
   inStock: boolean;
+  partNumber: number;
   id: string;
   category: string;
   specifications: {
@@ -142,7 +149,8 @@ export const products: ({
       "Inlet Size": "6 inches",
       "Outlet Size": "4 inches"
     },
-    tags: ["centrifugal", "industrial", "stainless steel", "high-efficiency", "corrosion-resistant"]
+    tags: ["centrifugal", "industrial", "stainless steel", "high-efficiency", "corrosion-resistant"],
+    partNumber: -1
   },
   {
     id: "pump-002",
@@ -160,7 +168,8 @@ export const products: ({
       "Inlet Size": "4 inches",
       "Outlet Size": "3 inches"
     },
-    tags: ["positive displacement", "viscous fluids", "flow control", "precision", "cast iron"]
+    tags: ["positive displacement", "viscous fluids", "flow control", "precision", "cast iron"],
+    partNumber: -1
   },
   {
     id: "compressor-001",
@@ -179,7 +188,8 @@ export const products: ({
       "Cooling": "Air Cooled",
       "Control": "VFD"
     },
-    tags: ["rotary screw", "compressor", "energy-efficient", "low maintenance", "air cooled"]
+    tags: ["rotary screw", "compressor", "energy-efficient", "low maintenance", "air cooled"],
+    partNumber: -1
   },
   {
     id: "seal-001",
@@ -198,7 +208,8 @@ export const products: ({
       "Design": "Balanced",
       "API Standard": "API 682"
     },
-    tags: ["mechanical seal", "pumps", "leak prevention", "API 682", "industrial"]
+    tags: ["mechanical seal", "pumps", "leak prevention", "API 682", "industrial"],
+    partNumber: -1
   },
   {
     id: "motor-001",
@@ -217,7 +228,8 @@ export const products: ({
       "Frame": "326T",
       "Enclosure": "TEFC"
     },
-    tags: ["motor", "VFD", "energy saving", "high efficiency", "industrial"]
+    tags: ["motor", "VFD", "energy saving", "high efficiency", "industrial"],
+    partNumber: -1
   },
   {
     id: "bearing-001",
@@ -236,7 +248,8 @@ export const products: ({
       "Speed Limit": "4300 RPM",
       "Sealing": "Double Sealed"
     },
-    tags: ["ball bearing", "heavy duty", "industrial", "long life", "high load"]
+    tags: ["ball bearing", "heavy duty", "industrial", "long life", "high load"],
+    partNumber: -1
   }
 ];
 
