@@ -107,7 +107,7 @@ const ProductDetail = () => {
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img
-                  src={product.images[currentImageIndex]?.image || "/api/placeholder/600/600"}
+                  src={product.images[currentImageIndex]?.image_url || "/api/placeholder/600/600"}
                   alt={product.images[currentImageIndex]?.alt_text || product.name}
                   className="w-full h-full object-cover"
                 />
@@ -130,7 +130,7 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img
-                      src={image.image}
+                      src={image.image_url}
                       alt={image.alt_text || `${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

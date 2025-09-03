@@ -1,4 +1,6 @@
 from django.db import models
+from django.core.exceptions import ValidationError
+import base64
 
 class Category(models.Model):
     name = models.CharField(max_length=100, unique=True)
@@ -31,17 +33,66 @@ class Product(models.Model):
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='products/')
+    image_data = models.BinaryField()
+    filename = models.CharField(max_length=255, blank=True, null=True)
+    content_type = models.CharField(max_length=100, default='image/jpeg')
     alt_text = models.CharField(max_length=200, blank=True)
-    is_primary = models.BooleanField(default=False)
     order = models.PositiveIntegerField(default=0)
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['order', 'created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'order'],
+                name='unique_product_image_order'
+            ),
+        ]
+
+    def clean(self):
+        """Custom validation for ProductImage"""
+        super().clean()
+        
+        # Check for duplicate order=0 (primary) images within the same product
+        if self.order == 0:
+            existing_primary = ProductImage.objects.filter(
+                product=self.product,
+                order=0
+            ).exclude(pk=self.pk)
+            
+            if existing_primary.exists():
+                raise ValidationError({
+                    'order': 'Only one image can have order 0 (primary) per product.'
+                })
+    
+    def save(self, *args, **kwargs):
+        """Override save to call clean validation"""
+        self.full_clean()
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.product.name} - Image {self.order}"
+        filename = self.filename or "No filename"
+        return f"{self.product.name} - {filename}"
+    
+    @property
+    def is_primary(self):
+        """Returns True if this is the primary image (order=0)"""
+        return self.order == 0
+    
+    @property
+    def image_base64(self):
+        """Return base64 encoded image data"""
+        if self.image_data:
+            return base64.b64encode(self.image_data).decode('utf-8')
+        return None
+    
+    @property
+    def data_url(self):
+        """Return data URL for the image"""
+        if self.image_data:
+            base64_data = self.image_base64
+            return f"data:{self.content_type};base64,{base64_data}"
+        return None
 
 class ProductSpecification(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specifications')
