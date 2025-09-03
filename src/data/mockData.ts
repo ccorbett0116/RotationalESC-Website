@@ -10,7 +10,9 @@ export interface Product {
   image: string;
   category: string;
   inStock: boolean;
+  material: string;
   specifications: Record<string, string>;
+  tags: string[];
 }
 
 export interface Service {
@@ -38,14 +40,15 @@ export const products: Product[] = [
     image: centrifugalPumpImg,
     category: "Pumps",
     inStock: true,
+    material: "Stainless Steel",
     specifications: {
       "Flow Rate": "500 GPM",
       "Head": "150 ft",
       "Power": "25 HP",
       "Inlet Size": "6 inches",
-      "Outlet Size": "4 inches",
-      "Material": "Stainless Steel"
-    }
+      "Outlet Size": "4 inches"
+    },
+    tags: ["centrifugal", "industrial", "stainless steel", "high-efficiency", "corrosion-resistant"]
   },
   {
     id: "pump-002",
@@ -55,14 +58,15 @@ export const products: Product[] = [
     image: "/api/placeholder/400/300",
     category: "Pumps",
     inStock: true,
+    material: "Cast Iron",
     specifications: {
       "Flow Rate": "200 GPM",
       "Pressure": "300 PSI",
       "Power": "15 HP",
       "Inlet Size": "4 inches",
-      "Outlet Size": "3 inches",
-      "Material": "Cast Iron"
-    }
+      "Outlet Size": "3 inches"
+    },
+    tags: ["positive displacement", "viscous fluids", "flow control", "precision", "cast iron"]
   },
   {
     id: "compressor-001",
@@ -72,6 +76,7 @@ export const products: Product[] = [
     image: rotaryCompressorImg,
     category: "Compressors",
     inStock: true,
+    material: "Steel",
     specifications: {
       "Air Flow": "125 CFM",
       "Pressure": "175 PSI",
@@ -79,24 +84,27 @@ export const products: Product[] = [
       "Tank Size": "120 gallons",
       "Cooling": "Air Cooled",
       "Control": "VFD"
-    }
+    },
+    tags: ["rotary screw", "compressor", "energy-efficient", "low maintenance", "air cooled"]
   },
   {
-    id: "turbine-001",
-    name: "Steam Turbine Generator",
-    description: "High-performance steam turbine generator for power generation applications with advanced control systems.",
-    price: 45000.00,
+    id: "seal-001",
+    name: "Mechanical Seal Assembly",
+    description: "Durable mechanical seal assembly designed for high-pressure and high-temperature pump applications. Provides reliable sealing performance to minimize leakage and downtime.",
+    price: 4999.99,
     image: "/api/placeholder/400/300",
-    category: "Turbines",
-    inStock: false,
+    category: "Seals",
+    inStock: true,
+    material: "Carbon/SiC/SS316",
     specifications: {
-      "Power Output": "1000 kW",
-      "Steam Pressure": "600 PSI",
-      "Steam Temperature": "750°F",
-      "Efficiency": "85%",
-      "Speed": "3600 RPM",
-      "Generator": "Synchronous"
-    }
+      "Type": "Cartridge Seal",
+      "Pressure Rating": "600 PSI",
+      "Temperature Rating": "400°F",
+      "Shaft Size": "2 inches",
+      "Design": "Balanced",
+      "API Standard": "API 682"
+    },
+    tags: ["mechanical seal", "pumps", "leak prevention", "API 682", "industrial"]
   },
   {
     id: "motor-001",
@@ -106,6 +114,7 @@ export const products: Product[] = [
     image: vfdMotorImg,
     category: "Motors",
     inStock: true,
+    material: "Cast Aluminum",
     specifications: {
       "Power": "50 HP",
       "Voltage": "480V",
@@ -113,7 +122,8 @@ export const products: Product[] = [
       "Efficiency": "96.2%",
       "Frame": "326T",
       "Enclosure": "TEFC"
-    }
+    },
+    tags: ["motor", "VFD", "energy saving", "high efficiency", "industrial"]
   },
   {
     id: "bearing-001",
@@ -123,6 +133,7 @@ export const products: Product[] = [
     image: "/api/placeholder/400/300",
     category: "Bearings",
     inStock: true,
+    material: "Chrome Steel",
     specifications: {
       "Bore": "100mm",
       "Outside Diameter": "180mm",
@@ -130,7 +141,8 @@ export const products: Product[] = [
       "Load Rating": "95 kN",
       "Speed Limit": "4300 RPM",
       "Sealing": "Double Sealed"
-    }
+    },
+    tags: ["ball bearing", "heavy duty", "industrial", "long life", "high load"]
   }
 ];
 
@@ -203,7 +215,7 @@ export const teamMembers: TeamMember[] = [
 export const companyInfo = {
   name: "Rotational Equipment Services",
   tagline: "Your trusted partner for industrial rotational equipment",
-  description: "We provide comprehensive services for industrial rotational equipment including pumps, compressors, turbines, and motors. Our experienced team delivers reliable solutions for maintenance, repair, and optimization of your critical equipment.",
+  description: "We provide comprehensive services for industrial rotational equipment including pumps, compressors, motors, bearings, and seals. Our experienced team delivers reliable solutions for maintenance, repair, and optimization of your critical equipment.",
   address: "1234 Industrial Blvd, Equipment City, EC 12345",
   phone: "(555) 123-4567",
   email: "info@rotationalequipment.com",
