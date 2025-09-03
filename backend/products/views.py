@@ -1,10 +1,15 @@
-from rest_framework import generics, filters
+from rest_framework import generics, filters, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Category, Product
-from .serializers import CategorySerializer, ProductListSerializer, ProductDetailSerializer
+from .models import Category, Product, ProductImage
+from .serializers import (
+    CategorySerializer, 
+    ProductListSerializer, 
+    ProductDetailSerializer,
+    ProductImageUploadSerializer
+)
 
 class CategoryListView(generics.ListAPIView):
     queryset = Category.objects.all()
@@ -63,3 +68,26 @@ def product_search(request):
     
     serializer = ProductListSerializer(products, many=True, context={'request': request})
     return Response(serializer.data)
+
+@api_view(['POST'])
+def upload_product_image(request, product_id):
+    """
+    Upload an image for a specific product
+    """
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {'error': 'Product not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    serializer = ProductImageUploadSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save(product=product)
+        return Response(
+            {'message': 'Image uploaded successfully'}, 
+            status=status.HTTP_201_CREATED
+        )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

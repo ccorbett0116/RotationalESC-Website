@@ -70,7 +70,7 @@ const Cart = () => {
     }>;
 
   const subtotal = cartWithDetails.reduce(
-    (sum, item) => sum + (item.product.price * item.quantity),
+    (sum, item) => sum + (Number(item.product.price) * item.quantity),
     0
   );
   const tax = subtotal * 0.1; // 10% tax
@@ -194,10 +194,10 @@ const Cart = () => {
                         {/* Price */}
                         <div className="text-right">
                           <div className="text-lg font-semibold text-primary">
-                            ${(item.product.price * item.quantity).toLocaleString()}
+                            ${(Number(item.product.price) * item.quantity).toFixed(2)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            ${item.product.price.toLocaleString()} each
+                            ${Number(item.product.price).toFixed(2)} each
                           </div>
                         </div>
                       </div>
@@ -224,7 +224,7 @@ const Cart = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal ({cartItems.length} items)</span>
-                  <span>${subtotal.toLocaleString()}</span>
+                  <span>${subtotal.toFixed(2)}</span>
                 </div>
 
                 <div className="flex justify-between">
@@ -253,7 +253,7 @@ const Cart = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${total.toLocaleString()}</span>
+                  <span>${total.toFixed(2)}</span>
                 </div>
 
                 <Link to="/checkout" className="block">

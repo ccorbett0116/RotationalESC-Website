@@ -221,7 +221,7 @@ const Shop = () => {
                       </div>
                       <CardTitle className="text-lg leading-tight">{product.name}</CardTitle>
                       <div className="text-2xl font-bold text-primary">
-                        ${product.price.toLocaleString()}
+                        ${Number(product.price).toFixed(2)}
                       </div>
                     </CardHeader>
                     <CardContent>

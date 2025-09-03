@@ -512,7 +512,7 @@ const Checkout = () => {
                         </div>
                       </div>
                       <p className="font-medium text-sm">
-                        ${(item.product.price * item.quantity).toLocaleString()}
+                        ${(Number(item.product.price) * item.quantity).toFixed(2)}
                       </p>
                     </div>
                   ))}
@@ -524,7 +524,7 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${orderTotals.subtotal.toLocaleString()}</span>
+                    <span>${orderTotals.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Shipping</span>
@@ -546,7 +546,7 @@ const Checkout = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${orderTotals.total_amount.toLocaleString()}</span>
+                  <span>${orderTotals.total_amount.toFixed(2)}</span>
                 </div>
 
                 <Button 

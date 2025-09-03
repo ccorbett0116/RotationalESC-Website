@@ -17,7 +17,9 @@ export interface Category {
 
 export interface ProductImage {
   id: number;
-  image: string;
+  image_url: string;
+  filename: string;
+  content_type: string;
   alt_text: string;
   is_primary: boolean;
   order: number;

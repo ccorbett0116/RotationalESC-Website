@@ -107,7 +107,7 @@ const ProductDetail = () => {
             <div className="aspect-square bg-muted rounded-lg overflow-hidden">
               {product.images && product.images.length > 0 ? (
                 <img
-                  src={product.images[currentImageIndex]?.image || "/api/placeholder/600/600"}
+                  src={product.images[currentImageIndex]?.image_url || "/api/placeholder/600/600"}
                   alt={product.images[currentImageIndex]?.alt_text || product.name}
                   className="w-full h-full object-cover"
                 />
@@ -130,7 +130,7 @@ const ProductDetail = () => {
                     }`}
                   >
                     <img
-                      src={image.image}
+                      src={image.image_url}
                       alt={image.alt_text || `${product.name} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />
@@ -151,7 +151,7 @@ const ProductDetail = () => {
               </div>
               <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
               <div className="text-3xl font-bold text-primary mb-6">
-                ${product.price.toLocaleString()}
+                ${Number(product.price).toFixed(2)}
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {product.description}
@@ -289,7 +289,7 @@ const ProductDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">{relatedProduct.name}</CardTitle>
                     <div className="text-xl font-bold text-primary">
-                      ${relatedProduct.price.toLocaleString()}
+                      ${Number(relatedProduct.price).toFixed(2)}
                     </div>
                   </CardHeader>
                   <CardContent>

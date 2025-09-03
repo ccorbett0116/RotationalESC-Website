@@ -26,7 +26,9 @@ const Home = () => {
           apiService.getCompanyInfo()
         ]);
         
-        setProducts(productsResponse.results);
+        // Randomly shuffle products and take first 3 for featured section
+        const shuffledProducts = [...productsResponse.results].sort(() => Math.random() - 0.5);
+        setProducts(shuffledProducts);
         setCompanyInfo(companyResponse);
       } catch (err) {
         console.error('Error fetching data:', err);
@@ -193,7 +195,7 @@ const Home = () => {
                     </div>
                     <div className="text-right sm:text-left">
                       <p className="text-xl lg:text-2xl font-bold text-primary">
-                        ${product.price.toLocaleString()}
+                        ${Number(product.price).toFixed(2)}
                       </p>
                     </div>
                   </div>

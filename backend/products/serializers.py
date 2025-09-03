@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import Category, Product, ProductImage, ProductSpecification
+import base64
 
 class CategorySerializer(serializers.ModelSerializer):
     class Meta:
@@ -7,9 +8,44 @@ class CategorySerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'description']
 
 class ProductImageSerializer(serializers.ModelSerializer):
+    image_url = serializers.SerializerMethodField()
+    is_primary = serializers.SerializerMethodField()
+    
     class Meta:
         model = ProductImage
-        fields = ['id', 'image', 'alt_text', 'is_primary', 'order']
+        fields = ['id', 'image_url', 'filename', 'content_type', 'alt_text', 'is_primary', 'order']
+        extra_kwargs = {
+            'image_data': {'write_only': True}
+        }
+    
+    def get_image_url(self, obj):
+        return obj.data_url
+    
+    def get_is_primary(self, obj):
+        return obj.is_primary
+
+class ProductImageUploadSerializer(serializers.ModelSerializer):
+    image_file = serializers.ImageField(write_only=True)
+    
+    class Meta:
+        model = ProductImage
+        fields = ['image_file', 'alt_text', 'order']
+    
+    def create(self, validated_data):
+        image_file = validated_data.pop('image_file')
+        
+        # Read the image file and convert to bytes
+        image_data = image_file.read()
+        
+        # Create the ProductImage instance
+        product_image = ProductImage.objects.create(
+            image_data=image_data,
+            filename=image_file.name,
+            content_type=image_file.content_type,
+            **validated_data
+        )
+        
+        return product_image
 
 class ProductSpecificationSerializer(serializers.ModelSerializer):
     class Meta:
@@ -29,11 +65,9 @@ class ProductListSerializer(serializers.ModelSerializer):
         ]
 
     def get_primary_image(self, obj):
-        primary_image = obj.images.filter(is_primary=True).first()
+        primary_image = obj.images.filter(order=0).first()
         if primary_image:
-            request = self.context.get('request')
-            if request:
-                return request.build_absolute_uri(primary_image.image.url)
+            return primary_image.data_url
         return None
 
 class ProductDetailSerializer(serializers.ModelSerializer):
