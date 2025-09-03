@@ -143,13 +143,13 @@ const OrderConfirmation = () => {
                           Quantity: {item.quantity}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          ${item.price.toLocaleString()} each
+                          ${Number(item.price).toFixed(2)} each
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        ${item.total_price.toLocaleString()}
+                        ${Number(item.total_price).toFixed(2)}
                       </p>
                     </div>
                   </div>

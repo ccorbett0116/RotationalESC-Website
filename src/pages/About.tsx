@@ -5,7 +5,7 @@ import { services } from "@/data/mockData"; // Keep services from mock for now
 import { apiService, CompanyInfo } from "@/services/api";
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
-import AboutUsImage from "@/assets/aboutusImage.jpg"; 
+
 
 
 const About = () => {

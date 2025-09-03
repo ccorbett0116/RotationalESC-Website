@@ -151,7 +151,7 @@ const ProductDetail = () => {
               </div>
               <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
               <div className="text-3xl font-bold text-primary mb-6">
-                ${product.price.toLocaleString()}
+                ${Number(product.price).toFixed(2)}
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {product.description}
@@ -289,7 +289,7 @@ const ProductDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">{relatedProduct.name}</CardTitle>
                     <div className="text-xl font-bold text-primary">
-                      ${relatedProduct.price.toLocaleString()}
+                      ${Number(relatedProduct.price).toFixed(2)}
                     </div>
                   </CardHeader>
                   <CardContent>

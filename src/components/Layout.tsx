@@ -17,12 +17,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'About', href: '/about' },
     { name: 'Shop', href: '/shop' },
-    { name: 'Contact', href: '/contact' },
     {
       name: 'Products',
-      href: '/shop',
+      href: '#',
       isDropdown: true,
       categories: [
         {
@@ -38,10 +36,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
           title: 'Service & Repair'
         }
       ]
-    }
+    },
+    { name: 'About', href: '/about' },
+    { name: 'Contact', href: '/contact' }
   ];
 
-  const isActive = (path: string) => location.pathname === path;
+  const isActive = (path: string, isDropdown?: boolean) => {
+    if (isDropdown) {
+      // For Products dropdown, check if we're on specific product category pages
+      return ['/pumps', '/mechanical-seals', '/packing', '/service-repair'].includes(location.pathname);
+    }
+    return location.pathname === path;
+  };
 
   // Fetch company info on component mount
   useEffect(() => {
@@ -101,7 +107,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               {(() => {
                 const product = navigation.find((n) => n.isDropdown);
                 if (!product) return null;
-                let closeTimeout: number;
+                let closeTimeout: NodeJS.Timeout;
                 return (
                 <div
                     className="relative group"
@@ -115,7 +121,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 >
                 <button
                       className={`px-3 py-2 text-xl font-medium transition-colors inline-flex items-center ${
-                        isActive(product.href)
+                        isActive(product.href, product.isDropdown)
                           ? 'text-primary border-b-2 border-primary'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
@@ -151,12 +157,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Right side icons */}
             <div className="flex items-center justify-end flex-1">
               <div className="flex items-center space-x-2 lg:space-x-4">
-                <Link to="/account">
-                  <Button variant="ghost" size="sm">
-                    <User className="h-4 w-4" />
-                    <span className="sr-only">Account</span>
-                  </Button>
-                </Link>
                 <Link to="/cart" className="relative">
                   <Button variant="ghost" size="sm">
                     <ShoppingCart className="h-4 w-4" />
@@ -226,7 +226,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       key={item.name}
                       to={item.href}
                       className={`block px-4 py-2 text-base font-medium transition-colors ${
-                        isActive(item.href)
+                        isActive(item.href, item.isDropdown)
                           ? 'text-primary bg-primary/10'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
