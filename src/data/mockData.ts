@@ -31,7 +31,101 @@ export interface TeamMember {
 }
 
 // Products Data
-export const products: Product[] = [
+export const products: ({
+  image: object;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: { "Flow Rate": string; Head: string; "Inlet Size": string; "Outlet Size": string; Power: string };
+  tags: string[]
+} | {
+  image: string;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: { "Flow Rate": string; "Inlet Size": string; "Outlet Size": string; Pressure: string; Power: string };
+  tags: string[]
+} | {
+  image: object;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: {
+    Control: string;
+    "Air Flow": string;
+    "Tank Size": string;
+    Cooling: string;
+    Pressure: string;
+    Power: string
+  };
+  tags: string[]
+} | {
+  image: string;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: {
+    "Temperature Rating": string;
+    Design: string;
+    "Shaft Size": string;
+    Type: string;
+    "Pressure Rating": string;
+    "API Standard": string
+  };
+  tags: string[]
+} | {
+  image: object;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: {
+    Speed: string;
+    Frame: string;
+    Efficiency: string;
+    Voltage: string;
+    Enclosure: string;
+    Power: string
+  };
+  tags: string[]
+} | {
+  image: string;
+  material: string;
+  price: number;
+  name: string;
+  description: string;
+  inStock: boolean;
+  id: string;
+  category: string;
+  specifications: {
+    "Load Rating": string;
+    "Speed Limit": string;
+    "Outside Diameter": string;
+    Width: string;
+    Sealing: string;
+    Bore: string
+  };
+  tags: string[]
+})[] = [
   {
     id: "pump-001",
     name: "Industrial Centrifugal Pump",
