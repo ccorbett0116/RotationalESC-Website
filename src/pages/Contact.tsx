@@ -9,7 +9,7 @@ import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiService, ContactFormData, CompanyInfo } from "@/services/api";
 import Layout from "@/components/Layout";
-import AboutUsImage from "@/assets/AboutUS.jpg";
+
 
 const Contact = () => {
   const { toast } = useToast();
@@ -102,12 +102,7 @@ const Contact = () => {
         {/* Background Image */}
         <div 
           className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url(${AboutUsImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
+         
         >
           {/* Dark overlay */}
           <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]"></div>
