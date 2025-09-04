@@ -1,20 +1,29 @@
 # Step 1: Use a Node.js image to build the app
-FROM node:18 AS builder
+FROM oven/bun:1 AS builder
+
+# Accept build-time arguments for Vite public env vars (must be prefixed VITE_)
+ARG VITE_STRIPE_PUBLISHABLE_KEY
+ARG VITE_API_URL
+ENV VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY} \
+	VITE_API_URL=${VITE_API_URL}
+
+# Fail early if required build args are absent (publishable key especially)
+RUN if [ -z "$VITE_STRIPE_PUBLISHABLE_KEY" ]; then echo "ERROR: VITE_STRIPE_PUBLISHABLE_KEY build arg not provided" >&2; exit 1; fi
 
 # Set working directory inside the container
 WORKDIR /app
 
-# Copy package.json and package-lock.json
-COPY package*.json ./
+# Copy package.json and bun.lockb
+COPY package.json bun.lockb ./
 
 # Install dependencies
-RUN npm install
+RUN bun install
 
 # Copy the rest of the app's source code
 COPY . .
 
 # Build the app
-RUN npm run build
+RUN bun run build
 
 # Step 2: Use an Nginx image to serve the static files
 FROM nginx:alpine

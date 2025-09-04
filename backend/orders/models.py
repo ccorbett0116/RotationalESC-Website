@@ -47,6 +47,10 @@ class Order(models.Model):
     # Payment information
     payment_method = models.CharField(max_length=50)
     payment_status = models.CharField(max_length=20, default='pending')
+    stripe_payment_intent_id = models.CharField(max_length=200, blank=True, null=True)
+    stripe_payment_intent_client_secret = models.CharField(max_length=200, blank=True, null=True)
+    # Stripe Checkout Session (alternative to direct PaymentIntent via Elements)
+    stripe_checkout_session_id = models.CharField(max_length=255, blank=True, null=True)
     
     # Note: Shipping will be handled via email contact basis
 

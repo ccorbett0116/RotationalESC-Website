@@ -56,12 +56,13 @@ class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     primary_image = serializers.SerializerMethodField()
     tags_list = serializers.ReadOnlyField()
+    specifications = ProductSpecificationSerializer(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'category', 
-            'in_stock', 'tags_list', 'primary_image'
+            'in_stock', 'tags_list', 'primary_image', 'specifications'
         ]
 
     def get_primary_image(self, obj):

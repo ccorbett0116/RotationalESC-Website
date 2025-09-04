@@ -1,6 +1,7 @@
 from rest_framework import generics, filters, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
 from .models import Category, Product, ProductImage
@@ -11,16 +12,21 @@ from .serializers import (
     ProductImageUploadSerializer
 )
 
-class CategoryListView(generics.ListAPIView):
-    queryset = Category.objects.all()
-    serializer_class = CategorySerializer
+class CategoryListView(APIView):
+    """
+    List all categories without pagination
+    """
+    def get(self, request, format=None):
+        categories = Category.objects.all()
+        serializer = CategorySerializer(categories, many=True)
+        return Response(serializer.data)
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.select_related('category').prefetch_related('images')
+    queryset = Product.objects.select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'in_stock']
-    search_fields = ['name', 'description', 'tags']
+    search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
     ordering_fields = ['name', 'price', 'created_at']
     ordering = ['name']
 

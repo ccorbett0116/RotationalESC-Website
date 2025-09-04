@@ -89,11 +89,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <div
                     key={item.name}
                     className="relative group"
+                    ref={dropdownRef}
                     onMouseEnter={() => {
                       setIsProductsOpen(true);
                     }}
                     onMouseLeave={() => {
-                      setTimeout(() => setIsProductsOpen(false), 200);
+                      setIsProductsOpen(false);
                     }}
                   >
                     <button
@@ -110,7 +111,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </button>
 
                     <div 
-                      className={`absolute right-0 mt-1 w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden transition-all duration-200 ${
+                      className={`absolute right-0 top-full w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden transition-all duration-200 ${
                         isProductsOpen ? 'opacity-100 transform scale-100' : 'opacity-0 transform scale-95 pointer-events-none'
                       }`}
                     >

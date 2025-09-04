@@ -23,3 +23,5 @@ def company_info(request):
     if company:
         serializer = CompanyInfoSerializer(company)
         return Response(serializer.data)
+    else:
+        return Response({'error': 'Company information not found'}, status=404)
