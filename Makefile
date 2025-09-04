@@ -12,12 +12,20 @@ help: ## Show this help message
 
 # Docker Compose Commands
 .PHONY: up
-up: ## Start all services in detached mode
+up: ## Start all services in detached mode (production - uses pre-built images)
 	docker compose up -d
+
+.PHONY: up-dev
+up-dev: ## Start all services in detached mode (development - builds images locally)
+	docker compose -f docker-compose.dev.yml up -d
 
 .PHONY: down
 down: ## Stop and remove all containers
 	docker compose down
+
+.PHONY: down-dev
+down-dev: ## Stop and remove all development containers
+	docker compose -f docker-compose.dev.yml down
 
 .PHONY: restart
 restart: ## Restart all services
@@ -32,17 +40,17 @@ start: ## Start existing stopped containers
 	docker compose start
 
 .PHONY: build
-build: ## Build all services
-	docker compose build
+build: ## Build all services (development)
+	docker compose -f docker-compose.dev.yml build
 
 .PHONY: rebuild
-rebuild: ## Stop, remove containers, rebuild images, and start services
-	docker compose down
-	docker compose build
-	docker compose up -d
+rebuild: ## Stop, remove containers, rebuild images, and start services (development)
+	docker compose -f docker-compose.dev.yml down
+	docker compose -f docker-compose.dev.yml build
+	docker compose -f docker-compose.dev.yml up -d
 
 .PHONY: pull
-pull: ## Pull latest images for all services
+pull: ## Pull latest images for all services (production)
 	docker compose pull
 
 # Individual Service Commands

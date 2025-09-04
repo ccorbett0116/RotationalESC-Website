@@ -1,7 +1,9 @@
 services:
   backend:
-    image: ghcr.io/ccorbett0116/rotationalesc-website/backend:latest
-    container_name: rotational-backend
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: rotational-backend-dev
     ports:
       - "8000:8000"
     volumes:
@@ -16,8 +18,13 @@ services:
       - rotational-network
 
   frontend:
-    image: ghcr.io/ccorbett0116/rotationalesc-website/frontend:latest
-    container_name: rotational-frontend
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
+        - VITE_API_URL=${VITE_API_URL}
+    container_name: rotational-frontend-dev
     ports:
       - "80:80"
       - "443:443"
@@ -37,7 +44,7 @@ services:
     build:
       context: ./certbot
       dockerfile: Dockerfile
-    container_name: rotational-certbot
+    container_name: rotational-certbot-dev
     volumes:
       - ./certbot/certs:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
