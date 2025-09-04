@@ -74,8 +74,7 @@ const Cart = () => {
     0
   );
   const tax = subtotal * 0.1; // 10% tax
-  const shipping = subtotal > 5000 ? 0 : 150; // Free shipping over $5000
-  const total = subtotal + tax + shipping;
+  const total = subtotal + tax;
 
   if (loading) {
     return (
@@ -232,22 +231,9 @@ const Cart = () => {
                   <span>${tax.toFixed(2)}</span>
                 </div>
 
-                <div className="flex justify-between">
-                  <span>Shipping</span>
-                  <span>
-                    {shipping === 0 ? (
-                      <span className="text-green-600">FREE</span>
-                    ) : (
-                      `$${shipping.toFixed(2)}`
-                    )}
-                  </span>
+                <div className="text-xs text-muted-foreground mt-2">
+                  * Shipping will be calculated and communicated via email
                 </div>
-
-                {shipping === 0 && (
-                  <div className="text-sm text-green-600">
-                    🎉 You qualify for free shipping!
-                  </div>
-                )}
 
                 <Separator />
 
