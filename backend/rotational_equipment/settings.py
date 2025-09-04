@@ -50,11 +50,6 @@ DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 # Parse ALLOWED_HOSTS from environment variable
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',') if os.environ.get('ALLOWED_HOSTS') else []
 
-# Ensure the production IP is always allowed
-PUBLIC_IP = os.environ.get('PUBLIC_IP', '40.233.106.142')
-if PUBLIC_IP not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(PUBLIC_IP)
-
 
 # Application definition
 
@@ -179,7 +174,6 @@ REST_FRAMEWORK = {
 # CORS configuration for React frontend
 # Get production domain from environment
 PRODUCTION_DOMAIN = os.environ.get('PRODUCTION_DOMAIN', 'rotationales.com')
-PUBLIC_IP = os.environ.get('PUBLIC_IP', '40.233.106.142')
 
 CORS_ALLOWED_ORIGINS = [
     "http://localhost",
@@ -187,19 +181,13 @@ CORS_ALLOWED_ORIGINS = [
     f"https://{PRODUCTION_DOMAIN}",
     f"https://www.{PRODUCTION_DOMAIN}",
     f"http://{PRODUCTION_DOMAIN}",
-    f"http://www.{PRODUCTION_DOMAIN}",
-    f"http://{PUBLIC_IP}",
-    f"https://{PUBLIC_IP}"
+    f"http://www.{PRODUCTION_DOMAIN}"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 # Additional CORS settings for better compatibility
 CORS_ALLOW_ALL_ORIGINS = False  # Keep this False for security
-CORS_ALLOWED_ORIGIN_REGEXES = [
-    rf"^http://{PUBLIC_IP.replace('.', r'\.')}(:\d+)?$",
-    rf"^https://{PUBLIC_IP.replace('.', r'\.')}(:\d+)?$",
-]
 
 # Allow common headers
 CORS_ALLOW_HEADERS = [
@@ -221,9 +209,7 @@ CSRF_TRUSTED_ORIGINS = [
     f"https://{PRODUCTION_DOMAIN}",
     f"https://www.{PRODUCTION_DOMAIN}",
     f"http://{PRODUCTION_DOMAIN}",
-    f"http://www.{PRODUCTION_DOMAIN}",
-    f"http://{PUBLIC_IP}",
-    f"https://{PUBLIC_IP}"
+    f"http://www.{PRODUCTION_DOMAIN}"
 ]
 
 # Default primary key field type

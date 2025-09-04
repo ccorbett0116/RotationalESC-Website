@@ -13,7 +13,7 @@ services:
       - .env
     environment:
       - DEBUG=${DEBUG:-True}
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,${PRODUCTION_DOMAIN},${PUBLIC_IP}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,${PRODUCTION_DOMAIN},www.${PRODUCTION_DOMAIN}
     networks:
       - rotational-network
 
