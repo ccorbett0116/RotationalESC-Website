@@ -57,6 +57,9 @@ pip-delete-this-directory.txt
 media/
 staticfiles/
 local_settings.py
+*.sqlite3
+*.sqlite
+*.db
 db.sqlite3-journal
 
 # Poetry

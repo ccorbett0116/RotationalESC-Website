@@ -99,6 +99,9 @@ export interface Order extends OrderData {
   order_number: string;
   status: string;
   payment_status: string;
+  stripe_payment_intent_id?: string;
+  stripe_payment_intent_client_secret?: string;
+  stripe_client_secret?: string; // For response from order creation
   items: Array<{
     id: number;
     product: Product;
@@ -108,6 +111,7 @@ export interface Order extends OrderData {
   }>;
   created_at: string;
   updated_at: string;
+  stripe_checkout_session_id?: string;
 }
 
 export interface OrderTotals {
@@ -135,7 +139,8 @@ export const apiService = {
   // Categories
   getCategories: async (): Promise<Category[]> => {
     const response = await api.get('/categories/');
-    return response.data;
+    // Handle both paginated and non-paginated responses
+    return Array.isArray(response.data) ? response.data : response.data.results || [];
   },
 
   // Products
@@ -173,6 +178,18 @@ export const apiService = {
 
   createOrder: async (orderData: OrderData): Promise<Order> => {
     const response = await api.post('/orders/', orderData);
+    return response.data;
+  },
+
+  confirmPayment: async (orderNumber: string, paymentIntentId: string): Promise<Order> => {
+    const response = await api.post(`/orders/${orderNumber}/confirm-payment/`, {
+      payment_intent_id: paymentIntentId
+    });
+    return response.data;
+  },
+
+  createCheckoutSession: async (orderNumber: string, orderItems?: Array<{ name: string; price: number; quantity: number }>): Promise<{ checkout_session_id: string; url: string }> => {
+    const response = await api.post(`/orders/${orderNumber}/create-checkout-session/`, orderItems ? { order_items: orderItems } : {});
     return response.data;
   },
 

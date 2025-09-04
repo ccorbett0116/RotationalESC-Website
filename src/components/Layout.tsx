@@ -89,11 +89,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   <div
                     key={item.name}
                     className="relative group"
+                    ref={dropdownRef}
                     onMouseEnter={() => {
                       setIsProductsOpen(true);
                     }}
                     onMouseLeave={() => {
-                      setTimeout(() => setIsProductsOpen(false), 200);
+                      setIsProductsOpen(false);
                     }}
                   >
                     <button
@@ -110,7 +111,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                     </button>
 
                     <div 
-                      className={`absolute right-0 mt-1 w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden transition-all duration-200 ${
+                      className={`absolute right-0 top-full w-48 bg-card border border-border rounded-md shadow-lg overflow-hidden transition-all duration-200 ${
                         isProductsOpen ? 'opacity-100 transform scale-100' : 'opacity-0 transform scale-95 pointer-events-none'
                       }`}
                     >
@@ -256,20 +257,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div>
               <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
               <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
-                {navigation.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
+                {navigation.map((item, idx) => {
+                  if (idx === navigation.length - 3) return null; // skip last one
+                  return (
+                      <li key={item.name}>
+                        <Link
+                            to={item.href}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+                      </li>
+                  );
+                })}
               </ul>
             </div>
 
-            
+
           </div>
 
           <div className="border-t border-border pt-8 mt-8">

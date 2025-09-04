@@ -5,24 +5,25 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CreditCard, Shield, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
+// import StripePaymentWrapper from "@/components/StripePayment"; // Replaced by Stripe Checkout redirect
 
 const Checkout = () => {
   const navigate = useNavigate();
   const { items: cartItems, clearCart } = useCart();
   const { toast } = useToast();
-  const [paymentMethod, setPaymentMethod] = useState("card");
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchingProducts, setFetchingProducts] = useState(true);
+  const [currentStep, setCurrentStep] = useState<'form'>('form');
+  const [orderCreated, setOrderCreated] = useState<any>(null);
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
   const [orderTotals, setOrderTotals] = useState({
     subtotal: 0,
     tax_amount: 0,
@@ -99,11 +100,69 @@ const Checkout = () => {
   const handleInputChange = (field: string, value: string) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     
+    // Clear error for this field when user starts typing
+    if (formErrors[field]) {
+      setFormErrors(prev => ({ ...prev, [field]: '' }));
+    }
+    
     // Copy billing address to shipping if same address is checked
     if (sameAsShipping && field.startsWith('billing_')) {
       const shippingField = field.replace('billing_', 'shipping_');
       setFormData(prev => ({ ...prev, [shippingField]: value }));
     }
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    // Required fields validation
+    if (!formData.customer_first_name.trim()) {
+      errors.customer_first_name = 'First name is required';
+    }
+    if (!formData.customer_last_name.trim()) {
+      errors.customer_last_name = 'Last name is required';
+    }
+    if (!formData.customer_email.trim()) {
+      errors.customer_email = 'Email is required';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.customer_email)) {
+      errors.customer_email = 'Please enter a valid email address';
+    }
+    if (!formData.billing_address_line1.trim()) {
+      errors.billing_address_line1 = 'Billing address is required';
+    }
+    if (!formData.billing_city.trim()) {
+      errors.billing_city = 'City is required';
+    }
+    if (!formData.billing_state.trim()) {
+      errors.billing_state = 'State/Province is required';
+    }
+    if (!formData.billing_postal_code.trim()) {
+      errors.billing_postal_code = 'ZIP/Postal code is required';
+    }
+
+    // Phone validation (if provided)
+    if (formData.customer_phone && !/^[\+]?[\d\s\-\(\)]+$/.test(formData.customer_phone)) {
+      errors.customer_phone = 'Please enter a valid phone number';
+    }
+
+    // If different shipping address, validate those fields too
+    if (!sameAsShipping) {
+      if (!formData.shipping_address_line1.trim()) {
+        errors.shipping_address_line1 = 'Shipping address is required';
+      }
+      if (!formData.shipping_city.trim()) {
+        errors.shipping_city = 'Shipping city is required';
+      }
+      if (!formData.shipping_state.trim()) {
+        errors.shipping_state = 'Shipping state/province is required';
+      }
+      if (!formData.shipping_postal_code.trim()) {
+        errors.shipping_postal_code = 'Shipping ZIP/postal code is required';
+      }
+    }
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
   const handleSameAsShippingChange = (checked: boolean) => {
@@ -123,6 +182,17 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form first
+    if (!validateForm()) {
+      toast({
+        title: "Please fix the errors",
+        description: "Some required fields are missing or invalid.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -131,7 +201,7 @@ const Checkout = () => {
         subtotal: orderTotals.subtotal,
         tax_amount: orderTotals.tax_amount,
         total_amount: orderTotals.total_amount,
-        payment_method: paymentMethod,
+        payment_method: 'card', // Always use Stripe
         order_items: cartItems.map((item, index) => ({
           product_id: item.productId,
           quantity: item.quantity,
@@ -140,16 +210,25 @@ const Checkout = () => {
       };
 
       const order = await apiService.createOrder(orderData);
+      setOrderCreated(order);
       
-      // Clear the cart after successful order
-      clearCart();
-      
-      toast({
-        title: "Order placed successfully!",
-        description: `Order #${order.order_number} has been created.`,
-      });
-      
-      navigate(`/order-confirmation/${order.order_number}`);
+      // Immediately create a Stripe Checkout Session and redirect
+      try {
+        const sessionResp = await apiService.createCheckoutSession(order.order_number, orderData.order_items.map(oi => ({
+          name: cartProducts.find(p => p.id === oi.product_id)?.name || 'Product',
+          price: oi.price,
+          quantity: oi.quantity,
+        })));
+        if (sessionResp.url) {
+          window.location.href = sessionResp.url;
+          return;
+        } else {
+          throw new Error('Failed to start hosted checkout');
+        }
+      } catch (err) {
+        console.error('Error creating checkout session', err);
+        throw err;
+      }
     } catch (error) {
       console.error('Error creating order:', error);
       toast({
@@ -160,6 +239,25 @@ const Checkout = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePaymentSuccess = () => {
+    clearCart();
+    
+    toast({
+      title: "Payment successful!",
+      description: `Order #${orderCreated.order_number} has been processed.`,
+    });
+    
+    navigate(`/order-confirmation/${orderCreated.order_number}`);
+  };
+
+  const handlePaymentError = (error: string) => {
+    toast({
+      title: "Payment failed",
+      description: error,
+      variant: "destructive",
+    });
   };
 
   return (
@@ -200,33 +298,45 @@ const Checkout = () => {
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">First Name *</Label>
                     <Input 
                       id="firstName" 
                       value={formData.customer_first_name}
                       onChange={(e) => handleInputChange('customer_first_name', e.target.value)}
+                      className={formErrors.customer_first_name ? 'border-red-500' : ''}
                       required 
                     />
+                    {formErrors.customer_first_name && (
+                      <p className="text-sm text-red-500">{formErrors.customer_first_name}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">Last Name *</Label>
                     <Input 
                       id="lastName" 
                       value={formData.customer_last_name}
                       onChange={(e) => handleInputChange('customer_last_name', e.target.value)}
+                      className={formErrors.customer_last_name ? 'border-red-500' : ''}
                       required 
                     />
+                    {formErrors.customer_last_name && (
+                      <p className="text-sm text-red-500">{formErrors.customer_last_name}</p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="email">Email *</Label>
                   <Input 
                     id="email" 
                     type="email"
                     value={formData.customer_email}
                     onChange={(e) => handleInputChange('customer_email', e.target.value)}
+                    className={formErrors.customer_email ? 'border-red-500' : ''}
                     required 
                   />
+                  {formErrors.customer_email && (
+                    <p className="text-sm text-red-500">{formErrors.customer_email}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="phone">Phone (Optional)</Label>
@@ -235,7 +345,12 @@ const Checkout = () => {
                     type="tel"
                     value={formData.customer_phone}
                     onChange={(e) => handleInputChange('customer_phone', e.target.value)}
+                    className={formErrors.customer_phone ? 'border-red-500' : ''}
+                    placeholder="(555) 123-4567"
                   />
+                  {formErrors.customer_phone && (
+                    <p className="text-sm text-red-500">{formErrors.customer_phone}</p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -247,13 +362,17 @@ const Checkout = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="billingAddress">Address</Label>
+                  <Label htmlFor="billingAddress">Address *</Label>
                   <Input 
                     id="billingAddress" 
                     value={formData.billing_address_line1}
                     onChange={(e) => handleInputChange('billing_address_line1', e.target.value)}
+                    className={formErrors.billing_address_line1 ? 'border-red-500' : ''}
                     required 
                   />
+                  {formErrors.billing_address_line1 && (
+                    <p className="text-sm text-red-500">{formErrors.billing_address_line1}</p>
+                  )}
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="billingAddress2">Address Line 2 (Optional)</Label>
@@ -265,31 +384,43 @@ const Checkout = () => {
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="space-y-2">
-                    <Label htmlFor="billingCity">City</Label>
+                    <Label htmlFor="billingCity">City *</Label>
                     <Input 
                       id="billingCity" 
                       value={formData.billing_city}
                       onChange={(e) => handleInputChange('billing_city', e.target.value)}
+                      className={formErrors.billing_city ? 'border-red-500' : ''}
                       required 
                     />
+                    {formErrors.billing_city && (
+                      <p className="text-sm text-red-500">{formErrors.billing_city}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingState">State/Province</Label>
+                    <Label htmlFor="billingState">State/Province *</Label>
                     <Input 
                       id="billingState" 
                       value={formData.billing_state}
                       onChange={(e) => handleInputChange('billing_state', e.target.value)}
+                      className={formErrors.billing_state ? 'border-red-500' : ''}
                       required 
                     />
+                    {formErrors.billing_state && (
+                      <p className="text-sm text-red-500">{formErrors.billing_state}</p>
+                    )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingZip">ZIP/Postal Code</Label>
+                    <Label htmlFor="billingZip">ZIP/Postal Code *</Label>
                     <Input 
                       id="billingZip" 
                       value={formData.billing_postal_code}
                       onChange={(e) => handleInputChange('billing_postal_code', e.target.value)}
+                      className={formErrors.billing_postal_code ? 'border-red-500' : ''}
                       required 
                     />
+                    {formErrors.billing_postal_code && (
+                      <p className="text-sm text-red-500">{formErrors.billing_postal_code}</p>
+                    )}
                   </div>
                 </div>
                 <div className="space-y-2">
@@ -325,13 +456,17 @@ const Checkout = () => {
                 {!sameAsShipping && (
                   <>
                     <div className="space-y-2">
-                      <Label htmlFor="shippingAddress">Address</Label>
+                      <Label htmlFor="shippingAddress">Address *</Label>
                       <Input 
                         id="shippingAddress" 
                         value={formData.shipping_address_line1}
                         onChange={(e) => handleInputChange('shipping_address_line1', e.target.value)}
+                        className={formErrors.shipping_address_line1 ? 'border-red-500' : ''}
                         required 
                       />
+                      {formErrors.shipping_address_line1 && (
+                        <p className="text-sm text-red-500">{formErrors.shipping_address_line1}</p>
+                      )}
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="shippingAddress2">Address Line 2 (Optional)</Label>
@@ -343,31 +478,43 @@ const Checkout = () => {
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="shippingCity">City</Label>
+                        <Label htmlFor="shippingCity">City *</Label>
                         <Input 
                           id="shippingCity" 
                           value={formData.shipping_city}
                           onChange={(e) => handleInputChange('shipping_city', e.target.value)}
+                          className={formErrors.shipping_city ? 'border-red-500' : ''}
                           required 
                         />
+                        {formErrors.shipping_city && (
+                          <p className="text-sm text-red-500">{formErrors.shipping_city}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingState">State/Province</Label>
+                        <Label htmlFor="shippingState">State/Province *</Label>
                         <Input 
                           id="shippingState" 
                           value={formData.shipping_state}
                           onChange={(e) => handleInputChange('shipping_state', e.target.value)}
+                          className={formErrors.shipping_state ? 'border-red-500' : ''}
                           required 
                         />
+                        {formErrors.shipping_state && (
+                          <p className="text-sm text-red-500">{formErrors.shipping_state}</p>
+                        )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingZip">ZIP/Postal Code</Label>
+                        <Label htmlFor="shippingZip">ZIP/Postal Code *</Label>
                         <Input 
                           id="shippingZip" 
                           value={formData.shipping_postal_code}
                           onChange={(e) => handleInputChange('shipping_postal_code', e.target.value)}
+                          className={formErrors.shipping_postal_code ? 'border-red-500' : ''}
                           required 
                         />
+                        {formErrors.shipping_postal_code && (
+                          <p className="text-sm text-red-500">{formErrors.shipping_postal_code}</p>
+                        )}
                       </div>
                     </div>
                     <div className="space-y-2">
@@ -387,86 +534,7 @@ const Checkout = () => {
               </CardContent>
             </Card>
 
-            {/* Payment Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Payment Information</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="zip">ZIP Code</Label>
-                  <Input id="zip" required />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Phone Number</Label>
-                  <Input id="phone" type="tel" />
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Payment Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <CreditCard className="h-5 w-5" />
-                  Payment Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <RadioGroup value={paymentMethod} onValueChange={setPaymentMethod}>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="card" id="card" />
-                    <Label htmlFor="card">Credit/Debit Card</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="purchase-order" id="purchase-order" />
-                    <Label htmlFor="purchase-order">Purchase Order</Label>
-                  </div>
-                </RadioGroup>
-
-                {paymentMethod === "card" && (
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="cardNumber">Card Number</Label>
-                      <Input id="cardNumber" placeholder="1234 5678 9012 3456" />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="expiry">Expiry Date</Label>
-                        <Input id="expiry" placeholder="MM/YY" />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="cvv">CVV</Label>
-                        <Input id="cvv" placeholder="123" />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="cardName">Name on Card</Label>
-                      <Input id="cardName" />
-                    </div>
-                  </div>
-                )}
-
-                {paymentMethod === "purchase-order" && (
-                  <div className="space-y-4 mt-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="poNumber">Purchase Order Number</Label>
-                      <Input id="poNumber" />
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Net 30 terms will apply. Order will be processed upon PO approval.
-                    </p>
-                  </div>
-                )}
-
-                <div className="flex items-center space-x-2">
-                  <Checkbox id="billing-same" defaultChecked />
-                  <Label htmlFor="billing-same" className="text-sm">
-                    Billing address is the same as shipping address
-                  </Label>
-                </div>
-              </CardContent>
-            </Card>
+            {/* Stripe hosted Checkout handles payment externally now */}
           </div>
 
           {/* Order Summary */}
@@ -535,14 +603,18 @@ const Checkout = () => {
                   <span>${orderTotals.total_amount.toFixed(2)}</span>
                 </div>
 
-                <Button 
-                  size="lg" 
-                  className="w-full" 
-                  onClick={handleSubmit}
-                  disabled={loading || cartItems.length === 0}
-                >
-                  {loading ? "Processing..." : "Place Order"}
-                </Button>
+                {currentStep === 'form' && (
+                  <Button 
+                    size="lg" 
+                    className="w-full" 
+                    onClick={handleSubmit}
+                    disabled={loading || cartItems.length === 0}
+                  >
+                    {loading ? "Processing..." : "Pay with Stripe"}
+                  </Button>
+                )}
+
+                {/* Payment step removed for hosted Checkout */}
 
                 <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
                   <Shield className="h-3 w-3" />

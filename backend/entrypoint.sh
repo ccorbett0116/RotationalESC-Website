@@ -15,7 +15,20 @@ if [ ! -f "/app/database/db.sqlite3" ]; then
     python manage.py migrate
 else
     echo "Database file found. Running migrations to ensure schema is up to date..."
-    python manage.py migrate
+    # Try to run migrations, but handle conflicts automatically
+    if ! python manage.py migrate 2>&1; then
+        echo "Migration conflict detected. Attempting to auto-merge..."
+        # Check if the error mentions conflicting migrations
+        if python manage.py migrate 2>&1 | grep -q "Conflicting migrations detected"; then
+            echo "Running makemigrations --merge to resolve conflicts..."
+            echo "y" | python manage.py makemigrations --merge
+            echo "Re-running migrations after merge..."
+            python manage.py migrate
+        else
+            echo "Migration failed for non-conflict reasons. Exiting."
+            exit 1
+        fi
+    fi
 fi
 
 # Check database connection

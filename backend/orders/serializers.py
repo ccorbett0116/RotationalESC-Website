@@ -28,6 +28,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'shipping_state', 'shipping_postal_code', 'shipping_country',
             'subtotal', 'tax_amount', 'total_amount',
             'payment_method', 'payment_status', 
+            'stripe_payment_intent_id', 'stripe_payment_intent_client_secret', 'stripe_checkout_session_id',
             'items', 'order_items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['order_number', 'created_at', 'updated_at']
@@ -54,7 +55,7 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'billing_city', 'billing_state', 'billing_postal_code', 'billing_country',
             'shipping_address_line1', 'shipping_address_line2', 'shipping_city',
             'shipping_state', 'shipping_postal_code', 'shipping_country',
-            'subtotal', 'tax_amount', 'total_amount',
+            'subtotal', 'tax_amount', 'total_amount', 'stripe_checkout_session_id',
             'payment_method', 'order_items'
         ]
 
