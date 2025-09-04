@@ -7,6 +7,15 @@ fi
 
 echo "Starting nginx for domain: $PRODUCTION_DOMAIN"
 
+# Create runtime configuration file for frontend
+echo "Creating runtime configuration..."
+cat > /usr/share/nginx/html/config.js << EOF
+window.ENV = {
+  VITE_STRIPE_PUBLISHABLE_KEY: "${VITE_STRIPE_PUBLISHABLE_KEY:-}",
+  VITE_API_URL: "${VITE_API_URL:-http://localhost:8000}"
+};
+EOF
+
 # Substitute environment variables in nginx config template
 envsubst '${PRODUCTION_DOMAIN}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
