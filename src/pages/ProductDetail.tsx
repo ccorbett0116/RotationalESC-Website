@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ArrowLeft, ShoppingCart, Heart, Share2 } from "lucide-react";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { ArrowLeft, ShoppingCart, Share2, ZoomIn } from "lucide-react";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -57,6 +58,37 @@ const ProductDetail = () => {
       description: `${quantity} x ${product.name} added to your cart`,
     });
   };
+
+  const handleShare = async () => {
+    if (!product) return;
+    
+    const shareData = {
+      title: product.name,
+      text: `Check out this ${product.name} from Rotational Equipment Services`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        // Use native share API if available (mobile devices)
+        await navigator.share(shareData);
+      } else {
+        // Fallback to copying to clipboard
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link copied!",
+          description: "Product link has been copied to your clipboard",
+        });
+      }
+    } catch (error) {
+      // If both fail, show error message
+      toast({
+        title: "Share failed",
+        description: "Unable to share this product",
+        variant: "destructive",
+      });
+    }
+  };
   
   if (loading) {
     return (
@@ -104,13 +136,31 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden">
+            <div className="aspect-video bg-muted rounded-lg overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
-                <img
-                  src={product.images[currentImageIndex]?.image_url || "/api/placeholder/600/600"}
-                  alt={product.images[currentImageIndex]?.alt_text || product.name}
-                  className="w-full h-full object-cover"
-                />
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <div className="relative cursor-pointer">
+                      <img
+                        src={product.images[currentImageIndex]?.image_url || "/api/placeholder/600/400"}
+                        alt={product.images[currentImageIndex]?.alt_text || product.name}
+                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                        <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      </div>
+                    </div>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                    <div className="relative">
+                      <img
+                        src={product.images[currentImageIndex]?.image_url || "/api/placeholder/800/600"}
+                        alt={product.images[currentImageIndex]?.alt_text || product.name}
+                        className="w-full h-auto max-h-[85vh] object-contain"
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <span className="text-muted-foreground text-lg">No Image Available</span>
@@ -125,14 +175,14 @@ const ProductDetail = () => {
                   <button
                     key={image.id}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 ${
-                      currentImageIndex === index ? 'border-primary' : 'border-transparent'
+                    className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
+                      currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary/50'
                     }`}
                   >
                     <img
                       src={image.image_url}
                       alt={image.alt_text || `${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-contain"
                     />
                   </button>
                 ))}
@@ -211,10 +261,7 @@ const ProductDetail = () => {
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   {product.in_stock ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button variant="outline" size="lg">
-                  <Heart className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="lg">
+                <Button variant="outline" size="lg" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -272,14 +319,32 @@ const ProductDetail = () => {
             <h2 className="text-2xl font-bold text-foreground mb-8">Related Products</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <Card key={relatedProduct.id} className="overflow-hidden">
-                  <div className="aspect-video bg-muted">
+                <Card key={relatedProduct.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
+                  <div className="aspect-video bg-muted relative group">
                     {relatedProduct.primary_image ? (
-                      <img
-                        src={relatedProduct.primary_image}
-                        alt={relatedProduct.name}
-                        className="w-full h-full object-cover"
-                      />
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <div className="relative cursor-pointer">
+                            <img
+                              src={relatedProduct.primary_image}
+                              alt={relatedProduct.name}
+                              className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
+                            />
+                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
+                              <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                            </div>
+                          </div>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
+                          <div className="relative">
+                            <img
+                              src={relatedProduct.primary_image}
+                              alt={relatedProduct.name}
+                              className="w-full h-auto max-h-[85vh] object-contain"
+                            />
+                          </div>
+                        </DialogContent>
+                      </Dialog>
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                         <span className="text-muted-foreground">No Image</span>

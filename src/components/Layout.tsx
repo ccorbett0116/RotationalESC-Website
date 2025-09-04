@@ -255,12 +255,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                <span className="font-bold text-lg text-foreground">{companyInfo?.name || "Rotational Equipment Services"}</span>
+                <span className="font-bold text-lg text-foreground">{companyInfo?.name || ""}</span>
               </div>
-              <p className="text-muted-foreground mb-4">{companyInfo?.tagline || "Your trusted partner for industrial rotational equipment"}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.address || "Loading..."}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.phone || "Loading..."}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.email || "Loading..."}</p>
+              <p className="text-muted-foreground mb-4">{companyInfo?.tagline || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.address || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.phone || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.email || ""}</p>
             </div>
 
             {/* Quick Links */}
@@ -285,7 +285,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {companyInfo?.name || "Rotational Equipment Services"}. All rights reserved.
+              © {new Date().getFullYear()} {companyInfo?.name || ""}. All rights reserved.
             </p>
           </div>
         </div>

@@ -140,7 +140,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.address || "Loading..."}
+                  {companyInfo?.address || ""}
                 </p>
               </CardContent>
             </Card>
@@ -154,7 +154,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.phone || "Loading..."}
+                  {companyInfo?.phone || ""}
                 </p>
               </CardContent>
             </Card>
@@ -168,7 +168,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.email || "Loading..."}
+                  {companyInfo?.email || ""}
                 </p>
               </CardContent>
             </Card>
@@ -182,7 +182,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.hours || "Loading..."}
+                  {companyInfo?.hours || ""}
                 </p>
               </CardContent>
             </Card>
@@ -294,7 +294,7 @@ const Contact = () => {
                 <p className="text-muted-foreground">
                   Interactive Map Placeholder
                   <br />
-                  {companyInfo?.address || "Loading address..."}
+                  {companyInfo?.address || ""}
                 </p>
               </div>
             </CardContent>

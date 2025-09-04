@@ -23,15 +23,3 @@ def company_info(request):
     if company:
         serializer = CompanyInfoSerializer(company)
         return Response(serializer.data)
-    else:
-        return Response({
-            'name': 'Rotational Equipment Services',
-            'tagline': 'Your trusted partner for industrial rotational equipment',
-            'description': 'We provide comprehensive services for industrial rotational equipment including pumps, compressors, motors, bearings, and seals.',
-            'address': '1234 Industrial Blvd, Equipment City, EC 12345',
-            'phone': '(555) 123-4567',
-            'email': 'info@rotationalequipment.com',
-            'hours': 'Monday - Friday: 8:00 AM - 5:00 PM',
-            'founded': '1985',
-            'employees': '50+'
-        })

@@ -54,7 +54,8 @@ class ProductImage(models.Model):
         super().clean()
         
         # Check for duplicate order=0 (primary) images within the same product
-        if self.order == 0:
+        # Only perform this check if the product is already saved
+        if self.order == 0 and self.product and self.product.pk:
             existing_primary = ProductImage.objects.filter(
                 product=self.product,
                 order=0
@@ -67,8 +68,21 @@ class ProductImage(models.Model):
     
     def save(self, *args, **kwargs):
         """Override save to call clean validation"""
-        self.full_clean()
+        # Only call full_clean if the product is saved (to avoid related filter issues)
+        if self.product and self.product.pk:
+            self.full_clean()
         super().save(*args, **kwargs)
+        
+        # After saving, perform the primary image validation if needed
+        if self.order == 0 and self.product and self.product.pk:
+            other_primary = ProductImage.objects.filter(
+                product=self.product,
+                order=0
+            ).exclude(pk=self.pk)
+            
+            if other_primary.exists():
+                # Update other primary images to order=1
+                other_primary.update(order=1)
 
     def __str__(self):
         filename = self.filename or "No filename"
