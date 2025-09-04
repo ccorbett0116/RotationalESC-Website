@@ -45,14 +45,7 @@ def calculate_order_total(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
-    # Calculate tax based on country
-    if billing_country == 'CA':
-        # Canadian GST/HST (average 13%)
-        tax_rate = Decimal('0.13')
-    else:
-        # US sales tax (average 10%)
-        tax_rate = Decimal('0.10')
-    
+    tax_rate = Decimal('0.13')
     tax_amount = subtotal * tax_rate
     total_amount = subtotal + tax_amount
     
