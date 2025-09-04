@@ -8,7 +8,7 @@ import { Separator } from "@/components/ui/separator";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { CreditCard, Truck, Shield, ArrowLeft, ShoppingBag } from "lucide-react";
+import { CreditCard, Shield, ArrowLeft, ShoppingBag } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
@@ -20,14 +20,12 @@ const Checkout = () => {
   const { items: cartItems, clearCart } = useCart();
   const { toast } = useToast();
   const [paymentMethod, setPaymentMethod] = useState("card");
-  const [shippingMethod, setShippingMethod] = useState("standard");
   const [sameAsShipping, setSameAsShipping] = useState(true);
   const [loading, setLoading] = useState(false);
   const [fetchingProducts, setFetchingProducts] = useState(true);
   const [orderTotals, setOrderTotals] = useState({
     subtotal: 0,
     tax_amount: 0,
-    shipping_amount: 0,
     total_amount: 0
   });
 
@@ -75,7 +73,7 @@ const Checkout = () => {
         
         const totalData = await apiService.calculateOrderTotal({
           items: orderItems,
-          shipping_method: shippingMethod
+          billing_country: formData.billing_country
         });
         setOrderTotals(totalData);
       } catch (error) {
@@ -91,7 +89,7 @@ const Checkout = () => {
     };
 
     fetchCartProducts();
-  }, [cartItems, shippingMethod, toast]);
+  }, [cartItems, formData.billing_country, toast]);
 
   const cartWithDetails = cartItems.map((item, index) => ({
     ...item,
@@ -132,10 +130,8 @@ const Checkout = () => {
         ...formData,
         subtotal: orderTotals.subtotal,
         tax_amount: orderTotals.tax_amount,
-        shipping_amount: orderTotals.shipping_amount,
         total_amount: orderTotals.total_amount,
         payment_method: paymentMethod,
-        shipping_method: shippingMethod,
         order_items: cartItems.map((item, index) => ({
           product_id: item.productId,
           quantity: item.quantity,
@@ -197,9 +193,8 @@ const Checkout = () => {
             {/* Shipping Information */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Truck className="h-5 w-5" />
-                  Shipping Information
+                <CardTitle>
+                  Contact & Billing Information
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -279,7 +274,7 @@ const Checkout = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingState">State</Label>
+                    <Label htmlFor="billingState">State/Province</Label>
                     <Input 
                       id="billingState" 
                       value={formData.billing_state}
@@ -288,7 +283,7 @@ const Checkout = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingZip">ZIP Code</Label>
+                    <Label htmlFor="billingZip">ZIP/Postal Code</Label>
                     <Input 
                       id="billingZip" 
                       value={formData.billing_postal_code}
@@ -296,6 +291,18 @@ const Checkout = () => {
                       required 
                     />
                   </div>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="billingCountry">Country</Label>
+                  <Select value={formData.billing_country} onValueChange={(value) => handleInputChange('billing_country', value)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select country" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="US">United States</SelectItem>
+                      <SelectItem value="CA">Canada</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
               </CardContent>
             </Card>
@@ -345,7 +352,7 @@ const Checkout = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingState">State</Label>
+                        <Label htmlFor="shippingState">State/Province</Label>
                         <Input 
                           id="shippingState" 
                           value={formData.shipping_state}
@@ -354,7 +361,7 @@ const Checkout = () => {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingZip">ZIP Code</Label>
+                        <Label htmlFor="shippingZip">ZIP/Postal Code</Label>
                         <Input 
                           id="shippingZip" 
                           value={formData.shipping_postal_code}
@@ -362,6 +369,18 @@ const Checkout = () => {
                           required 
                         />
                       </div>
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shippingCountry">Country</Label>
+                      <Select value={formData.shipping_country} onValueChange={(value) => handleInputChange('shipping_country', value)}>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select country" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="US">United States</SelectItem>
+                          <SelectItem value="CA">Canada</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
                   </>
                 )}
@@ -382,37 +401,6 @@ const Checkout = () => {
                   <Label htmlFor="phone">Phone Number</Label>
                   <Input id="phone" type="tel" />
                 </div>
-              </CardContent>
-            </Card>
-
-            {/* Shipping Method */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Shipping Method</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <RadioGroup value={shippingMethod} onValueChange={setShippingMethod}>
-                  <div className="flex items-center space-x-2 p-3 border border-border rounded">
-                    <RadioGroupItem value="standard" id="standard" />
-                    <div className="flex-1">
-                      <Label htmlFor="standard" className="font-medium">
-                        Standard Shipping (5-7 business days)
-                      </Label>
-                      <p className="text-sm text-muted-foreground">
-                        {orderTotals.subtotal > 5000 ? "FREE" : "$150.00"}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center space-x-2 p-3 border border-border rounded">
-                    <RadioGroupItem value="express" id="express" />
-                    <div className="flex-1">
-                      <Label htmlFor="express" className="font-medium">
-                        Express Shipping (2-3 business days)
-                      </Label>
-                      <p className="text-sm text-muted-foreground">$250.00</p>
-                    </div>
-                  </div>
-                </RadioGroup>
               </CardContent>
             </Card>
 
@@ -490,32 +478,37 @@ const Checkout = () => {
               <CardContent className="space-y-4">
                 {/* Order Items */}
                 <div className="space-y-3">
-                  {cartWithDetails.map((item) => (
-                    <div key={item.productId} className="flex justify-between items-start">
-                      <div className="flex gap-3">
-                        <div className="w-12 h-12 bg-muted rounded overflow-hidden">
-                          {item.product.primary_image ? (
-                            <img
-                              src={item.product.primary_image}
-                              alt={item.product.name}
-                              className="w-full h-full object-cover"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                              <span className="text-xs text-muted-foreground">No Image</span>
-                            </div>
-                          )}
+                  {cartWithDetails.map((item) => {
+                    // Get the image at order 0 from the images array
+                    const imageUrl = item.product.images?.find(img => img.order === 0)?.image_url;
+                    
+                    return (
+                      <div key={item.productId} className="flex justify-between items-start">
+                        <div className="flex gap-3">
+                          <div className="w-12 h-12 bg-muted rounded overflow-hidden">
+                            {imageUrl ? (
+                              <img
+                                src={imageUrl}
+                                alt={item.product.name}
+                                className="w-full h-full object-cover"
+                              />
+                            ) : (
+                              <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                                <span className="text-xs text-muted-foreground">No Image</span>
+                              </div>
+                            )}
+                          </div>
+                          <div>
+                            <p className="font-medium text-sm">{item.product.name}</p>
+                            <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
+                          </div>
                         </div>
-                        <div>
-                          <p className="font-medium text-sm">{item.product.name}</p>
-                          <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
-                        </div>
+                        <p className="font-medium text-sm">
+                          ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                        </p>
                       </div>
-                      <p className="font-medium text-sm">
-                        ${(Number(item.product.price) * item.quantity).toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 <Separator />
@@ -527,18 +520,11 @@ const Checkout = () => {
                     <span>${orderTotals.subtotal.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span>Shipping</span>
-                    <span>
-                      {orderTotals.shipping_amount === 0 ? (
-                        <span className="text-green-600">FREE</span>
-                      ) : (
-                        `$${orderTotals.shipping_amount.toFixed(2)}`
-                      )}
-                    </span>
-                  </div>
-                  <div className="flex justify-between">
                     <span>Tax</span>
                     <span>${orderTotals.tax_amount.toFixed(2)}</span>
+                  </div>
+                  <div className="text-xs text-muted-foreground mt-2">
+                    * Shipping will be calculated and communicated via email
                   </div>
                 </div>
 

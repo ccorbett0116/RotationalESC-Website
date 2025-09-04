@@ -26,9 +26,9 @@ class OrderSerializer(serializers.ModelSerializer):
             'billing_state', 'billing_postal_code', 'billing_country',
             'shipping_address_line1', 'shipping_address_line2', 'shipping_city',
             'shipping_state', 'shipping_postal_code', 'shipping_country',
-            'subtotal', 'tax_amount', 'shipping_amount', 'total_amount',
-            'payment_method', 'payment_status', 'shipping_method', 
-            'tracking_number', 'items', 'order_items', 'created_at', 'updated_at'
+            'subtotal', 'tax_amount', 'total_amount',
+            'payment_method', 'payment_status', 
+            'items', 'order_items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['order_number', 'created_at', 'updated_at']
 
@@ -54,8 +54,8 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'billing_city', 'billing_state', 'billing_postal_code', 'billing_country',
             'shipping_address_line1', 'shipping_address_line2', 'shipping_city',
             'shipping_state', 'shipping_postal_code', 'shipping_country',
-            'subtotal', 'tax_amount', 'shipping_amount', 'total_amount',
-            'payment_method', 'shipping_method', 'order_items'
+            'subtotal', 'tax_amount', 'total_amount',
+            'payment_method', 'order_items'
         ]
 
     def create(self, validated_data):

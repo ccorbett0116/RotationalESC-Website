@@ -84,49 +84,26 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
-              {/* Primary links (exclude Products) */}
-              <div className="flex items-center space-x-6">
-                {navigation
-                  .filter((item) => !item.isDropdown)
-                  .map((item) => (
-                    <Link
-                      key={item.name}
-                      to={item.href}
-                      className={`px-3 py-2 text-xl font-medium transition-colors ${
-                        isActive(item.href)
+              {navigation.map((item) => (
+                'isDropdown' in item ? (
+                  <div
+                    key={item.name}
+                    className="relative group"
+                    onMouseEnter={() => {
+                      setIsProductsOpen(true);
+                    }}
+                    onMouseLeave={() => {
+                      setTimeout(() => setIsProductsOpen(false), 200);
+                    }}
+                  >
+                    <button
+                      className={`px-3 py-2 text-xl font-medium transition-colors inline-flex items-center ${
+                        isActive(item.href, item.isDropdown)
                           ? 'text-primary border-b-2 border-primary'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
                     >
                       {item.name}
-                    </Link>
-                  ))}
-              </div>
-
-              {/* Products — separated into its own container */}
-              {(() => {
-                const product = navigation.find((n) => n.isDropdown);
-                if (!product) return null;
-                let closeTimeout: NodeJS.Timeout;
-                return (
-                <div
-                    className="relative group"
-                    onMouseEnter={() => {
-                      clearTimeout(closeTimeout);
-                      setIsProductsOpen(true);
-                    }}
-                    onMouseLeave={() => {
-                      closeTimeout = setTimeout(() => setIsProductsOpen(false), 200);
-                    }}
-                >
-                <button
-                      className={`px-3 py-2 text-xl font-medium transition-colors inline-flex items-center ${
-                        isActive(product.href, product.isDropdown)
-                          ? 'text-primary border-b-2 border-primary'
-                          : 'text-muted-foreground hover:text-foreground'
-                      }`}
-                    >
-                      {product.name}
                       <ChevronDown
                         className={`ml-1 h-4 w-4 transition-transform duration-200 group-hover:rotate-180`}
                       />
@@ -138,7 +115,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       }`}
                     >
                       <div className="flex flex-col py-2">
-                        {product.categories.map((category) => (
+                        {item.categories.map((category) => (
                           <Link
                             key={category.title}
                             to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
@@ -150,8 +127,20 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       </div>
                     </div>
                   </div>
-                );
-              })()}
+                ) : (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={`px-3 py-2 text-xl font-medium transition-colors ${
+                      isActive(item.href)
+                        ? 'text-primary border-b-2 border-primary'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {item.name}
+                  </Link>
+                )
+              ))}
             </nav>
 
             {/* Right side icons */}

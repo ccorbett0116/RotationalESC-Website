@@ -31,6 +31,7 @@ def calculate_order_total(request):
     Calculate order totals based on cart items
     """
     cart_items = request.data.get('items', [])
+    billing_country = request.data.get('billing_country', 'US')
     subtotal = 0
     
     for item in cart_items:
@@ -44,24 +45,21 @@ def calculate_order_total(request):
                 status=status.HTTP_400_BAD_REQUEST
             )
     
-    # Calculate tax (10%)
-    tax_rate = Decimal('0.10')
-    tax_amount = subtotal * tax_rate
-    
-    # Calculate shipping
-    shipping_method = request.data.get('shipping_method', 'standard')
-    if shipping_method == 'express':
-        shipping_amount = Decimal('250.00')
-    elif subtotal > 5000:
-        shipping_amount = Decimal('0.00')  # Free shipping over $5000
+    # Calculate tax based on country
+    if billing_country == 'CA':
+        # Canadian GST/HST (average 13%)
+        tax_rate = Decimal('0.13')
     else:
-        shipping_amount = Decimal('150.00')
+        # US sales tax (average 10%)
+        tax_rate = Decimal('0.10')
     
-    total_amount = subtotal + tax_amount + shipping_amount
+    tax_amount = subtotal * tax_rate
+    total_amount = subtotal + tax_amount
     
     return Response({
         'subtotal': subtotal,
         'tax_amount': tax_amount,
-        'shipping_amount': shipping_amount,
-        'total_amount': total_amount
+        'total_amount': total_amount,
+        'tax_rate': tax_rate,
+        'billing_country': billing_country
     })

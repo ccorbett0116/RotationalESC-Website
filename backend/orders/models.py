@@ -9,6 +9,11 @@ class Order(models.Model):
         ('delivered', 'Delivered'),
         ('cancelled', 'Cancelled'),
     ]
+    
+    COUNTRY_CHOICES = [
+        ('US', 'United States'),
+        ('CA', 'Canada'),
+    ]
 
     # Customer information (no account required)
     customer_email = models.EmailField()
@@ -22,7 +27,7 @@ class Order(models.Model):
     billing_city = models.CharField(max_length=100)
     billing_state = models.CharField(max_length=100)
     billing_postal_code = models.CharField(max_length=20)
-    billing_country = models.CharField(max_length=100, default='US')
+    billing_country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, default='US')
 
     # Shipping address (can be same as billing)
     shipping_address_line1 = models.CharField(max_length=255)
@@ -30,23 +35,20 @@ class Order(models.Model):
     shipping_city = models.CharField(max_length=100)
     shipping_state = models.CharField(max_length=100)
     shipping_postal_code = models.CharField(max_length=20)
-    shipping_country = models.CharField(max_length=100, default='US')
+    shipping_country = models.CharField(max_length=2, choices=COUNTRY_CHOICES, default='US')
 
     # Order details
     order_number = models.CharField(max_length=20, unique=True)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
     subtotal = models.DecimalField(max_digits=10, decimal_places=2)
     tax_amount = models.DecimalField(max_digits=10, decimal_places=2)
-    shipping_amount = models.DecimalField(max_digits=10, decimal_places=2)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2)
     
     # Payment information
     payment_method = models.CharField(max_length=50)
     payment_status = models.CharField(max_length=20, default='pending')
     
-    # Shipping
-    shipping_method = models.CharField(max_length=50)
-    tracking_number = models.CharField(max_length=100, blank=True)
+    # Note: Shipping will be handled via email contact basis
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -77,4 +79,6 @@ class OrderItem(models.Model):
 
     @property
     def total_price(self):
-        return self.quantity * self.price
+        if self.quantity is not None and self.price is not None:
+            return self.quantity * self.price
+        return 0

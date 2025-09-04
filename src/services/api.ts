@@ -73,10 +73,8 @@ export interface OrderData {
   shipping_country?: string;
   subtotal: number;
   tax_amount: number;
-  shipping_amount: number;
   total_amount: number;
   payment_method: string;
-  shipping_method: string;
   order_items: OrderItem[];
 }
 
@@ -85,7 +83,6 @@ export interface Order extends OrderData {
   order_number: string;
   status: string;
   payment_status: string;
-  tracking_number?: string;
   items: Array<{
     id: number;
     product: Product;
@@ -100,7 +97,6 @@ export interface Order extends OrderData {
 export interface OrderTotals {
   subtotal: number;
   tax_amount: number;
-  shipping_amount: number;
   total_amount: number;
 }
 
@@ -153,7 +149,7 @@ export const apiService = {
   // Orders
   calculateOrderTotal: async (data: {
     items: Array<{ product_id: number; quantity: number }>;
-    shipping_method: string;
+    billing_country?: string;
   }): Promise<OrderTotals> => {
     const response = await api.post('/orders/calculate-total/', data);
     return response.data;
