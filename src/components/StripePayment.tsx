@@ -7,13 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CreditCard, Shield } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { config } from '@/lib/config';
 
 // Initialize Stripe with safety checks so empty key isn't silently used
-const publishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+const publishableKey = config.stripePublishableKey;
 if (!publishableKey) {
   // Surface a clear error early in the console for easier debugging
   // (Publishable key is safe to log, but you can mask if preferred.)
-  console.error('Stripe publishable key is missing. Ensure VITE_STRIPE_PUBLISHABLE_KEY is provided at build time.');
+  console.error('Stripe publishable key is missing. Ensure VITE_STRIPE_PUBLISHABLE_KEY is provided in environment.');
 }
 const stripePromise = publishableKey ? loadStripe(publishableKey) : Promise.resolve(null);
 

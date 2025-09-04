@@ -1,10 +1,11 @@
 import React, { createContext, useContext, ReactNode } from 'react';
 import { loadStripe, Stripe } from '@stripe/stripe-js';
+import { config } from '@/lib/config';
 
 // Centralized Stripe initialization with explicit missing-key warning
-const stripePublishableKey = import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY as string | undefined;
+const stripePublishableKey = config.stripePublishableKey;
 if (!stripePublishableKey) {
-  console.error('Stripe publishable key missing in StripeContext. Provide VITE_STRIPE_PUBLISHABLE_KEY at build time.');
+  console.error('Stripe publishable key missing in StripeContext. Provide VITE_STRIPE_PUBLISHABLE_KEY in environment.');
 }
 const stripePromise = stripePublishableKey ? loadStripe(stripePublishableKey) : Promise.resolve(null);
 

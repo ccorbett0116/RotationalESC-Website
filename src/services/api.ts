@@ -1,11 +1,12 @@
 import axios from 'axios';
+import { config } from '@/lib/config';
 
 // Create axios instance with base URL
 // In production, use the production domain API endpoint via nginx proxy
 // In development, fall back to localhost or testing IP
 const getBaseURL = () => {
-  if (import.meta.env.VITE_API_URL) {
-    return import.meta.env.VITE_API_URL;
+  if (config.apiUrl) {
+    return config.apiUrl;
   }
   
   // Development fallbacks
