@@ -29,7 +29,7 @@ COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 RUN apk add --no-cache bash gettext openssl
 
 # Copy nginx entrypoint script and make it executable
-COPY nginx-entrypoint.sh /nginx-entrypoint.sh
+COPY ./nginx-entrypoint.sh /nginx-entrypoint.sh
 RUN chmod +x /nginx-entrypoint.sh
 
 # Expose ports 80 and 443
