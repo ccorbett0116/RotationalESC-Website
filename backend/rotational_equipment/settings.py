@@ -170,13 +170,8 @@ REST_FRAMEWORK = {
 PRODUCTION_DOMAIN = os.environ.get('PRODUCTION_DOMAIN', 'rotationales.com')
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:8000",
-    "http://localhost:8080",
-    "http://localhost:8081",
+    "http://localhost",
+    "https://localhost",
     f"https://{PRODUCTION_DOMAIN}",
     f"https://www.{PRODUCTION_DOMAIN}",
     f"http://{PRODUCTION_DOMAIN}",
@@ -187,13 +182,8 @@ CORS_ALLOW_CREDENTIALS = True
 
 # CSRF trusted origins for Django admin
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-    "http://localhost:5173",
-    "http://127.0.0.1:5173",
-    "http://localhost:8000",
-    "http://localhost:8080",
-    "http://localhost:8081",
+    "http://localhost",
+    "https://localhost",
     f"https://{PRODUCTION_DOMAIN}",
     f"https://www.{PRODUCTION_DOMAIN}",
     f"http://{PRODUCTION_DOMAIN}",

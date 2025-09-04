@@ -82,3 +82,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+# SSL certificates and certbot data
+certbot/certs

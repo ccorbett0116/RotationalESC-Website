@@ -12,8 +12,8 @@ services:
     env_file:
       - .env
     environment:
-      - DEBUG=True
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend
+      - DEBUG=${DEBUG:-True}
+      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,${PRODUCTION_DOMAIN}
     networks:
       - rotational-network
 
@@ -23,19 +23,44 @@ services:
       dockerfile: Dockerfile
     container_name: rotational-frontend
     ports:
-      - "8080:80"
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot:ro
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf.template:ro
     depends_on:
       - backend
     env_file:
       - .env
     networks:
       - rotational-network
+    entrypoint: ["/nginx-entrypoint.sh"]
+
+  certbot:
+    build:
+      context: ./certbot
+      dockerfile: Dockerfile
+    container_name: rotational-certbot
+    volumes:
+      - ./certbot/certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/logs:/var/log/letsencrypt
+      - ./certbot-entrypoint.sh:/custom-entrypoint.sh:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env_file:
+      - .env
     environment:
-      - VITE_API_URL=http://localhost:8000
+      - EMAIL=${OWNER_EMAIL}
+      - DOMAIN=${PRODUCTION_DOMAIN}
+    networks:
+      - rotational-network
+    entrypoint: ""
+    command: ["/bin/sh", "/custom-entrypoint.sh"]
+    restart: unless-stopped
+    depends_on:
+      - frontend
 
 networks:
   rotational-network:
     driver: bridge
-
-volumes:
-  database_data:

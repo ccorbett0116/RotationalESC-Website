@@ -22,11 +22,18 @@ FROM nginx:alpine
 # Copy the build files from the builder stage to the Nginx web directory
 COPY --from=builder /app/dist /usr/share/nginx/html
 
-# Copy custom Nginx configuration
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Copy the unified nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf.template
 
-# Expose port 80
-EXPOSE 80
+# Install required packages for envsubst (gettext) and openssl used in entrypoint
+RUN apk add --no-cache bash gettext openssl
 
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Copy nginx entrypoint script and make it executable
+COPY nginx-entrypoint.sh /nginx-entrypoint.sh
+RUN chmod +x /nginx-entrypoint.sh
+
+# Expose ports 80 and 443
+EXPOSE 80 443
+
+# Use the nginx entrypoint script
+ENTRYPOINT ["/nginx-entrypoint.sh"]

@@ -12,3 +12,4 @@ build/
 backend/
 Dockerfile
 docker-compose.yml
+certbot/

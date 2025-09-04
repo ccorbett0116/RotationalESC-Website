@@ -37,10 +37,10 @@ class OrderAdmin(admin.ModelAdmin):
             )
         }),
         ('Order Totals', {
-            'fields': ('subtotal', 'tax_amount', 'shipping_amount', 'total_amount')
+            'fields': ('subtotal', 'tax_amount', 'total_amount')
         }),
-        ('Payment & Shipping', {
-            'fields': ('payment_method', 'payment_status', 'shipping_method', 'tracking_number')
+        ('Payment Information', {
+            'fields': ('payment_method', 'payment_status')
         }),
     )
 
