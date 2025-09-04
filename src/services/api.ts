@@ -1,8 +1,24 @@
 import axios from 'axios';
 
 // Create axios instance with base URL
+// In production, use the production domain API endpoint via nginx proxy
+// In development, fall back to localhost or testing IP
+const getBaseURL = () => {
+  if (import.meta.env.VITE_API_URL) {
+    return import.meta.env.VITE_API_URL;
+  }
+  
+  // Development fallbacks
+  if (import.meta.env.DEV) {
+    return 'http://localhost:8000/api';
+  }
+  
+  // Production fallback - use nginx proxy
+  return '/api';
+};
+
 const api = axios.create({
-  baseURL: 'http://127.0.0.1:8000/api',
+  baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
   },
