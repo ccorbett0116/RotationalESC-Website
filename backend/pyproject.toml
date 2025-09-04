@@ -4,6 +4,7 @@ version = "0.1.0"
 description = "Django backend for Rotational Equipment Services"
 authors = ["Your Name <your.email@example.com>"]
 readme = "README.md"
+package-mode = false
 
 [tool.poetry.dependencies]
 python = "^3.10"

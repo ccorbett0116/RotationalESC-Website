@@ -1,27 +1,32 @@
-# Use Node.js 18 as base image
-FROM node:18-alpine
+# Step 1: Use a Node.js image to build the app
+FROM node:18 AS builder
 
-# Set working directory
+# Set working directory inside the container
 WORKDIR /app
 
-# Copy package files
+# Copy package.json and package-lock.json
 COPY package*.json ./
-COPY bun.lockb ./
-
-# Install bun
-RUN npm install -g bun
 
 # Install dependencies
-RUN bun install
+RUN npm install
 
-# Copy source code
+# Copy the rest of the app's source code
 COPY . .
 
-# Build the application
-RUN bun run build
+# Build the app
+RUN npm run build
 
-# Expose port
-EXPOSE 8080
+# Step 2: Use an Nginx image to serve the static files
+FROM nginx:alpine
 
-# Start the application
-CMD ["bun", "run", "preview", "--host", "0.0.0.0", "--port", "8080"]
+# Copy the build files from the builder stage to the Nginx web directory
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copy custom Nginx configuration
+COPY nginx.conf /etc/nginx/conf.d/default.conf
+
+# Expose port 80
+EXPOSE 80
+
+# Start Nginx server
+CMD ["nginx", "-g", "daemon off;"]

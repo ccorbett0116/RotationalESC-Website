@@ -5,8 +5,10 @@ FROM python:3.12-slim
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     POETRY_NO_INTERACTION=1 \
-    POETRY_VENV_IN_PROJECT=1 \
-    POETRY_CACHE_DIR=/tmp/poetry_cache
+    POETRY_VENV_IN_PROJECT=0 \
+    POETRY_CACHE_DIR=/tmp/poetry_cache \
+    POETRY_HOME="/opt/poetry" \
+    POETRY_VENV_PATH="/opt/poetry-venv"
 
 # Set work directory
 WORKDIR /app
@@ -25,7 +27,9 @@ RUN pip install poetry
 COPY pyproject.toml poetry.lock* ./
 
 # Install dependencies
-RUN poetry install --only=main && rm -rf $POETRY_CACHE_DIR
+RUN poetry config virtualenvs.create false \
+    && poetry install --only=main --no-root \
+    && rm -rf $POETRY_CACHE_DIR
 
 # Copy project
 COPY . .
@@ -36,9 +40,6 @@ RUN chmod +x /app/entrypoint.sh
 
 # Create database directory with proper permissions
 RUN mkdir -p /app/database && chmod 755 /app/database
-
-# Collect static files
-RUN poetry run python manage.py collectstatic --noinput
 
 # Expose port
 EXPOSE 8000
