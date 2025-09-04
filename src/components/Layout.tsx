@@ -256,20 +256,23 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div>
               <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
               <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
-                {navigation.map((item) => (
-                  <li key={item.name}>
-                    <Link
-                      to={item.href}
-                      className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                    >
-                      {item.name}
-                    </Link>
-                  </li>
-                ))}
+                {navigation.map((item, idx) => {
+                  if (idx === navigation.length - 3) return null; // skip last one
+                  return (
+                      <li key={item.name}>
+                        <Link
+                            to={item.href}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+                      </li>
+                  );
+                })}
               </ul>
             </div>
 
-            
+
           </div>
 
           <div className="border-t border-border pt-8 mt-8">
