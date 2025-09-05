@@ -196,8 +196,8 @@ const ProductDetail = () => {
             <div>
               <div className="flex gap-2 mb-4">
                 <Badge variant="outline">{product.category.name}</Badge>
-                <Badge variant={product.in_stock ? "default" : "secondary"}>
-                  {product.in_stock ? "In Stock" : "Out of Stock"}
+                <Badge variant={product.is_available ? "default" : "secondary"}>
+                  {product.is_available ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>
               <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
@@ -232,12 +232,15 @@ const ProductDetail = () => {
             {/* Quantity Selector */}
             <div className="space-y-4">
               <div>
-                <label className="text-sm font-medium mb-2 block">Quantity</label>
+                <label className="text-sm font-medium mb-2 block">
+                  Quantity {product.quantity > 0 && <span className="text-muted-foreground">({product.quantity} available)</span>}
+                </label>
                 <div className="flex items-center space-x-2">
                   <Button 
                     variant="outline" 
                     size="sm"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    disabled={!product.is_available}
                   >
                     -
                   </Button>
@@ -245,7 +248,8 @@ const ProductDetail = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setQuantity(quantity + 1)}
+                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
+                    disabled={!product.is_available || quantity >= product.quantity}
                   >
                     +
                   </Button>
@@ -256,11 +260,11 @@ const ProductDetail = () => {
                 <Button 
                   className="flex-1" 
                   size="lg"
-                  disabled={!product.in_stock}
+                  disabled={!product.is_available}
                   onClick={handleAddToCart}
                 >
                   <ShoppingCart className="w-4 h-4 mr-2" />
-                  {product.in_stock ? "Add to Cart" : "Out of Stock"}
+                  {product.is_available ? "Add to Cart" : "Out of Stock"}
                 </Button>
                 <Button variant="outline" size="lg" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />

@@ -146,8 +146,9 @@ export interface Product {
   description: string;
   price: number;
   category: Category;
-  in_stock: boolean;
-  material: string;
+  active: boolean;
+  quantity: number;
+  is_available: boolean;
   tags_list: string[];
   primary_image?: string;
   images?: ProductImage[];

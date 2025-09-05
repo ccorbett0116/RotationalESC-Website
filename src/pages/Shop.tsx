@@ -345,10 +345,10 @@ const Shop = () => {
                     <CardHeader className="flex-1">
                       <div className="flex justify-between items-start mb-2">
                         <Badge 
-                          variant={product.in_stock ? "default" : "secondary"}
-                          className={product.in_stock ? "bg-green-100 text-green-800" : ""}
+                          variant={product.is_available ? "default" : "secondary"}
+                          className={product.is_available ? "bg-green-100 text-green-800" : ""}
                         >
-                          {product.in_stock ? "In Stock" : "Out of Stock"}
+                          {product.is_available ? "In Stock" : "Out of Stock"}
                         </Badge>
                         <Badge variant="outline">
                           {product.category.name}
@@ -410,11 +410,11 @@ const Shop = () => {
                         </Link>
                         <Button 
                           className="w-full" 
-                          disabled={!product.in_stock}
+                          disabled={!product.is_available}
                           onClick={() => handleAddToCart(product)}
                         >
                           <ShoppingCart className="w-4 h-4 mr-2" />
-                          {product.in_stock ? "Add to Cart" : "Out of Stock"}
+                          {product.is_available ? "Add to Cart" : "Out of Stock"}
                         </Button>
                       </div>
                     </CardContent>
