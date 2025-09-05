@@ -6,7 +6,7 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0002_change_product_id_to_uuid'),
+        ('products', '0003_fix_orphaned_specs_and_images'),
     ]
 
     operations = [

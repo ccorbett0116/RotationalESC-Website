@@ -96,14 +96,14 @@ def fix_orphaned_data(apps, schema_editor):
         # Update orphaned specifications to point to the new product using raw SQL
         with connection.cursor() as cursor:
             cursor.execute(
-                "UPDATE products_productspecification SET product_id = %s WHERE product_id = %s",
+                "UPDATE products_productspecification SET product_id = ? WHERE product_id = ?",
                 [str(product_uuid), str(old_product_id)]
             )
         
         # Update orphaned images to point to the new product using raw SQL
         with connection.cursor() as cursor:
             cursor.execute(
-                "UPDATE products_productimage SET product_id = %s WHERE product_id = %s",
+                "UPDATE products_productimage SET product_id = ? WHERE product_id = ?",
                 [str(product_uuid), str(old_product_id)]
             )
     
@@ -135,7 +135,7 @@ def reverse_fix_orphaned_data(apps, schema_editor):
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('products', '0003_section_manufacturer'),
+        ('products', '0002_change_product_id_to_uuid'),
     ]
 
     operations = [
