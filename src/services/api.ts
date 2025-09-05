@@ -305,19 +305,19 @@ export const apiService = {
 
   // Sections and Manufacturers
   getSections: async (): Promise<Section[]> => {
-    const response = await api.get('/products/sections/');
+    const response = await api.get('/sections/');
     return response.data;
   },
 
   getManufacturers: async (sectionId?: number): Promise<Manufacturer[]> => {
     const params = sectionId ? { section: sectionId } : {};
-    const response = await api.get('/products/manufacturers/', { params });
+    const response = await api.get('/manufacturers/', { params });
     return response.data;
   },
 
   getSectionsWithManufacturers: async (page?: string): Promise<SectionWithManufacturers[]> => {
     const params = page ? { page } : {};
-    const response = await api.get('/products/sections-with-manufacturers/', { params });
+    const response = await api.get('/sections-with-manufacturers/', { params });
     return response.data;
   },
 
