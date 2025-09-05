@@ -121,23 +121,30 @@ class OrderAdmin(admin.ModelAdmin):
         items = obj.items.all()
         items_count = items.count()
         
-        summary = f"""
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
-            <h4 style="margin-top: 0; color: #2c3e50;">📋 Order Summary</h4>
-            <p><strong>Items:</strong> {items_count} product(s)</p>
-            <p><strong>Subtotal:</strong> ${obj.subtotal:.2f}</p>
-            <p><strong>Tax:</strong> ${obj.tax_amount:.2f}</p>
-            <p><strong>Total:</strong> <span style="font-weight: bold; color: #27ae60; font-size: 16px;">${obj.total_amount:.2f}</span></p>
-        </div>
-        """
+        summary = format_html(
+            '''
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+                <h4 style="margin-top: 0; color: #2c3e50;">📋 Order Summary</h4>
+                <p><strong>Items:</strong> {} product(s)</p>
+                <p><strong>Subtotal:</strong> ${:.2f}</p>
+                <p><strong>Tax:</strong> ${:.2f}</p>
+                <p><strong>Total:</strong> <span style="font-weight: bold; color: #27ae60; font-size: 16px;">${:.2f}</span></p>
+            </div>
+            ''',
+            items_count, obj.subtotal, obj.tax_amount, obj.total_amount
+        )
         
         if items:
-            summary += "<h4>🛍️ Items in this order:</h4><ul>"
+            items_html = "<h4>🛍️ Items in this order:</h4><ul>"
             for item in items:
-                summary += f"<li>{item.product.name} × {item.quantity} = ${item.total_price:.2f}</li>"
-            summary += "</ul>"
+                items_html += format_html(
+                    "<li>{} × {} = ${:.2f}</li>",
+                    item.product.name, item.quantity, item.total_price
+                )
+            items_html += "</ul>"
+            summary += mark_safe(items_html)
             
-        return mark_safe(summary)
+        return summary
     order_summary.short_description = "Order Summary"
     
     fieldsets = (
@@ -210,10 +217,11 @@ class OrderItemAdmin(admin.ModelAdmin):
     order_link.admin_order_field = 'order__order_number'
     
     def product_info(self, obj):
+        category_name = obj.product.category.name if obj.product.category else 'No category'
         return format_html(
             '<strong>{}</strong><br><small style="color: #666;">{}</small>',
             obj.product.name,
-            obj.product.category.name if obj.product.category else 'No category'
+            category_name
         )
     product_info.short_description = "Product"
     

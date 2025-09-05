@@ -286,7 +286,7 @@ To import: Create a CSV file with the format above, then use Django's management
                 product.name,
                 product.description,
                 str(product.price),
-                product.category.name,
+                product.category.name if product.category else '',
                 product.in_stock,
                 product.tags
             ])
