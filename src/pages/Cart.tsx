@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
+import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -44,37 +44,90 @@ const Cart = () => {
     cart_changed: boolean;
   } | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
+  const [hasValidated, setHasValidated] = useState(false);
 
+  // Separate effect for fetching products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         const response = await apiService.getProducts();
         setProducts(response.results);
-        
-        // Check for items in cart that no longer exist
-        const existingProductIds = new Set(response.results.map(p => p.id));
-        const missingItems = cartItems.filter(item => !existingProductIds.has(item.productId));
-        
-        if (missingItems.length > 0) {
-          setRemovedItems(missingItems.map(item => item.productId));
-          // Show notification about removed items
-          toast({
-            title: "Items removed from cart",
-            description: `${missingItems.length} item(s) no longer available and were removed from your cart`,
-            variant: "destructive",
-          });
-          // Auto-remove missing items from cart
-          missingItems.forEach(item => removeCartItem(item.productId));
-        }
       } catch (error) {
         console.error('Error fetching products:', error);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+  // Separate effect for cart validation that runs once when cart loads or changes significantly
+  useEffect(() => {
+    const validateCartOnMount = async () => {
+      if (cartItems.length === 0 || hasValidated) {
+        setLoading(false);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        
+        // Perform comprehensive cart validation
+        const cartItemsForValidation = cartItems.map(item => ({
+          product_id: item.productId,
+          quantity: item.quantity
+        }));
+        
+        const validation = await apiService.validateCart({
+          items: cartItemsForValidation
+        });
+        
+        if (validation.cart_changed) {
+          // Auto-apply validation changes immediately
+          let changesSummary = [];
+          
+          // Remove invalid items
+          if (validation.removed_items.length > 0) {
+            validation.removed_items.forEach(item => {
+              removeCartItem(item.product_id);
+            });
+            changesSummary.push(`${validation.removed_items.length} items removed`);
+          }
+          
+          // Update quantities for adjusted items  
+          if (validation.updated_items.length > 0) {
+            validation.updated_items.forEach(item => {
+              updateCartQuantity(item.product_id, item.adjusted_quantity);
+            });
+            changesSummary.push(`${validation.updated_items.length} quantities adjusted`);
+          }
+          
+          // Show summary notification
+          toast({
+            title: "Cart Updated",
+            description: `Your cart was automatically updated: ${changesSummary.join(', ')}.`,
+            variant: "default",
+          });
+          
+          // Store validation results to show details
+          setValidationResults(validation);
+          setRemovedItems(validation.removed_items.map(item => item.product_id));
+        }
+        
+        setHasValidated(true);
+      } catch (validationError) {
+        console.error('Cart validation failed:', validationError);
+        toast({
+          title: "Cart validation error",
+          description: "Unable to validate cart items. Some items may not be current.",
+          variant: "destructive",
+        });
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProducts();
-  }, [cartItems, removeCartItem]);
+    validateCartOnMount();
+  }, [cartItems.length, hasValidated, removeCartItem, updateCartQuantity, toast]);
 
   const updateQuantity = (productId: string, newQuantity: number) => {
     const product = products.find(p => p.id === productId);
@@ -129,7 +182,7 @@ const Cart = () => {
         // Cart is valid, proceed to checkout
         navigate('/checkout');
       } else {
-        // Show validation results to user
+        // Show validation results to user for confirmation
         setValidationResults(validation);
         setShowValidationDialog(true);
       }
@@ -169,6 +222,43 @@ const Cart = () => {
     // If there are still valid items, proceed to checkout
     if (validationResults.valid_cart_items.length > 0) {
       navigate('/checkout');
+    }
+  };
+
+  const refreshCart = async () => {
+    setHasValidated(false);
+    setValidationResults(null);
+    setLoading(true);
+    
+    try {
+      const cartItemsForValidation = cartItems.map(item => ({
+        product_id: item.productId,
+        quantity: item.quantity
+      }));
+      
+      const validation = await apiService.validateCart({
+        items: cartItemsForValidation
+      });
+      
+      if (validation.cart_changed) {
+        setValidationResults(validation);
+        setShowValidationDialog(true);
+      } else {
+        toast({
+          title: "Cart is up to date",
+          description: "All items in your cart are current and available.",
+        });
+      }
+    } catch (error) {
+      console.error('Cart refresh failed:', error);
+      toast({
+        title: "Refresh failed",
+        description: "Unable to refresh cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+      setHasValidated(true);
     }
   };
 
@@ -226,9 +316,58 @@ const Cart = () => {
   return (
     <Layout>
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <h1 className="text-3xl font-bold text-foreground mb-8">Shopping Cart</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-foreground">Shopping Cart</h1>
+          {cartItems.length > 0 && (
+            <Button
+              variant="outline"
+              onClick={refreshCart}
+              disabled={loading || validating}
+              className="flex items-center gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
+              Refresh Cart
+            </Button>
+          )}
+        </div>
 
-        {removedItems.length > 0 && (
+        {/* Validation Results Alert */}
+        {validationResults && validationResults.cart_changed && (
+          <Alert className="mb-6">
+            <AlertTriangle className="h-4 w-4" />
+            <AlertDescription>
+              <div className="space-y-2">
+                <p className="font-medium">Your cart was automatically updated:</p>
+                {validationResults.removed_items.length > 0 && (
+                  <div className="text-sm">
+                    <strong>Removed items:</strong>
+                    <ul className="list-disc list-inside ml-2">
+                      {validationResults.removed_items.map((item) => (
+                        <li key={item.product_id}>
+                          {item.product_name} - {item.message}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {validationResults.updated_items.length > 0 && (
+                  <div className="text-sm">
+                    <strong>Quantity adjustments:</strong>
+                    <ul className="list-disc list-inside ml-2">
+                      {validationResults.updated_items.map((item) => (
+                        <li key={item.product_id}>
+                          {item.product_name} - Reduced from {item.original_quantity} to {item.adjusted_quantity}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {removedItems.length > 0 && !validationResults && (
           <Alert className="mb-6">
             <AlertTriangle className="h-4 w-4" />
             <AlertDescription>
