@@ -28,7 +28,7 @@ const ProductDetail = () => {
       
       try {
         setLoading(true);
-        const productData = await apiService.getProduct(parseInt(id));
+        const productData = await apiService.getProduct(id);
         setProduct(productData);
         
         // Fetch related products from the same category

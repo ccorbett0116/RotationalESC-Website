@@ -27,10 +27,47 @@ const api = axios.create({
   withCredentials: true, // Important for CORS with credentials
 });
 
-// Add request interceptor for debugging
+// CSRF token management
+let csrfToken: string | null = null;
+
+const getCsrfToken = async (): Promise<string> => {
+  if (csrfToken) {
+    return csrfToken;
+  }
+  
+  try {
+    const response = await api.get('/csrf-token/');
+    // Extract CSRF token from cookie
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      const [name, value] = cookie.trim().split('=');
+      if (name === 'csrftoken') {
+        csrfToken = value;
+        return csrfToken;
+      }
+    }
+    throw new Error('CSRF token not found in cookies');
+  } catch (error) {
+    console.error('Failed to get CSRF token:', error);
+    throw error;
+  }
+};
+
+// Add request interceptor for debugging and CSRF token
 api.interceptors.request.use(
-  (config) => {
+  async (config) => {
     console.log('API Request:', config.method?.toUpperCase(), config.baseURL + config.url);
+    
+    // Add CSRF token for POST, PUT, PATCH, DELETE requests
+    if (config.method && ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase())) {
+      try {
+        const token = await getCsrfToken();
+        config.headers['X-CSRFToken'] = token;
+      } catch (error) {
+        console.warn('Could not get CSRF token:', error);
+      }
+    }
+    
     return config;
   },
   (error) => {
@@ -208,7 +245,7 @@ export const apiService = {
     return response.data;
   },
 
-  getProduct: async (id: number): Promise<Product> => {
+  getProduct: async (id: string): Promise<Product> => {
     const response = await api.get(`/products/${id}/`);
     return response.data;
   },

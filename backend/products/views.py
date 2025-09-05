@@ -29,7 +29,7 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'in_stock']
+    filterset_fields = ['category', 'page', 'in_stock']
     search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
     ordering_fields = ['name', 'price', 'created_at']
     ordering = ['name']
@@ -41,6 +41,11 @@ class ProductListView(generics.ListAPIView):
         category_name = self.request.query_params.get('category_name', None)
         if category_name and category_name != 'all':
             queryset = queryset.filter(category__name=category_name)
+        
+        # Page filtering
+        page = self.request.query_params.get('page', None)
+        if page and page != 'all':
+            queryset = queryset.filter(page=page)
         
         min_price = self.request.query_params.get('min_price', None)
         max_price = self.request.query_params.get('max_price', None)
@@ -172,3 +177,157 @@ def sections_with_manufacturers(request):
     sections = Section.objects.prefetch_related('manufacturers').all()
     serializer = SectionWithManufacturersSerializer(sections, many=True)
     return Response(serializer.data)
+
+
+@api_view(['POST'])
+def import_products_csv(request):
+    """
+    Import products from CSV file via API
+    """
+    from django.db import transaction
+    from decimal import Decimal, InvalidOperation
+    import csv
+    import io
+    
+    products_file = request.FILES.get('products_csv_file')
+    specs_file = request.FILES.get('specifications_csv_file')
+    update_existing = request.data.get('update_existing', 'false').lower() == 'true'
+    
+    if not products_file:
+        return Response(
+            {'error': 'Products CSV file is required'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        with transaction.atomic():
+            # Import products
+            products_imported = _import_products_from_csv_api(products_file, update_existing)
+            
+            # Import specifications if provided
+            specs_imported = 0
+            if specs_file:
+                specs_imported = _import_specifications_from_csv_api(specs_file)
+            
+            return Response({
+                'message': f'Successfully imported {products_imported} products and {specs_imported} specifications',
+                'products_imported': products_imported,
+                'specifications_imported': specs_imported
+            }, status=status.HTTP_201_CREATED)
+            
+    except Exception as e:
+        return Response(
+            {'error': f'Import failed: {str(e)}'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+def _import_products_from_csv_api(csv_file, update_existing):
+    """Import products from CSV file for API"""
+    from decimal import Decimal, InvalidOperation
+    
+    imported_count = 0
+    decoded_file = csv_file.read().decode('utf-8')
+    io_string = io.StringIO(decoded_file)
+    reader = csv.DictReader(io_string)
+    
+    for row in reader:
+        try:
+            name = row['name'].strip()
+            description = row['description'].strip()
+            category_name = row['category'].strip()
+            page = row['page'].strip()
+            
+            # Validate page value
+            valid_pages = ['seals', 'packing', 'pumps', 'general']
+            if page not in valid_pages:
+                raise ValueError(f'Invalid page value "{page}". Must be one of: {", ".join(valid_pages)}')
+            
+            # Parse price
+            try:
+                price_str = row['price'].strip().replace('$', '').replace(',', '')
+                price = Decimal(price_str)
+            except (InvalidOperation, ValueError):
+                raise ValueError(f'Invalid price "{row["price"]}" for product "{name}"')
+            
+            # Get or create category
+            from .models import Category, Product, ProductSpecification
+            category, created = Category.objects.get_or_create(
+                name=category_name,
+                defaults={'description': f'Category for {category_name}'}
+            )
+            
+            # Optional fields
+            in_stock = row.get('in_stock', 'true').strip().lower() in ['true', '1', 'yes', 'y']
+            tags = row.get('tags', '').strip()
+            
+            # Check if product exists
+            product_exists = Product.objects.filter(name=name).exists()
+            
+            if product_exists and not update_existing:
+                continue  # Skip existing products
+            
+            if product_exists and update_existing:
+                # Update existing product
+                product = Product.objects.get(name=name)
+                product.description = description
+                product.price = price
+                product.category = category
+                product.page = page
+                product.in_stock = in_stock
+                product.tags = tags
+                product.save()
+            else:
+                # Create new product
+                Product.objects.create(
+                    name=name,
+                    description=description,
+                    price=price,
+                    category=category,
+                    page=page,
+                    in_stock=in_stock,
+                    tags=tags
+                )
+            
+            imported_count += 1
+            
+        except Exception as e:
+            raise Exception(f'Error processing row with product "{row.get("name", "Unknown")}": {str(e)}')
+    
+    return imported_count
+
+
+def _import_specifications_from_csv_api(csv_file):
+    """Import product specifications from CSV file for API"""
+    from .models import Product, ProductSpecification
+    
+    imported_count = 0
+    decoded_file = csv_file.read().decode('utf-8')
+    io_string = io.StringIO(decoded_file)
+    reader = csv.DictReader(io_string)
+    
+    for row in reader:
+        try:
+            product_name = row['product_name'].strip()
+            key = row['key'].strip()
+            value = row['value'].strip()
+            order = int(row.get('order', 0))
+            
+            try:
+                product = Product.objects.get(name=product_name)
+            except Product.DoesNotExist:
+                continue  # Skip if product doesn't exist
+            
+            # Create or update specification
+            ProductSpecification.objects.update_or_create(
+                product=product,
+                key=key,
+                defaults={'value': value, 'order': order}
+            )
+            
+            imported_count += 1
+            
+        except Exception as e:
+            continue  # Skip problematic rows
+    
+    return imported_count

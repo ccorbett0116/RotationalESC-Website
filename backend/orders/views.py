@@ -61,7 +61,6 @@ class OrderDetailView(generics.RetrieveAPIView):
     lookup_field = 'order_number'
 
 @api_view(['POST', 'OPTIONS'])
-@csrf_exempt
 def calculate_order_total(request):
     """
     Calculate order totals based on cart items

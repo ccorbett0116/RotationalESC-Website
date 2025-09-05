@@ -85,12 +85,209 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'in_stock', 'created_at']
-    list_filter = ['category', 'in_stock', 'created_at']
+    list_display = ['name', 'category', 'page', 'price', 'in_stock', 'created_at']
+    list_filter = ['category', 'page', 'in_stock', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
     readonly_fields = ['created_at', 'updated_at']
     actions = ['export_to_csv']
+    
+    def changelist_view(self, request, extra_context=None):
+        """Add import CSV button to the changelist"""
+        extra_context = extra_context or {}
+        extra_context['import_csv_url'] = 'import-csv/'
+        return super().changelist_view(request, extra_context)
+    
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('import-csv/', self.admin_site.admin_view(self.import_csv), name='products_product_import_csv'),
+        ]
+        return custom_urls + urls
+    
+    def import_csv(self, request):
+        """Import products from CSV file"""
+        from django.shortcuts import render, redirect
+        from django.contrib import messages
+        from django import forms
+        from django.db import transaction
+        import csv
+        import io
+        from decimal import Decimal, InvalidOperation
+        
+        class CSVImportForm(forms.Form):
+            products_csv_file = forms.FileField(
+                label='Products CSV File',
+                help_text='CSV file with products data. Required columns: name, description, price, category, page'
+            )
+            specifications_csv_file = forms.FileField(
+                label='Specifications CSV File (Optional)',
+                required=False,
+                help_text='Optional CSV file with product specifications'
+            )
+            update_existing = forms.BooleanField(
+                label='Update existing products',
+                required=False,
+                help_text='If checked, existing products will be updated. Otherwise, duplicates will be skipped.'
+            )
+        
+        if request.method == 'POST':
+            form = CSVImportForm(request.POST, request.FILES)
+            if form.is_valid():
+                products_file = form.cleaned_data['products_csv_file']
+                specs_file = form.cleaned_data.get('specifications_csv_file')
+                update_existing = form.cleaned_data['update_existing']
+                
+                try:
+                    with transaction.atomic():
+                        # Import products
+                        products_imported = self._import_products_from_csv(products_file, update_existing)
+                        
+                        # Import specifications if provided
+                        specs_imported = 0
+                        if specs_file:
+                            specs_imported = self._import_specifications_from_csv(specs_file)
+                        
+                        messages.success(
+                            request,
+                            f'Successfully imported {products_imported} products and {specs_imported} specifications.'
+                        )
+                        return redirect('..')
+                        
+                except Exception as e:
+                    messages.error(request, f'Import failed: {str(e)}')
+        else:
+            form = CSVImportForm()
+        
+        help_text = """
+        <h3>CSV Format Requirements</h3>
+        <h4>Products CSV:</h4>
+        <p><strong>Required columns:</strong> name, description, price, category, page</p>
+        <p><strong>Optional columns:</strong> in_stock, tags</p>
+        <p><strong>Page values:</strong> seals, packing, pumps, general</p>
+        <pre>name,description,price,category,page,in_stock,tags
+Industrial Pump,High-efficiency pump,2499.99,Pumps,pumps,true,"industrial,pump"</pre>
+        
+        <h4>Specifications CSV (Optional):</h4>
+        <p><strong>Required columns:</strong> product_name, key, value</p>
+        <p><strong>Optional columns:</strong> order</p>
+        <pre>product_name,key,value,order
+Industrial Pump,Flow Rate,500 GPM,0</pre>
+        """
+        
+        context = {
+            'form': form,
+            'title': 'Import Products from CSV',
+            'help_text': help_text
+        }
+        return render(request, 'admin/products/import_csv.html', context)
+    
+    def _import_products_from_csv(self, csv_file, update_existing):
+        """Import products from CSV file"""
+        from decimal import Decimal, InvalidOperation
+        
+        imported_count = 0
+        decoded_file = csv_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+        
+        for row in reader:
+            try:
+                name = row['name'].strip()
+                description = row['description'].strip()
+                category_name = row['category'].strip()
+                page = row['page'].strip()
+                
+                # Validate page value
+                valid_pages = ['seals', 'packing', 'pumps', 'general']
+                if page not in valid_pages:
+                    raise ValueError(f'Invalid page value "{page}". Must be one of: {", ".join(valid_pages)}')
+                
+                # Parse price
+                try:
+                    price_str = row['price'].strip().replace('$', '').replace(',', '')
+                    price = Decimal(price_str)
+                except (InvalidOperation, ValueError):
+                    raise ValueError(f'Invalid price "{row["price"]}" for product "{name}"')
+                
+                # Get or create category
+                category, created = Category.objects.get_or_create(
+                    name=category_name,
+                    defaults={'description': f'Category for {category_name}'}
+                )
+                
+                # Optional fields
+                in_stock = row.get('in_stock', 'true').strip().lower() in ['true', '1', 'yes', 'y']
+                tags = row.get('tags', '').strip()
+                
+                # Check if product exists
+                product_exists = Product.objects.filter(name=name).exists()
+                
+                if product_exists and not update_existing:
+                    continue  # Skip existing products
+                
+                if product_exists and update_existing:
+                    # Update existing product
+                    product = Product.objects.get(name=name)
+                    product.description = description
+                    product.price = price
+                    product.category = category
+                    product.page = page
+                    product.in_stock = in_stock
+                    product.tags = tags
+                    product.save()
+                else:
+                    # Create new product
+                    Product.objects.create(
+                        name=name,
+                        description=description,
+                        price=price,
+                        category=category,
+                        page=page,
+                        in_stock=in_stock,
+                        tags=tags
+                    )
+                
+                imported_count += 1
+                
+            except Exception as e:
+                raise Exception(f'Error processing row: {str(e)}')
+        
+        return imported_count
+    
+    def _import_specifications_from_csv(self, csv_file):
+        """Import product specifications from CSV file"""
+        imported_count = 0
+        decoded_file = csv_file.read().decode('utf-8')
+        io_string = io.StringIO(decoded_file)
+        reader = csv.DictReader(io_string)
+        
+        for row in reader:
+            try:
+                product_name = row['product_name'].strip()
+                key = row['key'].strip()
+                value = row['value'].strip()
+                order = int(row.get('order', 0))
+                
+                try:
+                    product = Product.objects.get(name=product_name)
+                except Product.DoesNotExist:
+                    continue  # Skip if product doesn't exist
+                
+                # Create or update specification
+                ProductSpecification.objects.update_or_create(
+                    product=product,
+                    key=key,
+                    defaults={'value': value, 'order': order}
+                )
+                
+                imported_count += 1
+                
+            except Exception as e:
+                continue  # Skip problematic rows
+        
+        return imported_count
 
     def export_to_csv(self, request, queryset):
         """Export selected products to CSV"""
@@ -103,7 +300,7 @@ class ProductAdmin(admin.ModelAdmin):
         writer = csv.writer(response)
         
         # Write header
-        writer.writerow(['name', 'description', 'price', 'category', 'in_stock', 'tags'])
+        writer.writerow(['name', 'description', 'price', 'category', 'page', 'in_stock', 'tags'])
         
         # Write data
         for product in queryset:
@@ -112,6 +309,7 @@ class ProductAdmin(admin.ModelAdmin):
                 product.description,
                 str(product.price),
                 product.category.name,
+                product.page,
                 product.in_stock,
                 product.tags
             ])

@@ -8,7 +8,6 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import ContactSubmission
 from .serializers import ContactSubmissionSerializer
 
-@csrf_exempt
 @api_view(['POST'])
 def submit_contact_form(request):
     """

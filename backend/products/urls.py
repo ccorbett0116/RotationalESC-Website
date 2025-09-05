@@ -7,6 +7,7 @@ urlpatterns = [
     path('products/<uuid:pk>/', views.ProductDetailView.as_view(), name='product-detail'),
     path('products/search/', views.product_search, name='product-search'),
     path('products/<uuid:product_id>/upload-image/', views.upload_product_image, name='upload-product-image'),
+    path('products/import-csv/', views.import_products_csv, name='import-products-csv'),
     
     # Sections and Manufacturers
     path('sections/', views.SectionListView.as_view(), name='section-list'),
