@@ -85,7 +85,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
               {navigation.map((item) => (
-                'isDropdown' in item ? (
+                item.isDropdown ? (
                   <div
                     key={item.name}
                     className="relative group"
@@ -179,7 +179,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="md:hidden py-4 border-t border-border">
               <nav className="flex flex-col space-y-2">
                 {navigation.map((item) => (
-                  'isDropdown' in item ? (
+                  item.isDropdown ? (
                     <div key={item.name} className="space-y-2">
                       <button
                         onClick={() => setIsProductsOpen(!isProductsOpen)}
