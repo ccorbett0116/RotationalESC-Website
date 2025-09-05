@@ -4,12 +4,16 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Category, Product, ProductImage
+from .models import Category, Product, ProductImage, Section, Manufacturer
 from .serializers import (
     CategorySerializer, 
     ProductListSerializer, 
     ProductDetailSerializer,
-    ProductImageUploadSerializer
+    ProductImageUploadSerializer,
+    SectionSerializer,
+    ManufacturerSerializer,
+    ManufacturerUploadSerializer,
+    SectionWithManufacturersSerializer
 )
 
 class CategoryListView(APIView):
@@ -97,3 +101,74 @@ def upload_product_image(request, product_id):
         )
     
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SectionListView(APIView):
+    """
+    List all sections without pagination
+    """
+    def get(self, request, format=None):
+        sections = Section.objects.all()
+        serializer = SectionSerializer(sections, many=True)
+        return Response(serializer.data)
+
+    def post(self, request, format=None):
+        serializer = SectionSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class SectionDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+
+
+class ManufacturerListView(generics.ListAPIView):
+    queryset = Manufacturer.objects.prefetch_related('sections')
+    serializer_class = ManufacturerSerializer
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_fields = ['sections']
+    search_fields = ['label']
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        
+        # Filter by section if provided
+        section_id = self.request.query_params.get('section', None)
+        if section_id:
+            queryset = queryset.filter(sections__id=section_id)
+            
+        return queryset
+
+
+class ManufacturerDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Manufacturer.objects.prefetch_related('sections')
+    serializer_class = ManufacturerSerializer
+
+
+@api_view(['POST'])
+def upload_manufacturer(request):
+    """
+    Upload a manufacturer with image
+    """
+    serializer = ManufacturerUploadSerializer(data=request.data)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(
+            {'message': 'Manufacturer created successfully'}, 
+            status=status.HTTP_201_CREATED
+        )
+    
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+def sections_with_manufacturers(request):
+    """
+    Get all sections with their associated manufacturers
+    """
+    sections = Section.objects.prefetch_related('manufacturers').all()
+    serializer = SectionWithManufacturersSerializer(sections, many=True)
+    return Response(serializer.data)

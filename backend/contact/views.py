@@ -4,9 +4,11 @@ from rest_framework.response import Response
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
+from django.views.decorators.csrf import csrf_exempt
 from .models import ContactSubmission
 from .serializers import ContactSubmissionSerializer
 
+@csrf_exempt
 @api_view(['POST'])
 def submit_contact_form(request):
     """

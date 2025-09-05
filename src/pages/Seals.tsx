@@ -1,18 +1,13 @@
 import Layout from "@/components/Layout";
+import SectionsWithManufacturers from "@/components/SectionsWithManufacturers";
 
 const Seals = () => {
     return (
         <Layout>
-            <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-                    <h1 className="text-4xl md:text-5xl font-bold text-foreground mb-6">
-                        PLACEHOLDER
-                    </h1>
-                    <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-                        Follow same instructions as pumps but with seals (I'll get things from him)
-                    </p>
-                </div>
-            </section>
+            <SectionsWithManufacturers 
+                title="Mechanical Seals"
+                description="Find high-quality mechanical seals from trusted manufacturers. Our extensive selection includes seals for various applications and industries."
+            />
         </Layout>
     );
 };

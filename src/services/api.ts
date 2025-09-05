@@ -22,8 +22,34 @@ const api = axios.create({
   baseURL: getBaseURL(),
   headers: {
     'Content-Type': 'application/json',
+    'Accept': 'application/json',
   },
+  withCredentials: true, // Important for CORS with credentials
 });
+
+// Add request interceptor for debugging
+api.interceptors.request.use(
+  (config) => {
+    console.log('API Request:', config.method?.toUpperCase(), config.baseURL + config.url);
+    return config;
+  },
+  (error) => {
+    console.error('API Request Error:', error);
+    return Promise.reject(error);
+  }
+);
+
+// Add response interceptor for error handling
+api.interceptors.response.use(
+  (response) => {
+    console.log('API Response:', response.status, response.config.url);
+    return response;
+  },
+  (error) => {
+    console.error('API Response Error:', error.response?.status, error.response?.data || error.message);
+    return Promise.reject(error);
+  }
+);
 
 // Types for API responses
 export interface Category {
@@ -47,6 +73,32 @@ export interface ProductSpecification {
   key: string;
   value: string;
   order: number;
+}
+
+export interface Section {
+  id: number;
+  label: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Manufacturer {
+  id: number;
+  label: string;
+  url: string;
+  image_url: string;
+  filename: string;
+  sections: Section[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface SectionWithManufacturers {
+  id: number;
+  label: string;
+  manufacturers: Manufacturer[];
+  created_at: string;
+  updated_at: string;
 }
 
 export interface Product {
@@ -202,6 +254,23 @@ export const apiService = {
   // Contact Form
   submitContactForm: async (contactData: ContactFormData): Promise<ContactSubmissionResponse> => {
     const response = await api.post('/contact/submit/', contactData);
+    return response.data;
+  },
+
+  // Sections and Manufacturers
+  getSections: async (): Promise<Section[]> => {
+    const response = await api.get('/products/sections/');
+    return response.data;
+  },
+
+  getManufacturers: async (sectionId?: number): Promise<Manufacturer[]> => {
+    const params = sectionId ? { section: sectionId } : {};
+    const response = await api.get('/products/manufacturers/', { params });
+    return response.data;
+  },
+
+  getSectionsWithManufacturers: async (): Promise<SectionWithManufacturers[]> => {
+    const response = await api.get('/products/sections-with-manufacturers/');
     return response.data;
   },
 
