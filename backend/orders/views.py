@@ -60,12 +60,15 @@ class OrderDetailView(generics.RetrieveAPIView):
     serializer_class = OrderSerializer
     lookup_field = 'order_number'
 
-@api_view(['POST'])
+@api_view(['POST', 'OPTIONS'])
 @csrf_exempt
 def calculate_order_total(request):
     """
     Calculate order totals based on cart items
     """
+    if request.method == 'OPTIONS':
+        return Response(status=status.HTTP_200_OK)
+    
     cart_items = request.data.get('items', [])
     billing_country = request.data.get('billing_country', 'US')
     subtotal = 0
