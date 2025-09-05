@@ -23,6 +23,7 @@ class Product(models.Model):
     description = models.TextField()
     price = models.DecimalField(max_digits=10, decimal_places=2)
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
+    active = models.BooleanField(default=True, help_text="Whether this product is available for sale")
     in_stock = models.BooleanField(default=True)
     quantity = models.PositiveIntegerField(default=0, help_text="Available quantity in stock")
     tags = models.CharField(max_length=500, help_text="Comma-separated tags")
@@ -38,8 +39,8 @@ class Product(models.Model):
     
     @property
     def is_available(self):
-        """Returns True if product is in stock and has available quantity"""
-        return self.in_stock and self.quantity > 0
+        """Returns True if product is active, in stock, and has available quantity"""
+        return self.active and self.in_stock and self.quantity > 0
     
     def reduce_quantity(self, amount):
         """Reduce product quantity by specified amount"""

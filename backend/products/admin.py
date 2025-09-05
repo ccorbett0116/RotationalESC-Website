@@ -130,12 +130,12 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'stock_status', 'image_count', 'created_date']
-    list_filter = ['category', 'in_stock', 'created_at']
+    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'created_date']
+    list_filter = ['category', 'active', 'in_stock', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
     readonly_fields = ['created_at', 'updated_at', 'product_summary']
-    actions = ['export_to_csv', 'mark_in_stock', 'mark_out_of_stock', 'bulk_import_csv']
+    actions = ['export_to_csv', 'mark_in_stock', 'mark_out_of_stock', 'mark_active', 'mark_inactive', 'bulk_import_csv']
     list_per_page = 20
     date_hierarchy = 'created_at'
     
@@ -187,6 +187,18 @@ class ProductAdmin(admin.ModelAdmin):
     quantity_display.short_description = "Quantity"
     quantity_display.admin_order_field = 'quantity'
     
+    def active_status(self, obj):
+        if obj.active:
+            return format_html(
+                '<span style="color: #27ae60; font-weight: bold;">✅ Active</span>'
+            )
+        else:
+            return format_html(
+                '<span style="color: #e74c3c; font-weight: bold;">❌ Disabled</span>'
+            )
+    active_status.short_description = "Active"
+    active_status.admin_order_field = 'active'
+    
     def stock_status(self, obj):
         if obj.is_available:
             return format_html(
@@ -237,6 +249,7 @@ class ProductAdmin(admin.ModelAdmin):
             <div style="display: flex; gap: 20px;">
                 <div style="flex: 1;">
                     <p><strong>Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
+                    <p><strong>Active:</strong> {'✅ Yes' if obj.active else '❌ Disabled'}</p>
                     <p><strong>Quantity:</strong> <span style="color: {quantity_color}; font-weight: bold;">{obj.quantity}</span></p>
                     <p><strong>Stock Status:</strong> {'✅ Available' if obj.is_available else '❌ Not Available'}</p>
                     <p><strong>Images:</strong> {images_count}</p>
@@ -265,6 +278,16 @@ class ProductAdmin(admin.ModelAdmin):
         self.message_user(request, f'{updated} product(s) marked as out of stock.')
     mark_out_of_stock.short_description = "Mark selected products as out of stock"
     
+    def mark_active(self, request, queryset):
+        updated = queryset.update(active=True)
+        self.message_user(request, f'{updated} product(s) marked as active.')
+    mark_active.short_description = "Mark selected products as active"
+    
+    def mark_inactive(self, request, queryset):
+        updated = queryset.update(active=False)
+        self.message_user(request, f'{updated} product(s) marked as inactive.')
+    mark_inactive.short_description = "Mark selected products as inactive"
+    
     def bulk_import_csv(self, request, queryset):
         """Bulk import products from CSV - shows instructions"""
         from django.http import HttpResponse
@@ -273,11 +296,11 @@ class ProductAdmin(admin.ModelAdmin):
 
 Products CSV Format:
 Required columns: name, description, price, category
-Optional columns: quantity, in_stock, tags
+Optional columns: active, quantity, in_stock, tags
 
 Example:
-name,description,price,category,quantity,in_stock,tags
-Industrial Pump,High-efficiency pump,2499.99,Pumps,50,true,"industrial,pump"
+name,description,price,category,active,quantity,in_stock,tags
+Industrial Pump,High-efficiency pump,2499.99,Pumps,true,50,true,"industrial,pump"
 
 Specifications CSV Format (Optional):
 Required columns: product_name, key, value
@@ -303,7 +326,7 @@ To import: Create a CSV file with the format above, then use Django's management
         writer = csv.writer(response)
         
         # Write header
-        writer.writerow(['name', 'description', 'price', 'category', 'quantity', 'in_stock', 'tags'])
+        writer.writerow(['name', 'description', 'price', 'category', 'active', 'quantity', 'in_stock', 'tags'])
         
         # Write data
         for product in queryset:
@@ -312,6 +335,7 @@ To import: Create a CSV file with the format above, then use Django's management
                 product.description,
                 str(product.price),
                 product.category.name if product.category else '',
+                product.active,
                 product.quantity,
                 product.in_stock,
                 product.tags

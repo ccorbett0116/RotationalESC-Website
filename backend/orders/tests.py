@@ -25,6 +25,16 @@ class OrderInventoryValidationTestCase(TestCase):
             in_stock=False
         )
         
+        self.inactive_product = Product.objects.create(
+            name="Inactive Product",
+            description="Test Description", 
+            price=Decimal('75.00'),
+            category=self.category,
+            quantity=10,
+            in_stock=True,
+            active=False
+        )
+        
         self.base_order_data = {
             'customer_email': 'test@example.com',
             'customer_first_name': 'Test',
@@ -126,3 +136,20 @@ class OrderInventoryValidationTestCase(TestCase):
             serializer.is_valid(raise_exception=True)
         
         self.assertIn('not found', str(context.exception))
+
+    def test_inactive_product_validation(self):
+        """Test that orders with inactive products are rejected"""
+        order_data = self.base_order_data.copy()
+        order_data['order_items'] = [
+            {
+                'product_id': str(self.inactive_product.id),
+                'quantity': 1,
+                'price': self.inactive_product.price
+            }
+        ]
+        
+        serializer = OrderCreateSerializer(data=order_data)
+        with self.assertRaises(ValidationError) as context:
+            serializer.is_valid(raise_exception=True)
+        
+        self.assertIn('out of stock', str(context.exception))

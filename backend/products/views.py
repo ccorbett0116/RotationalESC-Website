@@ -26,7 +26,7 @@ class CategoryListView(APIView):
         return Response(serializer.data)
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.select_related('category').prefetch_related('images', 'specifications')
+    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category', 'in_stock']  # Removed 'page' to avoid conflict with pagination
@@ -58,7 +58,7 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.select_related('category').prefetch_related('images', 'specifications')
+    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductDetailSerializer
 
 @api_view(['GET'])
@@ -69,7 +69,7 @@ def product_search(request):
     query = request.GET.get('q', '')
     category = request.GET.get('category', '')
     
-    products = Product.objects.select_related('category').prefetch_related('images')
+    products = Product.objects.filter(active=True).select_related('category').prefetch_related('images')
     
     if query:
         products = products.filter(
@@ -90,7 +90,7 @@ def upload_product_image(request, product_id):
     Upload an image for a specific product
     """
     try:
-        product = Product.objects.get(id=product_id)
+        product = Product.objects.filter(active=True).get(id=product_id)
     except Product.DoesNotExist:
         return Response(
             {'error': 'Product not found'}, 

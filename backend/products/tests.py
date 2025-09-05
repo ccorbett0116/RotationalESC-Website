@@ -49,3 +49,25 @@ class ProductInventoryTestCase(TestCase):
         self.assertEqual(self.product.quantity, 0)
         self.assertFalse(self.product.in_stock)
         self.assertFalse(self.product.is_available)
+
+    def test_product_not_available_when_inactive(self):
+        """Test that product is not available when active=False"""
+        self.product.active = False
+        self.product.save()
+        self.assertFalse(self.product.is_available)
+
+    def test_inactive_product_with_stock_not_available(self):
+        """Test that inactive product with stock and quantity is still not available"""
+        self.product.active = False
+        self.product.in_stock = True
+        self.product.quantity = 5
+        self.product.save()
+        self.assertFalse(self.product.is_available)
+
+    def test_active_product_is_available(self):
+        """Test that active product with stock and quantity is available"""
+        self.product.active = True
+        self.product.in_stock = True
+        self.product.quantity = 5
+        self.product.save()
+        self.assertTrue(self.product.is_available)
