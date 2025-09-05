@@ -74,10 +74,23 @@ class StripeService:
                 'order_items_count': len(order_items),
             }
             
-            # Add individual product details to metadata
+            # Add individual product details to metadata AND validate availability
             for i, item in enumerate(order_items):
                 try:
                     product = Product.objects.get(id=item['product_id'])
+                    
+                    # Validate product availability before creating payment intent
+                    if not product.is_available:
+                        raise Exception(f'Product "{product.name}" is no longer available')
+                    
+                    # Validate quantity availability
+                    if item['quantity'] > product.quantity:
+                        raise Exception(f'Only {product.quantity} units of "{product.name}" are available')
+                    
+                    # Validate price hasn't changed
+                    if item['price'] != product.price:
+                        raise Exception(f'Price for "{product.name}" has changed. Please refresh your cart.')
+                    
                     metadata[f'item_{i+1}_name'] = product.name
                     metadata[f'item_{i+1}_id'] = str(product.id)
                     metadata[f'item_{i+1}_category'] = product.category.name
@@ -85,17 +98,16 @@ class StripeService:
                     metadata[f'item_{i+1}_price'] = str(item['price'])
                     metadata[f'item_{i+1}_total'] = str(float(item['price']) * item['quantity'])
                 except Product.DoesNotExist:
-                    metadata[f'item_{i+1}_name'] = f"Product ID {item['product_id']} (Not Found)"
-                    metadata[f'item_{i+1}_quantity'] = str(item['quantity'])
-                    metadata[f'item_{i+1}_price'] = str(item['price'])
+                    raise Exception(f'Product with ID {item["product_id"]} not found')
             
-            # Create a descriptive order summary
+            # Create a descriptive order summary (products already validated above)
             product_names = []
             for item in order_items:
                 try:
                     product = Product.objects.get(id=item['product_id'])
                     product_names.append(f"{product.name} x{item['quantity']}")
                 except Product.DoesNotExist:
+                    # This shouldn't happen since we validated above, but just in case
                     product_names.append(f"Product ID {item['product_id']} x{item['quantity']}")
             
             description = f"Order for {order_data['customer_email']} - Items: {'; '.join(product_names)}"
@@ -194,6 +206,18 @@ class StripeService:
                 if 'product_id' in item:
                     try:
                         product = Product.objects.select_related('category').get(id=item['product_id'])
+                        
+                        # Validate product availability before creating checkout session
+                        if not product.is_available:
+                            raise Exception(f'Product "{product.name}" is no longer available')
+                        
+                        # Validate quantity availability
+                        if item['quantity'] > product.quantity:
+                            raise Exception(f'Only {product.quantity} units of "{product.name}" are available')
+                        
+                        # Validate price hasn't changed
+                        if item['price'] != product.price:
+                            raise Exception(f'Price for "{product.name}" has changed. Please refresh your cart.')
                         
                         # Try to use existing Stripe product/price or create new ones
                         stripe_product = StripeService.create_or_get_stripe_product(product)

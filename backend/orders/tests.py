@@ -12,8 +12,7 @@ class OrderInventoryValidationTestCase(TestCase):
             description="Test Description",
             price=Decimal('100.00'),
             category=self.category,
-            quantity=5,
-            in_stock=True
+            quantity=5
         )
         
         self.out_of_stock_product = Product.objects.create(
@@ -21,8 +20,7 @@ class OrderInventoryValidationTestCase(TestCase):
             description="Test Description",
             price=Decimal('50.00'),
             category=self.category,
-            quantity=0,
-            in_stock=False
+            quantity=0
         )
         
         self.inactive_product = Product.objects.create(
@@ -31,7 +29,6 @@ class OrderInventoryValidationTestCase(TestCase):
             price=Decimal('75.00'),
             category=self.category,
             quantity=10,
-            in_stock=True,
             active=False
         )
         

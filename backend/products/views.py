@@ -29,7 +29,7 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'in_stock']  # Removed 'page' to avoid conflict with pagination
+    filterset_fields = ['category']  # Removed 'page' to avoid conflict with pagination
     search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
     ordering_fields = ['name', 'price', 'created_at']
     ordering = ['name']
@@ -265,7 +265,6 @@ def _import_products_from_csv_api(csv_file, update_existing):
             )
             
             # Optional fields
-            in_stock = row.get('in_stock', 'true').strip().lower() in ['true', '1', 'yes', 'y']
             tags = row.get('tags', '').strip()
             
             # Check if product exists
@@ -281,7 +280,6 @@ def _import_products_from_csv_api(csv_file, update_existing):
                 product.price = price
                 product.category = category
                 product.page = page
-                product.in_stock = in_stock
                 product.tags = tags
                 product.save()
             else:
@@ -292,7 +290,6 @@ def _import_products_from_csv_api(csv_file, update_existing):
                     price=price,
                     category=category,
                     page=page,
-                    in_stock=in_stock,
                     tags=tags
                 )
             
