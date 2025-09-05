@@ -95,7 +95,7 @@ class CategoryAdmin(admin.ModelAdmin):
     name_with_icon.admin_order_field = 'name'
     
     def product_count(self, obj):
-        count = obj.product_set.count()
+        count = obj.products.count()
         return format_html(
             '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px;">{} products</span>',
             count
@@ -112,7 +112,7 @@ class CategoryAdmin(admin.ModelAdmin):
         if not obj.pk:
             return "Save to see product count"
         
-        products = obj.product_set.all()
+        products = obj.products.all()
         in_stock = products.filter(in_stock=True).count()
         out_of_stock = products.filter(in_stock=False).count()
         
@@ -163,8 +163,8 @@ class ProductAdmin(admin.ModelAdmin):
     
     def price_display(self, obj):
         return format_html(
-            '<span style="font-weight: bold; color: #27ae60; font-size: 14px;">${:.2f}</span>',
-            obj.price
+            '<span style="font-weight: bold; color: #27ae60; font-size: 14px;">${}</span>',
+            f"{obj.price:.2f}"
         )
     price_display.short_description = "Price"
     price_display.admin_order_field = 'price'

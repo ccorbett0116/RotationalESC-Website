@@ -87,8 +87,8 @@ class OrderAdmin(admin.ModelAdmin):
     
     def formatted_total(self, obj):
         return format_html(
-            '<span style="font-weight: bold; color: #2c3e50; font-size: 14px;">${:.2f}</span>',
-            obj.total_amount
+            '<span style="font-weight: bold; color: #2c3e50; font-size: 14px;">${}</span>',
+            f"{obj.total_amount:.2f}"
         )
     formatted_total.short_description = "Total"
     formatted_total.admin_order_field = 'total_amount'
