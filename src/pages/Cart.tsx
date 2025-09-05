@@ -51,6 +51,30 @@ const Cart = () => {
   }, [cartItems, removeCartItem]);
 
   const updateQuantity = (productId: string, newQuantity: number) => {
+    const product = products.find(p => p.id === productId);
+    if (product) {
+      // Validate against available quantity
+      if (newQuantity > product.quantity) {
+        toast({
+          title: "Quantity limited",
+          description: `Only ${product.quantity} units of ${product.name} are available`,
+          variant: "destructive",
+        });
+        return;
+      }
+      
+      // Check if product is still available
+      if (!product.is_available && newQuantity > 0) {
+        toast({
+          title: "Product unavailable",
+          description: `${product.name} is no longer available`,
+          variant: "destructive",
+        });
+        removeCartItem(productId);
+        return;
+      }
+    }
+    
     updateCartQuantity(productId, newQuantity);
   };
 
@@ -157,9 +181,17 @@ const Cart = () => {
                               {item.product.name}
                             </Link>
                           </h3>
-                          <Badge variant="outline" className="mt-1">
-                            {item.product.category.name}
-                          </Badge>
+                          <div className="flex gap-2 mt-1">
+                            <Badge variant="outline">
+                              {item.product.category.name}
+                            </Badge>
+                            <Badge 
+                              variant={item.product.is_available ? "default" : "secondary"}
+                              className={item.product.is_available ? "bg-green-100 text-green-800" : ""}
+                            >
+                              {item.product.is_available ? `${item.product.quantity} in stock` : "Out of Stock"}
+                            </Badge>
+                          </div>
                         </div>
                         <Button
                           variant="ghost"
@@ -178,6 +210,7 @@ const Cart = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(item.productId, item.quantity - 1)}
+                            disabled={item.quantity <= 1}
                           >
                             <Minus className="h-3 w-3" />
                           </Button>
@@ -186,6 +219,7 @@ const Cart = () => {
                             variant="outline"
                             size="sm"
                             onClick={() => updateQuantity(item.productId, item.quantity + 1)}
+                            disabled={!item.product.is_available || item.quantity >= item.product.quantity}
                           >
                             <Plus className="h-3 w-3" />
                           </Button>

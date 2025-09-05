@@ -14,7 +14,7 @@ import Layout from "@/components/Layout";
 import ShopImage from "@/assets/ShopImage.jpg"; 
 
 const Shop = () => {
-  const { addItem } = useCart();
+  const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -135,6 +135,18 @@ const Shop = () => {
   }, [allProducts, selectedCategory, searchTerm, sortBy, searchProducts]);
 
   const handleAddToCart = (product: Product) => {
+    const currentQuantityInCart = getItemQuantity(product.id);
+    
+    // Check if adding one more would exceed available quantity
+    if (currentQuantityInCart + 1 > product.quantity) {
+      toast({
+        title: "Cannot add item",
+        description: `Only ${product.quantity} units of ${product.name} are available. You already have ${currentQuantityInCart} in your cart.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    
     addItem(product.id, 1);
     toast({
       title: "Added to cart",

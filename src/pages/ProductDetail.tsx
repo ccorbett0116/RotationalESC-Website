@@ -15,7 +15,7 @@ import Layout from "@/components/Layout";
 const ProductDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { addItem } = useCart();
+  const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
@@ -52,6 +52,18 @@ const ProductDetail = () => {
 
   const handleAddToCart = () => {
     if (!product) return;
+    
+    const currentQuantityInCart = getItemQuantity(product.id);
+    
+    // Check if adding this quantity would exceed available quantity
+    if (currentQuantityInCart + quantity > product.quantity) {
+      toast({
+        title: "Cannot add items",
+        description: `Only ${product.quantity} units available. You already have ${currentQuantityInCart} in your cart.`,
+        variant: "destructive",
+      });
+      return;
+    }
     
     addItem(product.id, quantity);
     toast({
@@ -233,7 +245,12 @@ const ProductDetail = () => {
             <div className="space-y-4">
               <div>
                 <label className="text-sm font-medium mb-2 block">
-                  Quantity {product.quantity > 0 && <span className="text-muted-foreground">({product.quantity} available)</span>}
+                  Quantity {product.quantity > 0 && (
+                    <span className="text-muted-foreground">
+                      ({product.quantity} available
+                      {getItemQuantity(product.id) > 0 && `, ${getItemQuantity(product.id)} in cart`})
+                    </span>
+                  )}
                 </label>
                 <div className="flex items-center space-x-2">
                   <Button 
@@ -248,8 +265,12 @@ const ProductDetail = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
-                    onClick={() => setQuantity(Math.min(product.quantity, quantity + 1))}
-                    disabled={!product.is_available || quantity >= product.quantity}
+                    onClick={() => {
+                      const currentInCart = getItemQuantity(product.id);
+                      const maxAllowed = product.quantity - currentInCart;
+                      setQuantity(Math.min(maxAllowed, quantity + 1));
+                    }}
+                    disabled={!product.is_available || quantity >= (product.quantity - getItemQuantity(product.id))}
                   >
                     +
                   </Button>
