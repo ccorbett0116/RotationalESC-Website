@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django import forms
 from django.utils.safestring import mark_safe
+from django.utils.html import format_html
+from django.urls import reverse
 from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer
 
 class ProductImageAdminForm(forms.ModelForm):
@@ -80,205 +82,190 @@ class ProductSpecificationInline(admin.TabularInline):
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
-    list_display = ['name', 'description', 'created_at']
-    search_fields = ['name']
+    list_display = ['name_with_icon', 'product_count', 'description_excerpt', 'created_at']
+    search_fields = ['name', 'description']
+    readonly_fields = ['product_count_detail', 'created_at']
+    
+    def name_with_icon(self, obj):
+        return format_html(
+            '<span style="font-weight: bold; color: #2c3e50;">🏷️ {}</span>',
+            obj.name
+        )
+    name_with_icon.short_description = "Category"
+    name_with_icon.admin_order_field = 'name'
+    
+    def product_count(self, obj):
+        count = obj.product_set.count()
+        return format_html(
+            '<span style="background: #3498db; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px;">{} products</span>',
+            count
+        )
+    product_count.short_description = "Products"
+    
+    def description_excerpt(self, obj):
+        if obj.description and len(obj.description) > 50:
+            return obj.description[:50] + "..."
+        return obj.description or "—"
+    description_excerpt.short_description = "Description"
+    
+    def product_count_detail(self, obj):
+        if not obj.pk:
+            return "Save to see product count"
+        
+        products = obj.product_set.all()
+        in_stock = products.filter(in_stock=True).count()
+        out_of_stock = products.filter(in_stock=False).count()
+        
+        return format_html(
+            '''
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                <p><strong>Total Products:</strong> {}</p>
+                <p><span style="color: #27ae60;">✅ In Stock:</span> {}</p>
+                <p><span style="color: #e74c3c;">❌ Out of Stock:</span> {}</p>
+            </div>
+            ''',
+            products.count(), in_stock, out_of_stock
+        )
+    product_count_detail.short_description = "Product Statistics"
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'price', 'in_stock', 'created_at']
+    list_display = ['product_info', 'category_badge', 'price_display', 'stock_status', 'image_count', 'created_date']
     list_filter = ['category', 'in_stock', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
-    readonly_fields = ['created_at', 'updated_at']
-    actions = ['export_to_csv']
+    readonly_fields = ['created_at', 'updated_at', 'product_summary']
+    actions = ['export_to_csv', 'mark_in_stock', 'mark_out_of_stock', 'bulk_import_csv']
+    list_per_page = 20
+    date_hierarchy = 'created_at'
     
-    def changelist_view(self, request, extra_context=None):
-        """Add import CSV button to the changelist"""
-        extra_context = extra_context or {}
-        extra_context['import_csv_url'] = 'import-csv/'
-        return super().changelist_view(request, extra_context)
+    def get_queryset(self, request):
+        return super().get_queryset(request).select_related('category').prefetch_related('images')
     
-    def get_urls(self):
-        from django.urls import path
-        urls = super().get_urls()
-        custom_urls = [
-            path('import-csv/', self.admin_site.admin_view(self.import_csv), name='products_product_import_csv'),
-        ]
-        return custom_urls + urls
+    def product_info(self, obj):
+        return format_html(
+            '<div><strong style="color: #2c3e50;">{}</strong><br><small style="color: #666;">{}</small></div>',
+            obj.name,
+            obj.description[:60] + "..." if len(obj.description or "") > 60 else obj.description or "No description"
+        )
+    product_info.short_description = "Product"
+    product_info.admin_order_field = 'name'
     
-    def import_csv(self, request):
-        """Import products from CSV file"""
-        from django.shortcuts import render, redirect
-        from django.contrib import messages
-        from django import forms
-        from django.db import transaction
-        import csv
-        import io
-        from decimal import Decimal, InvalidOperation
-        
-        class CSVImportForm(forms.Form):
-            products_csv_file = forms.FileField(
-                label='Products CSV File',
-                help_text='CSV file with products data. Required columns: name, description, price, category'
+    def category_badge(self, obj):
+        if obj.category:
+            return format_html(
+                '<span style="background: #17a2b8; color: white; padding: 3px 8px; border-radius: 12px; font-size: 11px;">{}</span>',
+                obj.category.name
             )
-            specifications_csv_file = forms.FileField(
-                label='Specifications CSV File (Optional)',
-                required=False,
-                help_text='Optional CSV file with product specifications'
+        return format_html('<span style="color: #999;">No category</span>')
+    category_badge.short_description = "Category"
+    category_badge.admin_order_field = 'category__name'
+    
+    def price_display(self, obj):
+        return format_html(
+            '<span style="font-weight: bold; color: #27ae60; font-size: 14px;">${:.2f}</span>',
+            obj.price
+        )
+    price_display.short_description = "Price"
+    price_display.admin_order_field = 'price'
+    
+    def stock_status(self, obj):
+        if obj.in_stock:
+            return format_html(
+                '<span style="color: #27ae60; font-weight: bold;">✅ In Stock</span>'
             )
-            update_existing = forms.BooleanField(
-                label='Update existing products',
-                required=False,
-                help_text='If checked, existing products will be updated. Otherwise, duplicates will be skipped.'
-            )
-        
-        if request.method == 'POST':
-            form = CSVImportForm(request.POST, request.FILES)
-            if form.is_valid():
-                products_file = form.cleaned_data['products_csv_file']
-                specs_file = form.cleaned_data.get('specifications_csv_file')
-                update_existing = form.cleaned_data['update_existing']
-                
-                try:
-                    with transaction.atomic():
-                        # Import products
-                        products_imported = self._import_products_from_csv(products_file, update_existing)
-                        
-                        # Import specifications if provided
-                        specs_imported = 0
-                        if specs_file:
-                            specs_imported = self._import_specifications_from_csv(specs_file)
-                        
-                        messages.success(
-                            request,
-                            f'Successfully imported {products_imported} products and {specs_imported} specifications.'
-                        )
-                        return redirect('..')
-                        
-                except Exception as e:
-                    messages.error(request, f'Import failed: {str(e)}')
         else:
-            form = CSVImportForm()
-        
-        help_text = """
-        <h3>CSV Format Requirements</h3>
-        <h4>Products CSV:</h4>
-        <p><strong>Required columns:</strong> name, description, price, category</p>
-        <p><strong>Optional columns:</strong> in_stock, tags</p>
-        <pre>name,description,price,category,in_stock,tags
-Industrial Pump,High-efficiency pump,2499.99,Pumps,true,"industrial,pump"</pre>
-        
-        <h4>Specifications CSV (Optional):</h4>
-        <p><strong>Required columns:</strong> product_name, key, value</p>
-        <p><strong>Optional columns:</strong> order</p>
-        <pre>product_name,key,value,order
-Industrial Pump,Flow Rate,500 GPM,0</pre>
-        """
-        
-        context = {
-            'form': form,
-            'title': 'Import Products from CSV',
-            'help_text': help_text
-        }
-        return render(request, 'admin/products/import_csv.html', context)
+            return format_html(
+                '<span style="color: #e74c3c; font-weight: bold;">❌ Out of Stock</span>'
+            )
+    stock_status.short_description = "Stock"
+    stock_status.admin_order_field = 'in_stock'
     
-    def _import_products_from_csv(self, csv_file, update_existing):
-        """Import products from CSV file"""
-        from decimal import Decimal, InvalidOperation
-        
-        imported_count = 0
-        decoded_file = csv_file.read().decode('utf-8')
-        io_string = io.StringIO(decoded_file)
-        reader = csv.DictReader(io_string)
-        
-        for row in reader:
-            try:
-                name = row['name'].strip()
-                description = row['description'].strip()
-                category_name = row['category'].strip()
-                
-                # Parse price
-                try:
-                    price_str = row['price'].strip().replace('$', '').replace(',', '')
-                    price = Decimal(price_str)
-                except (InvalidOperation, ValueError):
-                    raise ValueError(f'Invalid price "{row["price"]}" for product "{name}"')
-                
-                # Get or create category
-                category, created = Category.objects.get_or_create(
-                    name=category_name,
-                    defaults={'description': f'Category for {category_name}'}
-                )
-                
-                # Optional fields
-                in_stock = row.get('in_stock', 'true').strip().lower() in ['true', '1', 'yes', 'y']
-                tags = row.get('tags', '').strip()
-                
-                # Check if product exists
-                product_exists = Product.objects.filter(name=name).exists()
-                
-                if product_exists and not update_existing:
-                    continue  # Skip existing products
-                
-                if product_exists and update_existing:
-                    # Update existing product
-                    product = Product.objects.get(name=name)
-                    product.description = description
-                    product.price = price
-                    product.category = category
-                    product.in_stock = in_stock
-                    product.tags = tags
-                    product.save()
-                else:
-                    # Create new product
-                    Product.objects.create(
-                        name=name,
-                        description=description,
-                        price=price,
-                        category=category,
-                        in_stock=in_stock,
-                        tags=tags
-                    )
-                
-                imported_count += 1
-                
-            except Exception as e:
-                raise Exception(f'Error processing row: {str(e)}')
-        
-        return imported_count
+    def image_count(self, obj):
+        count = obj.images.count()
+        if count > 0:
+            return format_html(
+                '<span style="background: #f39c12; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px;">📷 {}</span>',
+                count
+            )
+        return format_html('<span style="color: #999;">No images</span>')
+    image_count.short_description = "Images"
     
-    def _import_specifications_from_csv(self, csv_file):
-        """Import product specifications from CSV file"""
-        imported_count = 0
-        decoded_file = csv_file.read().decode('utf-8')
-        io_string = io.StringIO(decoded_file)
-        reader = csv.DictReader(io_string)
+    def created_date(self, obj):
+        return format_html(
+            '<span style="color: #666;">{}</span>',
+            obj.created_at.strftime('%Y-%m-%d')
+        )
+    created_date.short_description = "Created"
+    created_date.admin_order_field = 'created_at'
+    
+    def product_summary(self, obj):
+        if not obj.pk:
+            return "Save the product to see summary"
+            
+        specs_count = obj.specifications.count()
+        images_count = obj.images.count()
+        primary_image = obj.images.filter(order=0).first()
         
-        for row in reader:
-            try:
-                product_name = row['product_name'].strip()
-                key = row['key'].strip()
-                value = row['value'].strip()
-                order = int(row.get('order', 0))
-                
-                try:
-                    product = Product.objects.get(name=product_name)
-                except Product.DoesNotExist:
-                    continue  # Skip if product doesn't exist
-                
-                # Create or update specification
-                ProductSpecification.objects.update_or_create(
-                    product=product,
-                    key=key,
-                    defaults={'value': value, 'order': order}
-                )
-                
-                imported_count += 1
-                
-            except Exception as e:
-                continue  # Skip problematic rows
+        summary = f'''
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <h4 style="margin-top: 0; color: #2c3e50;">📋 Product Summary</h4>
+            <div style="display: flex; gap: 20px;">
+                <div style="flex: 1;">
+                    <p><strong>Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
+                    <p><strong>Stock Status:</strong> {'✅ Available' if obj.in_stock else '❌ Out of Stock'}</p>
+                    <p><strong>Images:</strong> {images_count}</p>
+                    <p><strong>Specifications:</strong> {specs_count}</p>
+                </div>
+        '''
         
-        return imported_count
+        if primary_image and primary_image.image_data:
+            summary += f'''
+                <div style="flex: 0 0 150px;">
+                    <img src="{primary_image.data_url}" style="max-width: 150px; max-height: 150px; border-radius: 6px; border: 1px solid #ddd;" />
+                </div>
+            '''
+        
+        summary += '</div></div>'
+        return mark_safe(summary)
+    product_summary.short_description = "Product Summary"
+    
+    def mark_in_stock(self, request, queryset):
+        updated = queryset.update(in_stock=True)
+        self.message_user(request, f'{updated} product(s) marked as in stock.')
+    mark_in_stock.short_description = "Mark selected products as in stock"
+    
+    def mark_out_of_stock(self, request, queryset):
+        updated = queryset.update(in_stock=False)
+        self.message_user(request, f'{updated} product(s) marked as out of stock.')
+    mark_out_of_stock.short_description = "Mark selected products as out of stock"
+    
+    def bulk_import_csv(self, request, queryset):
+        """Bulk import products from CSV - shows instructions"""
+        from django.http import HttpResponse
+        
+        help_response = """CSV Import Instructions:
+
+Products CSV Format:
+Required columns: name, description, price, category
+Optional columns: in_stock, tags
+
+Example:
+name,description,price,category,in_stock,tags
+Industrial Pump,High-efficiency pump,2499.99,Pumps,true,"industrial,pump"
+
+Specifications CSV Format (Optional):
+Required columns: product_name, key, value
+Optional columns: order
+
+Example:
+product_name,key,value,order
+Industrial Pump,Flow Rate,500 GPM,0
+
+To import: Create a CSV file with the format above, then use Django's management commands or create a custom import script."""
+        
+        return HttpResponse(help_response, content_type='text/plain')
+    
 
     def export_to_csv(self, request, queryset):
         """Export selected products to CSV"""
@@ -307,6 +294,7 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
         return response
 
     export_to_csv.short_description = "Export selected products to CSV"
+    bulk_import_csv.short_description = "Show CSV import format instructions"
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):

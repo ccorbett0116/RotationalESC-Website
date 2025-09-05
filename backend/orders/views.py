@@ -1,4 +1,11 @@
-from decimal import Decimal
+ffrom rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from .models import Order, OrderItem
+from .serializers import OrderSerializer, OrderItemSerializer
+from .stripe_service import StripeService
+from .email_service import OrderEmailServicecimal import Decimal
 from rest_framework import generics, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
@@ -116,6 +123,16 @@ def confirm_payment(request, order_number):
         # Update order payment status
         order = StripeService.update_order_payment_status(order, payment_intent)
         
+        # Send email notifications if payment was successful
+        if payment_intent.status == 'succeeded':
+            OrderEmailService.send_payment_success_notification(order)
+            # Customer confirmation disabled for now
+            # OrderEmailService.send_customer_order_confirmation(order)
+        elif payment_intent.status in ['canceled', 'requires_payment_method']:
+            # Payment failed or was cancelled
+            failure_reason = getattr(payment_intent, 'cancellation_reason', 'Payment failed or cancelled')
+            OrderEmailService.send_payment_failed_notification(order, failure_reason)
+        
         # Return updated order
         serializer = OrderSerializer(order, context={'request': request})
         return Response(serializer.data, status=status.HTTP_200_OK)
@@ -170,6 +187,11 @@ def stripe_webhook(request):
             order.status = 'processing'
             order.save()
             
+            # Send email notification to owner about successful payment
+            OrderEmailService.send_payment_success_notification(order)
+            # Customer confirmation disabled for now
+            # OrderEmailService.send_customer_order_confirmation(order)
+            
         except Order.DoesNotExist:
             pass  # Order might not exist yet
     
@@ -180,6 +202,10 @@ def stripe_webhook(request):
             order = Order.objects.get(stripe_payment_intent_id=payment_intent['id'])
             order.payment_status = 'failed'
             order.save()
+            
+            # Send email notification to owner about failed payment
+            failure_reason = payment_intent.get('last_payment_error', {}).get('message', 'Payment failed')
+            OrderEmailService.send_payment_failed_notification(order, failure_reason)
             
         except Order.DoesNotExist:
             pass
@@ -197,6 +223,11 @@ def stripe_webhook(request):
                     order.status = 'processing'
                     order.save()
                     
+                    # Send email notification to owner about successful payment
+                    OrderEmailService.send_payment_success_notification(order)
+                    # Customer confirmation disabled for now
+                    # OrderEmailService.send_customer_order_confirmation(order)
+                    
         except Order.DoesNotExist:
             pass
 
@@ -209,7 +240,25 @@ def stripe_webhook(request):
                 order = Order.objects.get(order_number=order_number)
                 order.payment_status = 'failed'
                 order.save()
+                
+                # Send email notification to owner about expired session
+                OrderEmailService.send_payment_failed_notification(order, "Payment session expired")
                     
+        except Order.DoesNotExist:
+            pass
+    
+    elif event['type'] == 'payment_intent.canceled':
+        payment_intent = event['data']['object']
+        
+        try:
+            order = Order.objects.get(stripe_payment_intent_id=payment_intent['id'])
+            order.payment_status = 'failed'
+            order.save()
+            
+            # Send email notification to owner about cancelled payment
+            cancellation_reason = payment_intent.get('cancellation_reason', 'Payment cancelled')
+            OrderEmailService.send_payment_failed_notification(order, f"Payment cancelled: {cancellation_reason}")
+            
         except Order.DoesNotExist:
             pass
     
@@ -281,6 +330,12 @@ def verify_checkout_session(request, order_number):
             order.status = 'processing'
             order.save(update_fields=['payment_status', 'status'])
             verified = True
+            
+            # Send email notification to owner about successful payment
+            OrderEmailService.send_payment_success_notification(order)
+            # Customer confirmation disabled for now
+            # OrderEmailService.send_customer_order_confirmation(order)
+            
         elif session.payment_status == 'unpaid':
             order.payment_status = 'pending'
             order.save(update_fields=['payment_status'])
@@ -289,6 +344,9 @@ def verify_checkout_session(request, order_number):
             order.payment_status = 'failed'
             order.save(update_fields=['payment_status'])
             verified = False
+            
+            # Send email notification to owner about failed payment
+            OrderEmailService.send_payment_failed_notification(order, f"Payment verification failed - {session.payment_status}")
         
         # Return verification result
         serializer = OrderSerializer(order, context={'request': request})

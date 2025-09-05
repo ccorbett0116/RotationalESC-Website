@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { XCircle, ArrowLeft, CreditCard, Phone, Mail } from "lucide-react";
 import Layout from "@/components/Layout";
+import { apiService } from "@/services/api";
 
 const PaymentFailed = () => {
   const [searchParams] = useSearchParams();
@@ -12,6 +13,43 @@ const PaymentFailed = () => {
   
   const orderNumber = searchParams.get('order');
   const reason = searchParams.get('reason') || 'unknown';
+
+  // Notify owner about payment failure when component mounts
+  useEffect(() => {
+    const notifyOwner = async () => {
+      if (orderNumber && reason) {
+        try {
+          const reasonText = getReasonText(reason);
+          await apiService.notifyPaymentCancelled(orderNumber, reasonText);
+          console.log('Owner notified about payment failure');
+        } catch (error) {
+          console.error('Failed to notify owner:', error);
+          // Don't show error to user as this is a background operation
+        }
+      }
+    };
+
+    notifyOwner();
+  }, [orderNumber, reason]);
+
+  const getReasonText = (reason: string): string => {
+    switch (reason.toLowerCase()) {
+      case 'cancelled':
+        return 'Customer cancelled the payment';
+      case 'expired':
+        return 'Payment session expired';
+      case 'card_declined':
+        return 'Card was declined';
+      case 'insufficient_funds':
+        return 'Insufficient funds';
+      case 'processing_error':
+        return 'Payment processing error';
+      case 'verification_failed':
+        return 'Payment verification failed';
+      default:
+        return `Payment failed: ${reason}`;
+    }
+  };
 
   const getFailureMessage = (reason: string) => {
     switch (reason.toLowerCase()) {

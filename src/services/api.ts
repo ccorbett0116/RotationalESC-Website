@@ -297,6 +297,13 @@ export const apiService = {
     return response.data;
   },
 
+  notifyPaymentCancelled: async (orderNumber: string, reason: string): Promise<{ message: string }> => {
+    const response = await api.post(`/orders/${orderNumber}/notify-payment-cancelled/`, {
+      reason: reason
+    });
+    return response.data;
+  },
+
   // Contact Form
   submitContactForm: async (contactData: ContactFormData): Promise<ContactSubmissionResponse> => {
     const response = await api.post('/contact/submit/', contactData);

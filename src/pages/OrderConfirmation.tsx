@@ -33,6 +33,123 @@ const OrderConfirmation = () => {
     fetchOrder();
   }, [orderNumber]);
 
+  const handleDownloadReceipt = () => {
+    if (!order) return;
+
+    // Create a new window with the receipt content
+    const receiptWindow = window.open('', '_blank');
+    if (!receiptWindow) return;
+
+    const receiptHTML = generateReceiptHTML(order);
+    receiptWindow.document.write(receiptHTML);
+    receiptWindow.document.close();
+    
+    // Wait for content to load, then print
+    receiptWindow.onload = () => {
+      receiptWindow.print();
+      receiptWindow.close();
+    };
+  };
+
+  const generateReceiptHTML = (order: Order) => {
+    return `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Receipt - Order #${order.order_number}</title>
+          <style>
+            body { font-family: Arial, sans-serif; margin: 40px; }
+            .header { text-align: center; margin-bottom: 40px; }
+            .company-name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
+            .order-info { margin-bottom: 30px; }
+            .order-info h2 { margin-bottom: 10px; }
+            .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+            .items-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+            .items-table th, .items-table td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+            .items-table th { background-color: #f2f2f2; }
+            .totals { margin-top: 20px; }
+            .totals table { width: 300px; margin-left: auto; }
+            .totals td { padding: 5px 10px; }
+            .total-row { font-weight: bold; border-top: 2px solid #333; }
+            .footer { margin-top: 40px; text-align: center; font-size: 12px; color: #666; }
+          </style>
+        </head>
+        <body>
+          <div class="header">
+            <div class="company-name">Rotational Equipment Services</div>
+            <div>Receipt</div>
+          </div>
+          
+          <div class="order-info">
+            <h2>Order #${order.order_number}</h2>
+            <div class="info-grid">
+              <div>
+                <strong>Order Date:</strong> ${new Date(order.created_at).toLocaleDateString()}<br>
+                <strong>Customer:</strong> ${order.customer_first_name} ${order.customer_last_name}<br>
+                <strong>Email:</strong> ${order.customer_email}<br>
+                <strong>Payment Method:</strong> ${order.payment_method === 'card' ? 'Stripe' : 'Purchase Order'}
+              </div>
+              <div>
+                <strong>Shipping Address:</strong><br>
+                ${order.shipping_address_line1}<br>
+                ${order.shipping_address_line2 ? order.shipping_address_line2 + '<br>' : ''}
+                ${order.shipping_city}, ${order.shipping_state} ${order.shipping_postal_code}<br>
+                ${order.shipping_country}
+              </div>
+            </div>
+          </div>
+
+          <table class="items-table">
+            <thead>
+              <tr>
+                <th>Item</th>
+                <th>Quantity</th>
+                <th>Price</th>
+                <th>Total</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${order.items.map(item => `
+                <tr>
+                  <td>${item.product.name}</td>
+                  <td>${item.quantity}</td>
+                  <td>${formatCAD(Number(item.price))}</td>
+                  <td>${formatCAD(Number(item.total_price))}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+
+          <div class="totals">
+            <table>
+              <tr>
+                <td>Subtotal:</td>
+                <td>${formatCAD(Number(order.subtotal))}</td>
+              </tr>
+              <tr>
+                <td>Shipping:</td>
+                <td>Will be contacted for shipping</td>
+              </tr>
+              <tr>
+                <td>Tax:</td>
+                <td>${formatCAD(Number(order.tax_amount))}</td>
+              </tr>
+              <tr class="total-row">
+                <td><strong>Total:</strong></td>
+                <td><strong>${formatCAD(Number(order.total_amount))}</strong></td>
+              </tr>
+            </table>
+          </div>
+
+          <div class="footer">
+            <p>Thank you for your business!</p>
+            <p>For questions about this order, please contact us with your order number.</p>
+          </div>
+        </body>
+      </html>
+    `;
+  };
+
   if (loading) {
     return (
       <Layout>
@@ -111,7 +228,7 @@ const OrderConfirmation = () => {
               <div>
                 <h3 className="font-semibold mb-2">Payment Method</h3>
                 <p className="text-muted-foreground">
-                  {order.payment_method === 'card' ? 'Credit Card' : 'Purchase Order'}
+                  {order.payment_method === 'card' ? 'Stripe' : 'Purchase Order'}
                 </p>
               </div>
             </div>
@@ -169,13 +286,7 @@ const OrderConfirmation = () => {
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
-                <span>
-                  {order.shipping_amount === 0 ? (
-                    <span className="text-green-600">FREE</span>
-                  ) : (
-                    formatCAD(Number(order.shipping_amount))
-                  )}
-                </span>
+                <span>Will be contacted for shipping</span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
@@ -219,25 +330,16 @@ const OrderConfirmation = () => {
               <CardTitle>Shipping Method</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="capitalize">
-                {order.shipping_method === 'standard' 
-                  ? 'Standard Shipping (5-7 business days)'
-                  : 'Express Shipping (2-3 business days)'
-                }
+              <p>
+                Will be contacted via Email or your Number for shipping
               </p>
-              {order.tracking_number && (
-                <div className="mt-2">
-                  <p className="text-sm text-muted-foreground">Tracking Number:</p>
-                  <p className="font-mono">{order.tracking_number}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <Button variant="outline" className="flex items-center gap-2">
+          <Button variant="outline" className="flex items-center gap-2" onClick={handleDownloadReceipt}>
             <Download className="h-4 w-4" />
             Download Receipt
           </Button>

@@ -19,6 +19,11 @@ from django.urls import path, include
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
 
+# Configure admin titles
+admin.site.site_header = "Rotational Equipment Services Admin"
+admin.site.site_title = "RES Admin Portal"
+admin.site.index_title = "Welcome to RES Administration"
+
 @ensure_csrf_cookie
 def csrf_token_view(request):
     return JsonResponse({'csrfToken': 'token'})
