@@ -8,24 +8,104 @@ stripe.api_key = settings.STRIPE_SECRET_KEY
 
 class StripeService:
     @staticmethod
+    def create_or_get_stripe_product(product):
+        """
+        Create or retrieve a Stripe product for better tracking in Stripe dashboard
+        """
+        try:
+            # Check if product already exists in Stripe by searching metadata
+            existing_products = stripe.Product.list(
+                metadata={'internal_product_id': str(product.id)}
+            )
+            
+            if existing_products.data:
+                return existing_products.data[0]
+            
+            # Create new Stripe product
+            stripe_product = stripe.Product.create(
+                name=product.name,
+                description=product.description[:500] if product.description else None,  # Stripe limits description
+                metadata={
+                    'internal_product_id': str(product.id),
+                    'category': product.category.name if product.category else 'Unknown',
+                    'tags': product.tags[:500] if product.tags else '',  # Stripe metadata value limit
+                }
+            )
+            
+            return stripe_product
+            
+        except stripe.error.StripeError as e:
+            # If Stripe product creation fails, we'll continue without it
+            # This ensures the payment process doesn't break
+            print(f"Warning: Could not create Stripe product for {product.name}: {str(e)}")
+            return None
+
+    @staticmethod
+    def create_stripe_price(stripe_product, price_amount):
+        """
+        Create a Stripe price for a product
+        """
+        try:
+            stripe_price = stripe.Price.create(
+                product=stripe_product.id,
+                unit_amount=int(price_amount * 100),  # Convert to cents
+                currency='usd',
+            )
+            return stripe_price
+        except stripe.error.StripeError as e:
+            print(f"Warning: Could not create Stripe price: {str(e)}")
+            return None
+
+    @staticmethod
     def create_payment_intent(order_data, order_items):
         """
         Create a Stripe payment intent for the order
         """
         try:
+            from products.models import Product
+            
             # Calculate the total amount in cents (Stripe requires cents)
             total_amount_cents = int(order_data['total_amount'] * 100)
+            
+            # Build detailed metadata with product information
+            metadata = {
+                'customer_email': order_data['customer_email'],
+                'customer_name': f"{order_data['customer_first_name']} {order_data['customer_last_name']}",
+                'order_items_count': len(order_items),
+            }
+            
+            # Add individual product details to metadata
+            for i, item in enumerate(order_items):
+                try:
+                    product = Product.objects.get(id=item['product_id'])
+                    metadata[f'item_{i+1}_name'] = product.name
+                    metadata[f'item_{i+1}_id'] = str(product.id)
+                    metadata[f'item_{i+1}_category'] = product.category.name
+                    metadata[f'item_{i+1}_quantity'] = str(item['quantity'])
+                    metadata[f'item_{i+1}_price'] = str(item['price'])
+                    metadata[f'item_{i+1}_total'] = str(float(item['price']) * item['quantity'])
+                except Product.DoesNotExist:
+                    metadata[f'item_{i+1}_name'] = f"Product ID {item['product_id']} (Not Found)"
+                    metadata[f'item_{i+1}_quantity'] = str(item['quantity'])
+                    metadata[f'item_{i+1}_price'] = str(item['price'])
+            
+            # Create a descriptive order summary
+            product_names = []
+            for item in order_items:
+                try:
+                    product = Product.objects.get(id=item['product_id'])
+                    product_names.append(f"{product.name} x{item['quantity']}")
+                except Product.DoesNotExist:
+                    product_names.append(f"Product ID {item['product_id']} x{item['quantity']}")
+            
+            description = f"Order for {order_data['customer_email']} - Items: {'; '.join(product_names)}"
             
             # Create payment intent
             intent = stripe.PaymentIntent.create(
                 amount=total_amount_cents,
                 currency='usd',  # You can make this configurable based on billing_country
-                metadata={
-                    'customer_email': order_data['customer_email'],
-                    'customer_name': f"{order_data['customer_first_name']} {order_data['customer_last_name']}",
-                    'order_items_count': len(order_items),
-                },
-                description=f"Order for {order_data['customer_email']}",
+                metadata=metadata,
+                description=description,
                 receipt_email=order_data['customer_email'],
                 shipping={
                     'name': f"{order_data['customer_first_name']} {order_data['customer_last_name']}",
@@ -106,26 +186,128 @@ class StripeService:
     def create_checkout_session(order, order_items):
         """Create a Stripe Checkout Session for hosted checkout."""
         try:
+            from products.models import Product
+            
             line_items = []
             for item in order_items:
-                # item expected keys: product_id, quantity, price
-                line_items.append({
-                    'price_data': {
-                        'currency': 'usd',
-                        'product_data': {
-                            'name': item.get('name', 'Product'),
+                # Get product details if product_id is available
+                if 'product_id' in item:
+                    try:
+                        product = Product.objects.select_related('category').get(id=item['product_id'])
+                        
+                        # Try to use existing Stripe product/price or create new ones
+                        stripe_product = StripeService.create_or_get_stripe_product(product)
+                        
+                        if stripe_product:
+                            # Check if we have an existing price for this amount
+                            existing_prices = stripe.Price.list(
+                                product=stripe_product.id,
+                                unit_amount=int(Decimal(str(item['price'])) * 100)
+                            )
+                            
+                            if existing_prices.data:
+                                # Use existing price
+                                line_item = {
+                                    'price': existing_prices.data[0].id,
+                                    'quantity': item['quantity'],
+                                }
+                            else:
+                                # Create new price for this product
+                                stripe_price = StripeService.create_stripe_price(stripe_product, Decimal(str(item['price'])))
+                                
+                                if stripe_price:
+                                    line_item = {
+                                        'price': stripe_price.id,
+                                        'quantity': item['quantity'],
+                                    }
+                                else:
+                                    # Fallback to price_data if price creation fails
+                                    line_item = {
+                                        'price_data': {
+                                            'currency': 'usd',
+                                            'product': stripe_product.id,
+                                            'unit_amount': int(Decimal(str(item['price'])) * 100),
+                                        },
+                                        'quantity': item['quantity'],
+                                    }
+                        else:
+                            # Fallback to inline product creation
+                            product_name = product.name
+                            product_description = product.description[:500] if product.description else None
+                            category_name = product.category.name if product.category else 'Unknown'
+                            
+                            line_item = {
+                                'price_data': {
+                                    'currency': 'usd',
+                                    'product_data': {
+                                        'name': product_name,
+                                        'metadata': {
+                                            'product_id': str(item.get('product_id', 'unknown')),
+                                            'category': category_name
+                                        }
+                                    },
+                                    'unit_amount': int(Decimal(str(item['price'])) * 100),
+                                },
+                                'quantity': item['quantity'],
+                            }
+                            
+                            # Add description if available
+                            if product_description:
+                                line_item['price_data']['product_data']['description'] = product_description
+                                
+                    except Product.DoesNotExist:
+                        # Product not found in database
+                        product_name = item.get('name', f'Product ID {item["product_id"]}')
+                        line_item = {
+                            'price_data': {
+                                'currency': 'usd',
+                                'product_data': {
+                                    'name': product_name,
+                                    'metadata': {
+                                        'product_id': str(item.get('product_id', 'unknown')),
+                                        'category': 'Unknown'
+                                    }
+                                },
+                                'unit_amount': int(Decimal(str(item['price'])) * 100),
+                            },
+                            'quantity': item['quantity'],
+                        }
+                else:
+                    # No product_id provided, use basic product data
+                    product_name = item.get('name', 'Product')
+                    product_description = item.get('description', None)
+                    
+                    line_item = {
+                        'price_data': {
+                            'currency': 'usd',
+                            'product_data': {
+                                'name': product_name,
+                                'metadata': {
+                                    'product_id': 'unknown',
+                                    'category': 'Unknown'
+                                }
+                            },
+                            'unit_amount': int(Decimal(str(item['price'])) * 100),
                         },
-                        'unit_amount': int(Decimal(str(item['price'])) * 100),
-                    },
-                    'quantity': item['quantity'],
-                })
+                        'quantity': item['quantity'],
+                    }
+                    
+                    # Add description if available
+                    if product_description:
+                        line_item['price_data']['product_data']['description'] = product_description
+                
+                line_items.append(line_item)
 
             session = stripe.checkout.Session.create(
                 mode='payment',
                 payment_method_types=['card'],
                 line_items=line_items,
                 customer_email=order.customer_email,
-                metadata={'order_number': order.order_number},
+                metadata={
+                    'order_number': order.order_number,
+                    'customer_name': f"{order.customer_first_name} {order.customer_last_name}",
+                    'total_items': len(order_items)
+                },
                 success_url=settings.STRIPE_SUCCESS_URL + f'?session_id={{CHECKOUT_SESSION_ID}}&order={order.order_number}',
                 cancel_url=settings.STRIPE_CANCEL_URL + f'?order={order.order_number}',
             )

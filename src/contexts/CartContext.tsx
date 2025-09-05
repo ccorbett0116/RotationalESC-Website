@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useReducer, useEffect } from 'react';
 
 export interface CartItem {
-  productId: number;
+  productId: string;
   quantity: number;
 }
 
@@ -11,20 +11,20 @@ interface CartState {
 }
 
 type CartAction =
-  | { type: 'ADD_ITEM'; payload: { productId: number; quantity?: number } }
-  | { type: 'REMOVE_ITEM'; payload: { productId: number } }
-  | { type: 'UPDATE_QUANTITY'; payload: { productId: number; quantity: number } }
+  | { type: 'ADD_ITEM'; payload: { productId: string; quantity?: number } }
+  | { type: 'REMOVE_ITEM'; payload: { productId: string } }
+  | { type: 'UPDATE_QUANTITY'; payload: { productId: string; quantity: number } }
   | { type: 'CLEAR_CART' }
   | { type: 'LOAD_CART'; payload: CartItem[] }
   | { type: 'SET_LOADING'; payload: boolean };
 
 interface CartContextType extends CartState {
-  addItem: (productId: number, quantity?: number) => void;
-  removeItem: (productId: number) => void;
-  updateQuantity: (productId: number, quantity: number) => void;
+  addItem: (productId: string, quantity?: number) => void;
+  removeItem: (productId: string) => void;
+  updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
   getTotalItems: () => number;
-  getItemQuantity: (productId: number) => number;
+  getItemQuantity: (productId: string) => number;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -117,15 +117,15 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, [state.items]);
 
-  const addItem = (productId: number, quantity: number = 1) => {
+  const addItem = (productId: string, quantity: number = 1) => {
     dispatch({ type: 'ADD_ITEM', payload: { productId, quantity } });
   };
 
-  const removeItem = (productId: number) => {
+  const removeItem = (productId: string) => {
     dispatch({ type: 'REMOVE_ITEM', payload: { productId } });
   };
 
-  const updateQuantity = (productId: number, quantity: number) => {
+  const updateQuantity = (productId: string, quantity: number) => {
     dispatch({ type: 'UPDATE_QUANTITY', payload: { productId, quantity } });
   };
 
@@ -137,7 +137,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return state.items.reduce((total, item) => total + item.quantity, 0);
   };
 
-  const getItemQuantity = (productId: number) => {
+  const getItemQuantity = (productId: string) => {
     const item = state.items.find(item => item.productId === productId);
     return item ? item.quantity : 0;
   };

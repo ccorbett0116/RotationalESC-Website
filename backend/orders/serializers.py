@@ -4,7 +4,7 @@ from products.serializers import ProductListSerializer
 
 class OrderItemSerializer(serializers.ModelSerializer):
     product = ProductListSerializer(read_only=True)
-    product_id = serializers.IntegerField(write_only=True)
+    product_id = serializers.UUIDField(write_only=True)
     total_price = serializers.ReadOnlyField()
 
     class Meta:

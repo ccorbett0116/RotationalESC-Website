@@ -16,7 +16,7 @@ const Cart = () => {
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const [removedItems, setRemovedItems] = useState<number[]>([]);
+  const [removedItems, setRemovedItems] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -49,11 +49,11 @@ const Cart = () => {
     fetchProducts();
   }, [cartItems, removeCartItem]);
 
-  const updateQuantity = (productId: number, newQuantity: number) => {
+  const updateQuantity = (productId: string, newQuantity: number) => {
     updateCartQuantity(productId, newQuantity);
   };
 
-  const removeItem = (productId: number) => {
+  const removeItem = (productId: string) => {
     removeCartItem(productId);
   };
 
@@ -64,7 +64,7 @@ const Cart = () => {
       product: products.find(p => p.id === item.productId)
     }))
     .filter(item => item.product !== undefined) as Array<{
-      productId: number;
+      productId: string;
       quantity: number;
       product: Product;
     }>;

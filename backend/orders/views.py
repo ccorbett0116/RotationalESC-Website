@@ -189,7 +189,7 @@ def create_checkout_session(request, order_number):
     """Create a Stripe Checkout Session and attach it to the order."""
     try:
         order = Order.objects.get(order_number=order_number)
-        # Expect order_items with name, price, quantity
+        # Expect order_items with name, price, quantity, product_id
         order_items_payload = request.data.get('order_items', [])
         if not order_items_payload:
             # Build from existing OrderItems if not provided
@@ -198,8 +198,10 @@ def create_checkout_session(request, order_number):
                     'name': oi.product.name,
                     'price': oi.price,
                     'quantity': oi.quantity,
+                    'product_id': oi.product.id,
+                    'description': oi.product.description,
                 }
-                for oi in order.items.all()
+                for oi in order.items.select_related('product').all()
             ]
         session = StripeService.create_checkout_session(order, order_items_payload)
         order.stripe_checkout_session_id = session.id

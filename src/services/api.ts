@@ -50,7 +50,7 @@ export interface ProductSpecification {
 }
 
 export interface Product {
-  id: number;
+  id: string;
   name: string;
   description: string;
   price: number;
@@ -66,7 +66,7 @@ export interface Product {
 }
 
 export interface OrderItem {
-  product_id: number;
+  product_id: string;
   quantity: number;
   price: number;
 }
