@@ -269,6 +269,34 @@ export const apiService = {
     return response.data;
   },
 
+  validateCart: async (data: {
+    items: Array<{ product_id: string; quantity: number }>;
+  }): Promise<{
+    valid_cart_items: Array<{
+      product_id: string;
+      quantity: number;
+      price: number;
+      product_name: string;
+    }>;
+    removed_items: Array<{
+      product_id: string;
+      product_name: string;
+      reason: string;
+      message: string;
+    }>;
+    updated_items: Array<{
+      product_id: string;
+      product_name: string;
+      original_quantity: number;
+      adjusted_quantity: number;
+      message: string;
+    }>;
+    cart_changed: boolean;
+  }> => {
+    const response = await api.post('/orders/validate-cart/', data);
+    return response.data;
+  },
+
   createOrder: async (orderData: OrderData): Promise<Order> => {
     const response = await api.post('/orders/', orderData);
     return response.data;

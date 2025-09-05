@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle } from "lucide-react";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -15,9 +16,34 @@ import Layout from "@/components/Layout";
 const Cart = () => {
   const { items: cartItems, updateQuantity: updateCartQuantity, removeItem: removeCartItem } = useCart();
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [removedItems, setRemovedItems] = useState<string[]>([]);
+  const [validating, setValidating] = useState(false);
+  const [validationResults, setValidationResults] = useState<{
+    valid_cart_items: Array<{
+      product_id: string;
+      quantity: number;
+      price: number;
+      product_name: string;
+    }>;
+    removed_items: Array<{
+      product_id: string;
+      product_name: string;
+      reason: string;
+      message: string;
+    }>;
+    updated_items: Array<{
+      product_id: string;
+      product_name: string;
+      original_quantity: number;
+      adjusted_quantity: number;
+      message: string;
+    }>;
+    cart_changed: boolean;
+  } | null>(null);
+  const [showValidationDialog, setShowValidationDialog] = useState(false);
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -80,6 +106,70 @@ const Cart = () => {
 
   const removeItem = (productId: string) => {
     removeCartItem(productId);
+  };
+
+  const handleProceedToCheckout = async () => {
+    if (cartItems.length === 0) return;
+    
+    setValidating(true);
+    
+    try {
+      // Prepare cart items for validation
+      const cartItemsForValidation = cartItems.map(item => ({
+        product_id: item.productId,
+        quantity: item.quantity
+      }));
+      
+      // Call the validation API
+      const validation = await apiService.validateCart({
+        items: cartItemsForValidation
+      });
+      
+      if (!validation.cart_changed) {
+        // Cart is valid, proceed to checkout
+        navigate('/checkout');
+      } else {
+        // Show validation results to user
+        setValidationResults(validation);
+        setShowValidationDialog(true);
+      }
+    } catch (error) {
+      console.error('Cart validation failed:', error);
+      toast({
+        title: "Validation failed",
+        description: "Unable to validate cart. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const applyValidationChanges = () => {
+    if (!validationResults) return;
+    
+    // Remove invalid items
+    validationResults.removed_items.forEach(item => {
+      removeCartItem(item.product_id);
+    });
+    
+    // Update quantities for adjusted items
+    validationResults.updated_items.forEach(item => {
+      updateCartQuantity(item.product_id, item.adjusted_quantity);
+    });
+    
+    setShowValidationDialog(false);
+    setValidationResults(null);
+    
+    toast({
+      title: "Cart updated",
+      description: `Cart has been updated. ${validationResults.removed_items.length} items removed, ${validationResults.updated_items.length} items adjusted.`,
+    });
+    
+    // If there are still valid items, proceed to checkout
+    if (validationResults.valid_cart_items.length > 0) {
+      navigate('/checkout');
+    }
   };
 
   // Get product details for cart items, filter out items that don't exist
@@ -277,11 +367,14 @@ const Cart = () => {
                   <span>{formatCAD(total)}</span>
                 </div>
 
-                <Link to="/checkout" className="block">
-                  <Button size="lg" className="w-full">
-                    Proceed to Checkout
-                  </Button>
-                </Link>
+                <Button 
+                  size="lg" 
+                  className="w-full"
+                  onClick={handleProceedToCheckout}
+                  disabled={validating || cartItems.length === 0}
+                >
+                  {validating ? "Validating Cart..." : "Proceed to Checkout"}
+                </Button>
 
                 <div className="text-xs text-muted-foreground text-center">
                   Secure checkout with SSL encryption
@@ -307,6 +400,104 @@ const Cart = () => {
             </Card>
           </div>
         </div>
+
+        {/* Validation Dialog */}
+        <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-500" />
+                Cart Validation Required
+              </DialogTitle>
+            </DialogHeader>
+            
+            {validationResults && (
+              <div className="space-y-6">
+                <p className="text-muted-foreground">
+                  Some items in your cart need to be updated before checkout:
+                </p>
+
+                {/* Removed Items */}
+                {validationResults.removed_items.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-destructive flex items-center gap-2">
+                      <XCircle className="h-4 w-4" />
+                      Items to be Removed ({validationResults.removed_items.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {validationResults.removed_items.map((item) => (
+                        <Alert key={item.product_id} className="border-destructive/20 bg-destructive/5">
+                          <AlertDescription>
+                            <strong>{item.product_name}</strong>: {item.message}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Updated Items */}
+                {validationResults.updated_items.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-amber-600 flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4" />
+                      Quantity Adjustments ({validationResults.updated_items.length})
+                    </h4>
+                    <div className="space-y-2">
+                      {validationResults.updated_items.map((item) => (
+                        <Alert key={item.product_id} className="border-amber-200 bg-amber-50">
+                          <AlertDescription>
+                            <strong>{item.product_name}</strong>: Quantity changed from {item.original_quantity} to {item.adjusted_quantity}. {item.message}
+                          </AlertDescription>
+                        </Alert>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Valid Items Summary */}
+                {validationResults.valid_cart_items.length > 0 && (
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-green-600 flex items-center gap-2">
+                      <CheckCircle className="h-4 w-4" />
+                      Valid Items ({validationResults.valid_cart_items.length})
+                    </h4>
+                    <div className="text-sm text-muted-foreground">
+                      These items are ready for checkout:
+                    </div>
+                    <div className="space-y-1 max-h-32 overflow-y-auto">
+                      {validationResults.valid_cart_items.map((item) => (
+                        <div key={item.product_id} className="flex justify-between text-sm">
+                          <span>{item.product_name}</span>
+                          <span>Qty: {item.quantity} × {formatCAD(item.price)}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex gap-3 pt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowValidationDialog(false)}
+                    className="flex-1"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={applyValidationChanges}
+                    className="flex-1"
+                  >
+                    {validationResults.valid_cart_items.length > 0 
+                      ? "Update Cart & Checkout" 
+                      : "Update Cart"
+                    }
+                  </Button>
+                </div>
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </Layout>
   );

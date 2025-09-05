@@ -109,9 +109,21 @@ const Checkout = () => {
           });
           console.log('Order total calculated successfully:', totalData);
           setOrderTotals(totalData);
-        } catch (totalError) {
+        } catch (totalError: any) {
           console.error('Error calculating order total:', totalError);
-          // Set default totals if calculation fails
+          
+          // Check if this is a validation error (400 status)
+          if (totalError.response?.status === 400) {
+            toast({
+              title: "Cart Validation Failed",
+              description: "Some items in your cart are no longer available or have changed. Please review your cart.",
+              variant: "destructive",
+            });
+            navigate('/cart');
+            return;
+          }
+          
+          // For other errors, set default totals
           const defaultSubtotal = products.reduce((sum, product, index) => {
             const item = cartItems[index];
             return sum + (Number(product.price) * item.quantity);
@@ -281,6 +293,24 @@ const Checkout = () => {
     setLoading(true);
     
     try {
+      // Final cart validation before creating order
+      const cartValidation = await apiService.validateCart({
+        items: cartItems.map(item => ({
+          product_id: item.productId,
+          quantity: item.quantity
+        }))
+      });
+      
+      if (cartValidation.cart_changed) {
+        toast({
+          title: "Cart Changed",
+          description: "Your cart has changed since you started checkout. Please review and try again.",
+          variant: "destructive",
+        });
+        navigate('/cart');
+        return;
+      }
+      
       const orderData = {
         ...formData,
         subtotal: orderTotals.subtotal,
