@@ -77,6 +77,21 @@ def calculate_order_total(request):
     for item in cart_items:
         try:
             product = Product.objects.get(id=item['product_id'])
+            
+            # Check if product is available
+            if not product.is_available:
+                return Response(
+                    {'error': f'Product "{product.name}" is out of stock'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Check if requested quantity is available
+            if item['quantity'] > product.quantity:
+                return Response(
+                    {'error': f'Only {product.quantity} units of "{product.name}" are available'}, 
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
             item_total = product.price * item['quantity']
             subtotal += item_total
         except Product.DoesNotExist:
@@ -120,6 +135,13 @@ def confirm_payment(request, order_number):
         
         # Send email notifications if payment was successful
         if payment_intent.status == 'succeeded':
+            # Reduce product quantities
+            for order_item in order.items.select_related('product').all():
+                product = order_item.product
+                if not product.reduce_quantity(order_item.quantity):
+                    # If quantity reduction fails, log an error but don't stop the process
+                    print(f"Warning: Could not reduce quantity for product {product.name} (ID: {product.id})")
+            
             OrderEmailService.send_payment_success_notification(order)
             # Customer confirmation disabled for now
             # OrderEmailService.send_customer_order_confirmation(order)
@@ -182,6 +204,13 @@ def stripe_webhook(request):
             order.status = 'processing'
             order.save()
             
+            # Reduce product quantities
+            for order_item in order.items.select_related('product').all():
+                product = order_item.product
+                if not product.reduce_quantity(order_item.quantity):
+                    # If quantity reduction fails, log an error but don't stop the process
+                    print(f"Warning: Could not reduce quantity for product {product.name} (ID: {product.id})")
+            
             # Send email notification to owner about successful payment
             OrderEmailService.send_payment_success_notification(order)
             # Customer confirmation disabled for now
@@ -217,6 +246,13 @@ def stripe_webhook(request):
                     order.payment_status = 'completed'
                     order.status = 'processing'
                     order.save()
+                    
+                    # Reduce product quantities
+                    for order_item in order.items.select_related('product').all():
+                        product = order_item.product
+                        if not product.reduce_quantity(order_item.quantity):
+                            # If quantity reduction fails, log an error but don't stop the process
+                            print(f"Warning: Could not reduce quantity for product {product.name} (ID: {product.id})")
                     
                     # Send email notification to owner about successful payment
                     OrderEmailService.send_payment_success_notification(order)
@@ -325,6 +361,13 @@ def verify_checkout_session(request, order_number):
             order.status = 'processing'
             order.save(update_fields=['payment_status', 'status'])
             verified = True
+            
+            # Reduce product quantities
+            for order_item in order.items.select_related('product').all():
+                product = order_item.product
+                if not product.reduce_quantity(order_item.quantity):
+                    # If quantity reduction fails, log an error but don't stop the process
+                    print(f"Warning: Could not reduce quantity for product {product.name} (ID: {product.id})")
             
             # Send email notification to owner about successful payment
             OrderEmailService.send_payment_success_notification(order)

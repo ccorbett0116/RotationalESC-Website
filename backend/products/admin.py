@@ -130,7 +130,7 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['product_info', 'category_badge', 'price_display', 'stock_status', 'image_count', 'created_date']
+    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'stock_status', 'image_count', 'created_date']
     list_filter = ['category', 'in_stock', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
@@ -169,16 +169,38 @@ class ProductAdmin(admin.ModelAdmin):
     price_display.short_description = "Price"
     price_display.admin_order_field = 'price'
     
-    def stock_status(self, obj):
-        if obj.in_stock:
+    def quantity_display(self, obj):
+        if obj.quantity == 0:
             return format_html(
-                '<span style="color: #27ae60; font-weight: bold;">✅ In Stock</span>'
+                '<span style="color: #e74c3c; font-weight: bold; background: #ffe6e6; padding: 2px 6px; border-radius: 4px;">0</span>'
+            )
+        elif obj.quantity <= 5:
+            return format_html(
+                '<span style="color: #f39c12; font-weight: bold; background: #fff3cd; padding: 2px 6px; border-radius: 4px;">{}</span>',
+                obj.quantity
+            )
+        else:
+            return format_html(
+                '<span style="color: #27ae60; font-weight: bold; background: #e6ffe6; padding: 2px 6px; border-radius: 4px;">{}</span>',
+                obj.quantity
+            )
+    quantity_display.short_description = "Quantity"
+    quantity_display.admin_order_field = 'quantity'
+    
+    def stock_status(self, obj):
+        if obj.is_available:
+            return format_html(
+                '<span style="color: #27ae60; font-weight: bold;">✅ Available</span>'
+            )
+        elif obj.in_stock and obj.quantity == 0:
+            return format_html(
+                '<span style="color: #f39c12; font-weight: bold;">⚠️ Empty Stock</span>'
             )
         else:
             return format_html(
                 '<span style="color: #e74c3c; font-weight: bold;">❌ Out of Stock</span>'
             )
-    stock_status.short_description = "Stock"
+    stock_status.short_description = "Status"
     stock_status.admin_order_field = 'in_stock'
     
     def image_count(self, obj):
@@ -207,13 +229,16 @@ class ProductAdmin(admin.ModelAdmin):
         images_count = obj.images.count()
         primary_image = obj.images.filter(order=0).first()
         
+        quantity_color = '#e74c3c' if obj.quantity == 0 else '#f39c12' if obj.quantity <= 5 else '#27ae60'
+        
         summary = f'''
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
             <h4 style="margin-top: 0; color: #2c3e50;">📋 Product Summary</h4>
             <div style="display: flex; gap: 20px;">
                 <div style="flex: 1;">
                     <p><strong>Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
-                    <p><strong>Stock Status:</strong> {'✅ Available' if obj.in_stock else '❌ Out of Stock'}</p>
+                    <p><strong>Quantity:</strong> <span style="color: {quantity_color}; font-weight: bold;">{obj.quantity}</span></p>
+                    <p><strong>Stock Status:</strong> {'✅ Available' if obj.is_available else '❌ Not Available'}</p>
                     <p><strong>Images:</strong> {images_count}</p>
                     <p><strong>Specifications:</strong> {specs_count}</p>
                 </div>
@@ -248,11 +273,11 @@ class ProductAdmin(admin.ModelAdmin):
 
 Products CSV Format:
 Required columns: name, description, price, category
-Optional columns: in_stock, tags
+Optional columns: quantity, in_stock, tags
 
 Example:
-name,description,price,category,in_stock,tags
-Industrial Pump,High-efficiency pump,2499.99,Pumps,true,"industrial,pump"
+name,description,price,category,quantity,in_stock,tags
+Industrial Pump,High-efficiency pump,2499.99,Pumps,50,true,"industrial,pump"
 
 Specifications CSV Format (Optional):
 Required columns: product_name, key, value
@@ -278,7 +303,7 @@ To import: Create a CSV file with the format above, then use Django's management
         writer = csv.writer(response)
         
         # Write header
-        writer.writerow(['name', 'description', 'price', 'category', 'in_stock', 'tags'])
+        writer.writerow(['name', 'description', 'price', 'category', 'quantity', 'in_stock', 'tags'])
         
         # Write data
         for product in queryset:
@@ -287,6 +312,7 @@ To import: Create a CSV file with the format above, then use Django's management
                 product.description,
                 str(product.price),
                 product.category.name if product.category else '',
+                product.quantity,
                 product.in_stock,
                 product.tags
             ])

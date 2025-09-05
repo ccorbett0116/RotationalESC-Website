@@ -59,6 +59,41 @@ class OrderCreateSerializer(serializers.ModelSerializer):
             'payment_method', 'order_items'
         ]
 
+    def validate(self, data):
+        from products.models import Product
+        
+        order_items_data = data.get('order_items', [])
+        
+        for item_data in order_items_data:
+            try:
+                product = Product.objects.get(id=item_data.get('product_id'))
+                
+                # Check if product is available
+                if not product.is_available:
+                    raise serializers.ValidationError(
+                        f'Product "{product.name}" is out of stock'
+                    )
+                
+                # Check if requested quantity is available
+                quantity = item_data.get('quantity', 0)
+                if quantity > product.quantity:
+                    raise serializers.ValidationError(
+                        f'Only {product.quantity} units of "{product.name}" are available'
+                    )
+                
+                # Verify the price matches current product price
+                if item_data.get('price') != product.price:
+                    raise serializers.ValidationError(
+                        f'Price for "{product.name}" has changed. Please refresh your cart.'
+                    )
+                    
+            except Product.DoesNotExist:
+                raise serializers.ValidationError(
+                    f'Product with id {item_data.get("product_id")} not found'
+                )
+        
+        return data
+
     def create(self, validated_data):
         order_items_data = validated_data.pop('order_items', [])
         order = Order.objects.create(**validated_data)
