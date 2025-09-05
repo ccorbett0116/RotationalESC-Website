@@ -85,8 +85,8 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['name', 'category', 'page', 'price', 'in_stock', 'created_at']
-    list_filter = ['category', 'page', 'in_stock', 'created_at']
+    list_display = ['name', 'category', 'price', 'in_stock', 'created_at']
+    list_filter = ['category', 'in_stock', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
     readonly_fields = ['created_at', 'updated_at']
@@ -119,7 +119,7 @@ class ProductAdmin(admin.ModelAdmin):
         class CSVImportForm(forms.Form):
             products_csv_file = forms.FileField(
                 label='Products CSV File',
-                help_text='CSV file with products data. Required columns: name, description, price, category, page'
+                help_text='CSV file with products data. Required columns: name, description, price, category'
             )
             specifications_csv_file = forms.FileField(
                 label='Specifications CSV File (Optional)',
@@ -163,11 +163,10 @@ class ProductAdmin(admin.ModelAdmin):
         help_text = """
         <h3>CSV Format Requirements</h3>
         <h4>Products CSV:</h4>
-        <p><strong>Required columns:</strong> name, description, price, category, page</p>
+        <p><strong>Required columns:</strong> name, description, price, category</p>
         <p><strong>Optional columns:</strong> in_stock, tags</p>
-        <p><strong>Page values:</strong> seals, packing, pumps, general</p>
-        <pre>name,description,price,category,page,in_stock,tags
-Industrial Pump,High-efficiency pump,2499.99,Pumps,pumps,true,"industrial,pump"</pre>
+        <pre>name,description,price,category,in_stock,tags
+Industrial Pump,High-efficiency pump,2499.99,Pumps,true,"industrial,pump"</pre>
         
         <h4>Specifications CSV (Optional):</h4>
         <p><strong>Required columns:</strong> product_name, key, value</p>
@@ -197,12 +196,6 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
                 name = row['name'].strip()
                 description = row['description'].strip()
                 category_name = row['category'].strip()
-                page = row['page'].strip()
-                
-                # Validate page value
-                valid_pages = ['seals', 'packing', 'pumps', 'general']
-                if page not in valid_pages:
-                    raise ValueError(f'Invalid page value "{page}". Must be one of: {", ".join(valid_pages)}')
                 
                 # Parse price
                 try:
@@ -233,7 +226,6 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
                     product.description = description
                     product.price = price
                     product.category = category
-                    product.page = page
                     product.in_stock = in_stock
                     product.tags = tags
                     product.save()
@@ -244,7 +236,6 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
                         description=description,
                         price=price,
                         category=category,
-                        page=page,
                         in_stock=in_stock,
                         tags=tags
                     )
@@ -300,7 +291,7 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
         writer = csv.writer(response)
         
         # Write header
-        writer.writerow(['name', 'description', 'price', 'category', 'page', 'in_stock', 'tags'])
+        writer.writerow(['name', 'description', 'price', 'category', 'in_stock', 'tags'])
         
         # Write data
         for product in queryset:
@@ -309,7 +300,6 @@ Industrial Pump,Flow Rate,500 GPM,0</pre>
                 product.description,
                 str(product.price),
                 product.category.name,
-                product.page,
                 product.in_stock,
                 product.tags
             ])
@@ -427,9 +417,11 @@ class ManufacturerAdminForm(forms.ModelForm):
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
-    list_display = ['label', 'created_at', 'updated_at']
+    list_display = ['label', 'page', 'created_at', 'updated_at']
+    list_filter = ['page', 'created_at']
     search_fields = ['label']
     readonly_fields = ['created_at', 'updated_at']
+    fields = ['label', 'page', 'created_at', 'updated_at']
 
 
 @admin.register(Manufacturer)

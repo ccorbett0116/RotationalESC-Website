@@ -155,4 +155,4 @@ class SectionWithManufacturersSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Section
-        fields = ['id', 'label', 'manufacturers', 'created_at', 'updated_at']
+        fields = ['id', 'label', 'page', 'manufacturers', 'created_at', 'updated_at']

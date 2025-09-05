@@ -115,6 +115,7 @@ export interface ProductSpecification {
 export interface Section {
   id: number;
   label: string;
+  page: string;
   created_at: string;
   updated_at: string;
 }
@@ -133,6 +134,7 @@ export interface Manufacturer {
 export interface SectionWithManufacturers {
   id: number;
   label: string;
+  page: string;
   manufacturers: Manufacturer[];
   created_at: string;
   updated_at: string;
@@ -306,8 +308,9 @@ export const apiService = {
     return response.data;
   },
 
-  getSectionsWithManufacturers: async (): Promise<SectionWithManufacturers[]> => {
-    const response = await api.get('/products/sections-with-manufacturers/');
+  getSectionsWithManufacturers: async (page?: string): Promise<SectionWithManufacturers[]> => {
+    const params = page ? { page } : {};
+    const response = await api.get('/products/sections-with-manufacturers/', { params });
     return response.data;
   },
 

@@ -29,7 +29,7 @@ class ProductListView(generics.ListAPIView):
     queryset = Product.objects.select_related('category').prefetch_related('images', 'specifications')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
-    filterset_fields = ['category', 'page', 'in_stock']
+    filterset_fields = ['category', 'in_stock']  # Removed 'page' to avoid conflict with pagination
     search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
     ordering_fields = ['name', 'price', 'created_at']
     ordering = ['name']
@@ -42,10 +42,10 @@ class ProductListView(generics.ListAPIView):
         if category_name and category_name != 'all':
             queryset = queryset.filter(category__name=category_name)
         
-        # Page filtering
-        page = self.request.query_params.get('page', None)
-        if page and page != 'all':
-            queryset = queryset.filter(page=page)
+        # Product page filtering (use a different parameter name to avoid pagination conflict)
+        product_page = self.request.query_params.get('product_page', None)
+        if product_page and product_page != 'all':
+            queryset = queryset.filter(page=product_page)
         
         min_price = self.request.query_params.get('min_price', None)
         max_price = self.request.query_params.get('max_price', None)
@@ -173,8 +173,15 @@ def upload_manufacturer(request):
 def sections_with_manufacturers(request):
     """
     Get all sections with their associated manufacturers
+    Optionally filter by page parameter
     """
     sections = Section.objects.prefetch_related('manufacturers').all()
+    
+    # Filter by page if provided
+    page = request.GET.get('page')
+    if page:
+        sections = sections.filter(page=page)
+    
     serializer = SectionWithManufacturersSerializer(sections, many=True)
     return Response(serializer.data)
 
