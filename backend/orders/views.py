@@ -65,7 +65,7 @@ class OrderDetailView(generics.RetrieveAPIView):
 @api_view(['POST', 'OPTIONS'])
 def calculate_order_total(request):
     """
-    Calculate order totals based on cart items
+    Calculate order totals based on cart items and return availability issues
     """
     if request.method == 'OPTIONS':
         return Response(status=status.HTTP_200_OK)
@@ -74,42 +74,169 @@ def calculate_order_total(request):
     billing_country = request.data.get('billing_country', 'CA')
     subtotal = 0
     
+    # Track issues with cart items
+    unavailable_items = []
+    quantity_issues = []
+    price_issues = []
+    valid_items = []
+    
+    for item in cart_items:
+        try:
+            product = Product.objects.get(id=item['product_id'])
+            item_info = {
+                'product_id': str(product.id),
+                'product_name': product.name,
+                'requested_quantity': item['quantity']
+            }
+            
+            # Check if product is available (active and has stock)
+            if not product.is_available:
+                unavailable_items.append({
+                    **item_info,
+                    'reason': 'inactive' if not product.active else 'out_of_stock',
+                    'available_quantity': product.quantity
+                })
+                continue
+            
+            # Check if requested quantity is available
+            if item['quantity'] > product.quantity:
+                quantity_issues.append({
+                    **item_info,
+                    'available_quantity': product.quantity,
+                    'message': f'Only {product.quantity} units available'
+                })
+                continue
+            
+            # Check if price has changed
+            if item.get('price') and item['price'] != product.price:
+                price_issues.append({
+                    **item_info,
+                    'old_price': item['price'],
+                    'current_price': product.price,
+                    'message': 'Price has changed'
+                })
+                # Still include in calculation with current price
+            
+            # Item is valid - add to calculation
+            item_total = product.price * item['quantity']
+            subtotal += item_total
+            valid_items.append({
+                **item_info,
+                'price': product.price,
+                'total': item_total
+            })
+            
+        except Product.DoesNotExist:
+            unavailable_items.append({
+                'product_id': item.get('product_id', 'unknown'),
+                'product_name': 'Unknown Product',
+                'requested_quantity': item.get('quantity', 0),
+                'reason': 'not_found',
+                'message': 'Product no longer exists'
+            })
+    
+    # Calculate totals for valid items only
+    tax_rate = Decimal('0.13')
+    tax_amount = subtotal * tax_rate
+    total_amount = subtotal + tax_amount
+    
+    # Determine response status and structure
+    has_issues = bool(unavailable_items or quantity_issues)
+    
+    response_data = {
+        'valid': not has_issues,
+        'subtotal': subtotal,
+        'tax_amount': tax_amount,
+        'total_amount': total_amount,
+        'tax_rate': tax_rate,
+        'billing_country': billing_country,
+        'valid_items': valid_items,
+        'issues': {
+            'unavailable_items': unavailable_items,
+            'quantity_issues': quantity_issues,
+            'price_issues': price_issues
+        }
+    }
+    
+    # Return 400 if there are blocking issues, 200 with warnings otherwise
+    status_code = status.HTTP_400_BAD_REQUEST if has_issues else status.HTTP_200_OK
+    return Response(response_data, status=status_code)
+
+@api_view(['POST', 'OPTIONS'])
+def validate_cart(request):
+    """
+    Validate cart items and return cleaned cart with availability info
+    """
+    if request.method == 'OPTIONS':
+        return Response(status=status.HTTP_200_OK)
+    
+    cart_items = request.data.get('items', [])
+    
+    # Track issues and valid items
+    valid_cart_items = []
+    removed_items = []
+    updated_items = []
+    
     for item in cart_items:
         try:
             product = Product.objects.get(id=item['product_id'])
             
             # Check if product is available
             if not product.is_available:
-                return Response(
-                    {'error': f'Product "{product.name}" is out of stock'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                removed_items.append({
+                    'product_id': str(product.id),
+                    'product_name': product.name,
+                    'reason': 'inactive' if not product.active else 'out_of_stock',
+                    'message': f'Removed: {product.name} is no longer available'
+                })
+                continue
             
-            # Check if requested quantity is available
-            if item['quantity'] > product.quantity:
-                return Response(
-                    {'error': f'Only {product.quantity} units of "{product.name}" are available'}, 
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+            # Check if requested quantity needs adjustment
+            original_quantity = item['quantity']
+            adjusted_quantity = min(original_quantity, product.quantity)
             
-            item_total = product.price * item['quantity']
-            subtotal += item_total
+            if adjusted_quantity == 0:
+                removed_items.append({
+                    'product_id': str(product.id),
+                    'product_name': product.name,
+                    'reason': 'out_of_stock',
+                    'message': f'Removed: {product.name} is out of stock'
+                })
+                continue
+            
+            # Create cleaned cart item
+            clean_item = {
+                'product_id': str(product.id),
+                'quantity': adjusted_quantity,
+                'price': product.price,
+                'product_name': product.name
+            }
+            
+            valid_cart_items.append(clean_item)
+            
+            # Track if quantity was adjusted
+            if adjusted_quantity != original_quantity:
+                updated_items.append({
+                    'product_id': str(product.id),
+                    'product_name': product.name,
+                    'original_quantity': original_quantity,
+                    'adjusted_quantity': adjusted_quantity,
+                    'message': f'Quantity reduced to {adjusted_quantity} (maximum available)'
+                })
+            
         except Product.DoesNotExist:
-            return Response(
-                {'error': f'Product with id {item["product_id"]} not found'}, 
-                status=status.HTTP_400_BAD_REQUEST
-            )
-    
-    tax_rate = Decimal('0.13')
-    tax_amount = subtotal * tax_rate
-    total_amount = subtotal + tax_amount
+            removed_items.append({
+                'product_id': item.get('product_id', 'unknown'),
+                'product_name': 'Unknown Product',
+                'reason': 'not_found',
+                'message': 'Removed: Product no longer exists'
+            })
     
     return Response({
-        'subtotal': subtotal,
-        'tax_amount': tax_amount,
-        'total_amount': total_amount,
-        'tax_rate': tax_rate,
-        'billing_country': billing_country
+        'valid_cart_items': valid_cart_items,
+        'removed_items': removed_items,
+        'updated_items': updated_items,
+        'cart_changed': bool(removed_items or updated_items)
     })
 
 @api_view(['POST'])

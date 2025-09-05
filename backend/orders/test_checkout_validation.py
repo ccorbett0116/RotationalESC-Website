@@ -117,3 +117,155 @@ class CheckoutValidationTestCase(TestCase):
             StripeService.create_payment_intent(order_data, order_items)
         
         self.assertIn('changed', str(context.exception))
+
+class CartValidationTestCase(TestCase):
+    """Test cart validation and cleanup functionality"""
+    
+    def setUp(self):
+        self.category = Category.objects.create(name="Test Category")
+        self.active_product = Product.objects.create(
+            name="Active Product",
+            description="Test Description",
+            price=Decimal('100.00'),
+            category=self.category,
+            quantity=5,
+            active=True
+        )
+        
+        self.inactive_product = Product.objects.create(
+            name="Inactive Product",
+            description="Test Description", 
+            price=Decimal('75.00'),
+            category=self.category,
+            quantity=10,
+            active=False
+        )
+        
+        self.out_of_stock_product = Product.objects.create(
+            name="Out of Stock Product",
+            description="Test Description",
+            price=Decimal('50.00'),
+            category=self.category,
+            quantity=0
+        )
+
+    def test_calculate_order_total_detailed_response(self):
+        """Test that calculate_order_total returns detailed availability info"""
+        from orders.views import calculate_order_total
+        from django.test import RequestFactory
+        import json
+        
+        factory = RequestFactory()
+        data = {
+            'items': [
+                {
+                    'product_id': str(self.active_product.id),
+                    'quantity': 2,
+                    'price': float(self.active_product.price)
+                },
+                {
+                    'product_id': str(self.inactive_product.id),
+                    'quantity': 1
+                },
+                {
+                    'product_id': str(self.out_of_stock_product.id),
+                    'quantity': 1
+                }
+            ],
+            'billing_country': 'CA'
+        }
+        request = factory.post('/calculate/', data=json.dumps(data), content_type='application/json')
+        request.data = data
+        
+        response = calculate_order_total(request)
+        
+        # Should return 400 because of issues
+        self.assertEqual(response.status_code, 400)
+        
+        # Check response structure
+        self.assertFalse(response.data['valid'])
+        self.assertEqual(len(response.data['valid_items']), 1)  # Only active product
+        self.assertEqual(len(response.data['issues']['unavailable_items']), 2)  # Inactive and out of stock
+        
+        # Check that totals are calculated for valid items only
+        expected_subtotal = self.active_product.price * 2
+        self.assertEqual(response.data['subtotal'], expected_subtotal)
+
+    def test_validate_cart_endpoint(self):
+        """Test the validate_cart endpoint for cart cleanup"""
+        from orders.views import validate_cart
+        from django.test import RequestFactory
+        import json
+        
+        factory = RequestFactory()
+        data = {
+            'items': [
+                {
+                    'product_id': str(self.active_product.id),
+                    'quantity': 10,  # More than available
+                },
+                {
+                    'product_id': str(self.inactive_product.id),
+                    'quantity': 1
+                },
+                {
+                    'product_id': str(self.out_of_stock_product.id),
+                    'quantity': 1
+                },
+                {
+                    'product_id': '00000000-0000-0000-0000-000000000000',  # Non-existent
+                    'quantity': 1
+                }
+            ]
+        }
+        request = factory.post('/validate/', data=json.dumps(data), content_type='application/json')
+        request.data = data
+        
+        response = validate_cart(request)
+        
+        # Should return 200 with cleaned cart
+        self.assertEqual(response.status_code, 200)
+        
+        # Check that cart was cleaned
+        self.assertTrue(response.data['cart_changed'])
+        
+        # Should have 1 valid item (active product with adjusted quantity)
+        self.assertEqual(len(response.data['valid_cart_items']), 1)
+        valid_item = response.data['valid_cart_items'][0]
+        self.assertEqual(valid_item['quantity'], 5)  # Adjusted to max available
+        
+        # Should have 3 removed items (inactive, out of stock, non-existent)
+        self.assertEqual(len(response.data['removed_items']), 3)
+        
+        # Should have 1 updated item (quantity adjusted)
+        self.assertEqual(len(response.data['updated_items']), 1)
+        updated_item = response.data['updated_items'][0]
+        self.assertEqual(updated_item['original_quantity'], 10)
+        self.assertEqual(updated_item['adjusted_quantity'], 5)
+
+    def test_validate_cart_with_valid_items(self):
+        """Test validate_cart with all valid items"""
+        from orders.views import validate_cart
+        from django.test import RequestFactory
+        import json
+        
+        factory = RequestFactory()
+        data = {
+            'items': [
+                {
+                    'product_id': str(self.active_product.id),
+                    'quantity': 3,  # Within available quantity
+                }
+            ]
+        }
+        request = factory.post('/validate/', data=json.dumps(data), content_type='application/json')
+        request.data = data
+        
+        response = validate_cart(request)
+        
+        # Should return 200 with no changes needed
+        self.assertEqual(response.status_code, 200)
+        self.assertFalse(response.data['cart_changed'])
+        self.assertEqual(len(response.data['valid_cart_items']), 1)
+        self.assertEqual(len(response.data['removed_items']), 0)
+        self.assertEqual(len(response.data['updated_items']), 0)
