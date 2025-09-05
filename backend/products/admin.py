@@ -70,8 +70,9 @@ class ProductImageInline(admin.TabularInline):
     image_preview.short_description = "Preview"
     
     def is_primary_display(self, obj):
-        return "Yes" if obj and obj.is_primary else "No"
+        return obj.is_primary if obj else False
     is_primary_display.short_description = "Primary"
+    is_primary_display.boolean = True
 
 class ProductSpecificationInline(admin.TabularInline):
     model = ProductSpecification
@@ -104,7 +105,7 @@ class ProductImageAdmin(admin.ModelAdmin):
     get_filename.short_description = "Filename"
     
     def is_primary_display(self, obj):
-        return "Yes" if obj and obj.is_primary else "No"
+        return obj.is_primary if obj else False
     is_primary_display.short_description = "Primary"
     is_primary_display.boolean = True
     
