@@ -43,13 +43,13 @@ const Checkout = () => {
     billing_city: "",
     billing_state: "",
     billing_postal_code: "",
-    billing_country: "US",
+    billing_country: "CA",
     shipping_address_line1: "",
     shipping_address_line2: "",
     shipping_city: "",
     shipping_state: "",
     shipping_postal_code: "",
-    shipping_country: "US",
+    shipping_country: "CA",
   });
 
   useEffect(() => {
@@ -61,8 +61,19 @@ const Checkout = () => {
 
       try {
         setFetchingProducts(true);
+        console.log('Fetching products for cart items:', cartItems);
+        
         const products = await Promise.all(
-          cartItems.map(item => apiService.getProduct(item.productId))
+          cartItems.map(async (item) => {
+            try {
+              const product = await apiService.getProduct(item.productId);
+              console.log(`Fetched product ${item.productId}:`, product);
+              return product;
+            } catch (error) {
+              console.error(`Error fetching product ${item.productId}:`, error);
+              throw error;
+            }
+          })
         );
         setCartProducts(products);
         
@@ -72,11 +83,35 @@ const Checkout = () => {
           quantity: item.quantity
         }));
         
-        const totalData = await apiService.calculateOrderTotal({
-          items: orderItems,
-          billing_country: formData.billing_country
-        });
-        setOrderTotals(totalData);
+        console.log('Calculating order total with:', { items: orderItems, billing_country: formData.billing_country });
+        
+        try {
+          const totalData = await apiService.calculateOrderTotal({
+            items: orderItems,
+            billing_country: formData.billing_country
+          });
+          console.log('Order total calculated successfully:', totalData);
+          setOrderTotals(totalData);
+        } catch (totalError) {
+          console.error('Error calculating order total:', totalError);
+          // Set default totals if calculation fails
+          const defaultSubtotal = products.reduce((sum, product, index) => {
+            const item = cartItems[index];
+            return sum + (Number(product.price) * item.quantity);
+          }, 0);
+          
+          setOrderTotals({
+            subtotal: defaultSubtotal,
+            tax_amount: defaultSubtotal * 0.13, // Default 13% tax
+            total_amount: defaultSubtotal * 1.13
+          });
+          
+          toast({
+            title: "Tax calculation unavailable",
+            description: "Using estimated tax rate. Final tax will be calculated at checkout.",
+            variant: "default",
+          });
+        }
       } catch (error) {
         console.error('Error fetching cart data:', error);
         toast({
@@ -97,7 +132,40 @@ const Checkout = () => {
     product: cartProducts[index]
   })).filter(item => item.product);
 
+  const formatPhoneNumber = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as (XXX) XXX-XXXX
+    const match = cleaned.match(/^(\d{0,3})(\d{0,3})(\d{0,4})$/);
+    if (match) {
+      let formatted = '';
+      if (match[1]) {
+        formatted += `(${match[1]}`;
+        if (match[1].length === 3) {
+          formatted += ') ';
+        }
+      }
+      if (match[2]) {
+        formatted += match[2];
+        if (match[2].length === 3) {
+          formatted += '-';
+        }
+      }
+      if (match[3]) {
+        formatted += match[3];
+      }
+      return formatted;
+    }
+    return value;
+  };
+
   const handleInputChange = (field: string, value: string) => {
+    // Format phone number while typing
+    if (field === 'customer_phone') {
+      value = formatPhoneNumber(value);
+    }
+    
     setFormData(prev => ({ ...prev, [field]: value }));
     
     // Clear error for this field when user starts typing
@@ -134,10 +202,10 @@ const Checkout = () => {
       errors.billing_city = 'City is required';
     }
     if (!formData.billing_state.trim()) {
-      errors.billing_state = 'State/Province is required';
+      errors.billing_state = 'Province/State is required';
     }
     if (!formData.billing_postal_code.trim()) {
-      errors.billing_postal_code = 'ZIP/Postal code is required';
+      errors.billing_postal_code = 'Postal Code/ZIP is required';
     }
 
     // Phone validation (if provided)
@@ -154,10 +222,10 @@ const Checkout = () => {
         errors.shipping_city = 'Shipping city is required';
       }
       if (!formData.shipping_state.trim()) {
-        errors.shipping_state = 'Shipping state/province is required';
+        errors.shipping_state = 'Shipping province/state is required';
       }
       if (!formData.shipping_postal_code.trim()) {
-        errors.shipping_postal_code = 'Shipping ZIP/postal code is required';
+        errors.shipping_postal_code = 'Shipping postal code/ZIP is required';
       }
     }
 
@@ -397,7 +465,7 @@ const Checkout = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingState">State/Province *</Label>
+                    <Label htmlFor="billingState">Province/State *</Label>
                     <Input 
                       id="billingState" 
                       value={formData.billing_state}
@@ -410,7 +478,7 @@ const Checkout = () => {
                     )}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="billingZip">ZIP/Postal Code *</Label>
+                    <Label htmlFor="billingZip">Postal Code/ZIP *</Label>
                     <Input 
                       id="billingZip" 
                       value={formData.billing_postal_code}
@@ -430,8 +498,8 @@ const Checkout = () => {
                       <SelectValue placeholder="Select country" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="US">United States</SelectItem>
                       <SelectItem value="CA">Canada</SelectItem>
+                      <SelectItem value="US">United States</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -491,7 +559,7 @@ const Checkout = () => {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingState">State/Province *</Label>
+                        <Label htmlFor="shippingState">Province/State *</Label>
                         <Input 
                           id="shippingState" 
                           value={formData.shipping_state}
@@ -504,7 +572,7 @@ const Checkout = () => {
                         )}
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="shippingZip">ZIP/Postal Code *</Label>
+                        <Label htmlFor="shippingZip">Postal Code/ZIP *</Label>
                         <Input 
                           id="shippingZip" 
                           value={formData.shipping_postal_code}
@@ -524,8 +592,8 @@ const Checkout = () => {
                           <SelectValue placeholder="Select country" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="US">United States</SelectItem>
                           <SelectItem value="CA">Canada</SelectItem>
+                          <SelectItem value="US">United States</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
