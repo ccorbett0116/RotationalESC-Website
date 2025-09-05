@@ -14,8 +14,8 @@ class OrderItemInline(admin.TabularInline):
     def formatted_total(self, obj):
         if obj and obj.total_price:
             return format_html(
-                '<span style="font-weight: bold; color: #27ae60;">${:.2f}</span>',
-                obj.total_price
+                '<span style="font-weight: bold; color: #27ae60;">${}</span>',
+                f"{obj.total_price:.2f}"
             )
         return "$0.00"
     formatted_total.short_description = "Total"
@@ -235,16 +235,16 @@ class OrderItemAdmin(admin.ModelAdmin):
     
     def price_display(self, obj):
         return format_html(
-            '<span style="color: #666;">${:.2f}</span>',
-            obj.price
+            '<span style="color: #666;">${}</span>',
+            f"{obj.price:.2f}"
         )
     price_display.short_description = "Unit Price"
     price_display.admin_order_field = 'price'
     
     def total_display(self, obj):
         return format_html(
-            '<span style="font-weight: bold; color: #27ae60;">${:.2f}</span>',
-            obj.total_price
+            '<span style="font-weight: bold; color: #27ae60;">${}</span>',
+            f"{obj.total_price:.2f}"
         )
     total_display.short_description = "Total"
     readonly_fields = ['total_price']
