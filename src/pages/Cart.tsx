@@ -6,8 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle, RefreshCw } from "lucide-react";
-import { apiService, Product } from "@/services/api";
+import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle, RefreshCw, Phone, Mail, MessageCircle } from "lucide-react";
+import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
@@ -45,19 +45,24 @@ const Cart = () => {
   } | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [hasValidated, setHasValidated] = useState(false);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
 
-  // Separate effect for fetching products
+  // Separate effect for fetching products and company info
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiService.getProducts();
+        const [response, companyData] = await Promise.all([
+          apiService.getProducts(),
+          apiService.getCompanyInfo()
+        ]);
         setProducts(response.results);
+        setCompanyInfo(companyData);
       } catch (error) {
-        console.error('Error fetching products:', error);
+        console.error('Error fetching data:', error);
       }
     };
 
-    fetchProducts();
+    fetchData();
   }, []);
 
   // Separate effect for cart validation that runs once when cart loads or changes significantly
@@ -362,6 +367,32 @@ const Cart = () => {
                     </ul>
                   </div>
                 )}
+                {(validationResults.removed_items.length > 0 || validationResults.updated_items.length > 0) && (
+                  <div className="mt-4 pt-3 border-t border-gray-200">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm text-muted-foreground">Need more stock or have questions?</p>
+                      <div className="flex gap-2">
+                        <Link to="/contact">
+                          <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+                            <MessageCircle className="h-3 w-3" />
+                            Contact Us
+                          </Button>
+                        </Link>
+                        {companyInfo?.phone && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`tel:${companyInfo.phone}`, '_self')}
+                            className="flex items-center gap-1.5"
+                          >
+                            <Phone className="h-3 w-3" />
+                            Call
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </AlertDescription>
           </Alert>
@@ -420,6 +451,11 @@ const Cart = () => {
                             >
                               {item.product.is_available ? `${item.product.quantity} in stock` : "Out of Stock"}
                             </Badge>
+                            {item.product.is_available && item.product.quantity <= 5 && (
+                              <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
+                                Low Stock
+                              </Badge>
+                            )}
                           </div>
                         </div>
                         <Button
@@ -462,6 +498,14 @@ const Cart = () => {
                           <div className="text-sm text-muted-foreground">
                             {formatCAD(Number(item.product.price))} each
                           </div>
+                          {item.product.is_available && item.product.quantity <= 3 && (
+                            <div className="text-xs text-amber-600 mt-1">
+                              <Link to="/contact" className="hover:underline flex items-center gap-1 justify-end">
+                                <MessageCircle className="h-2.5 w-2.5" />
+                                Need more?
+                              </Link>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -505,6 +549,40 @@ const Cart = () => {
                   <span>Total</span>
                   <span>{formatCAD(total)}</span>
                 </div>
+
+                {/* Stock Help Section */}
+                {validationResults && validationResults.cart_changed && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+                    <div className="text-center space-y-3">
+                      <div className="flex items-center justify-center gap-2">
+                        <AlertTriangle className="h-4 w-4 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-900">Need More Inventory?</span>
+                      </div>
+                      <p className="text-xs text-blue-700">
+                        Some items were out of stock or had limited quantities. Contact us to check for additional inventory or place a special order.
+                      </p>
+                      <div className="flex gap-2 justify-center">
+                        <Link to="/contact">
+                          <Button variant="outline" size="sm" className="bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800">
+                            <Mail className="h-3 w-3 mr-1.5" />
+                            Email Us
+                          </Button>
+                        </Link>
+                        {companyInfo?.phone && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`tel:${companyInfo.phone}`, '_self')}
+                            className="bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800"
+                          >
+                            <Phone className="h-3 w-3 mr-1.5" />
+                            Call Now
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
 
                 <Button 
                   size="lg" 
@@ -611,6 +689,39 @@ const Cart = () => {
                           <span>Qty: {item.quantity} × {formatCAD(item.price)}</span>
                         </div>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Contact Section */}
+                {(validationResults.removed_items.length > 0 || validationResults.updated_items.length > 0) && (
+                  <div className="bg-muted/30 p-4 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h5 className="font-medium text-sm">Need More Stock?</h5>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          Contact us to check availability or place a special order
+                        </p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Link to="/contact">
+                          <Button variant="outline" size="sm" className="flex items-center gap-1.5">
+                            <MessageCircle className="h-3 w-3" />
+                            Contact Us
+                          </Button>
+                        </Link>
+                        {companyInfo?.phone && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => window.open(`tel:${companyInfo.phone}`, '_self')}
+                            className="flex items-center gap-1.5"
+                          >
+                            <Phone className="h-3 w-3" />
+                            Call Now
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}
