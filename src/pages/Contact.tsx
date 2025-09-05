@@ -243,7 +243,7 @@ const Contact = () => {
 
                   <div className="space-y-2">
                     <Label htmlFor="subject">Subject *</Label>
-                    <Select onValueChange={(value) => handleChange("subject", value)}>
+                    <Select value={formData.subject} onValueChange={(value) => handleChange("subject", value)}>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a subject" />
                       </SelectTrigger>

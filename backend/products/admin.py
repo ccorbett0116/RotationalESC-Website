@@ -90,6 +90,35 @@ class ProductAdmin(admin.ModelAdmin):
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
     readonly_fields = ['created_at', 'updated_at']
+    actions = ['export_to_csv']
+
+    def export_to_csv(self, request, queryset):
+        """Export selected products to CSV"""
+        import csv
+        from django.http import HttpResponse
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="products_export.csv"'
+        
+        writer = csv.writer(response)
+        
+        # Write header
+        writer.writerow(['name', 'description', 'price', 'category', 'in_stock', 'tags'])
+        
+        # Write data
+        for product in queryset:
+            writer.writerow([
+                product.name,
+                product.description,
+                str(product.price),
+                product.category.name,
+                product.in_stock,
+                product.tags
+            ])
+        
+        return response
+
+    export_to_csv.short_description = "Export selected products to CSV"
 
 @admin.register(ProductImage)
 class ProductImageAdmin(admin.ModelAdmin):
@@ -119,6 +148,33 @@ class ProductImageAdmin(admin.ModelAdmin):
 class ProductSpecificationAdmin(admin.ModelAdmin):
     list_display = ['product', 'key', 'value', 'order']
     list_filter = ['key']
+    actions = ['export_to_csv']
+
+    def export_to_csv(self, request, queryset):
+        """Export selected specifications to CSV"""
+        import csv
+        from django.http import HttpResponse
+        
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="specifications_export.csv"'
+        
+        writer = csv.writer(response)
+        
+        # Write header
+        writer.writerow(['product_name', 'key', 'value', 'order'])
+        
+        # Write data
+        for spec in queryset:
+            writer.writerow([
+                spec.product.name,
+                spec.key,
+                spec.value,
+                spec.order
+            ])
+        
+        return response
+
+    export_to_csv.short_description = "Export selected specifications to CSV"
 
 
 class ManufacturerAdminForm(forms.ModelForm):

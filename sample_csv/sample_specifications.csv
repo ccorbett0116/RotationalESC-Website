@@ -1,0 +1,31 @@
+product_name,key,value,order
+Industrial Centrifugal Pump Model A,Flow Rate,500 GPM,0
+Industrial Centrifugal Pump Model A,Head,150 ft,1
+Industrial Centrifugal Pump Model A,Power,25 HP,2
+Industrial Centrifugal Pump Model A,Inlet Size,6 inches,3
+Industrial Centrifugal Pump Model A,Outlet Size,4 inches,4
+Industrial Centrifugal Pump Model A,Material,Stainless Steel,5
+Rotary Screw Compressor 125CFM,Air Flow,125 CFM,0
+Rotary Screw Compressor 125CFM,Pressure,175 PSI,1
+Rotary Screw Compressor 125CFM,Power,30 HP,2
+Rotary Screw Compressor 125CFM,Tank Size,120 gallons,3
+Rotary Screw Compressor 125CFM,Cooling,Air Cooled,4
+Rotary Screw Compressor 125CFM,Control,VFD,5
+Premium Efficiency Motor 50HP,Power,50 HP,0
+Premium Efficiency Motor 50HP,Voltage,480V,1
+Premium Efficiency Motor 50HP,Speed,1750 RPM,2
+Premium Efficiency Motor 50HP,Efficiency,96.2%,3
+Premium Efficiency Motor 50HP,Frame,326T,4
+Premium Efficiency Motor 50HP,Enclosure,TEFC,5
+Heavy Duty Ball Bearing 6020,Bore,100mm,0
+Heavy Duty Ball Bearing 6020,Outside Diameter,180mm,1
+Heavy Duty Ball Bearing 6020,Width,34mm,2
+Heavy Duty Ball Bearing 6020,Load Rating,95 kN,3
+Heavy Duty Ball Bearing 6020,Speed Limit,4300 RPM,4
+Heavy Duty Ball Bearing 6020,Sealing,Double Sealed,5
+Mechanical Seal Type 21,Type,Cartridge Seal,0
+Mechanical Seal Type 21,Pressure Rating,600 PSI,1
+Mechanical Seal Type 21,Temperature Rating,400°F,2
+Mechanical Seal Type 21,Shaft Size,2 inches,3
+Mechanical Seal Type 21,Design,Balanced,4
+Mechanical Seal Type 21,API Standard,API 682,5
