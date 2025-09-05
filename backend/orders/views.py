@@ -69,7 +69,7 @@ def calculate_order_total(request):
         return Response(status=status.HTTP_200_OK)
     
     cart_items = request.data.get('items', [])
-    billing_country = request.data.get('billing_country', 'US')
+    billing_country = request.data.get('billing_country', 'CA')
     subtotal = 0
     
     for item in cart_items:
@@ -183,6 +183,35 @@ def stripe_webhook(request):
             
         except Order.DoesNotExist:
             pass
+
+    elif event['type'] == 'checkout.session.completed':
+        session = event['data']['object']
+        
+        try:
+            # Find order by checkout session ID or order number in metadata
+            order_number = session.get('metadata', {}).get('order_number')
+            if order_number:
+                order = Order.objects.get(order_number=order_number)
+                if session.payment_status == 'paid':
+                    order.payment_status = 'completed'
+                    order.status = 'processing'
+                    order.save()
+                    
+        except Order.DoesNotExist:
+            pass
+
+    elif event['type'] == 'checkout.session.expired':
+        session = event['data']['object']
+        
+        try:
+            order_number = session.get('metadata', {}).get('order_number')
+            if order_number:
+                order = Order.objects.get(order_number=order_number)
+                order.payment_status = 'failed'
+                order.save()
+                    
+        except Order.DoesNotExist:
+            pass
     
     return Response({'status': 'success'}, status=status.HTTP_200_OK)
 
@@ -213,3 +242,70 @@ def create_checkout_session(request, order_number):
         return Response({'error': 'Order not found'}, status=status.HTTP_404_NOT_FOUND)
     except Exception as e:
         return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['POST'])
+def verify_checkout_session(request, order_number):
+    """Verify Stripe Checkout Session completion and update order status."""
+    try:
+        order = Order.objects.get(order_number=order_number)
+        session_id = request.data.get('session_id')
+        
+        if not session_id:
+            return Response(
+                {'error': 'Session ID is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verify the session with Stripe
+        session = StripeService.get_checkout_session(session_id)
+        
+        # Check if session belongs to this order
+        if session.metadata.get('order_number') != order_number:
+            return Response(
+                {'error': 'Session does not match order'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check session status and payment status
+        if session.status == 'expired':
+            order.payment_status = 'failed'
+            order.save(update_fields=['payment_status'])
+            return Response(
+                {'error': 'Payment session expired', 'verified': False}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Update order status based on session payment status
+        if session.payment_status == 'paid':
+            order.payment_status = 'completed'
+            order.status = 'processing'
+            order.save(update_fields=['payment_status', 'status'])
+            verified = True
+        elif session.payment_status == 'unpaid':
+            order.payment_status = 'pending'
+            order.save(update_fields=['payment_status'])
+            verified = False
+        else:
+            order.payment_status = 'failed'
+            order.save(update_fields=['payment_status'])
+            verified = False
+        
+        # Return verification result
+        serializer = OrderSerializer(order, context={'request': request})
+        return Response({
+            'verified': verified,
+            'order': serializer.data,
+            'payment_status': session.payment_status,
+            'session_status': session.status
+        }, status=status.HTTP_200_OK)
+        
+    except Order.DoesNotExist:
+        return Response(
+            {'error': 'Order not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    except Exception as e:
+        return Response(
+            {'error': f'Session verification failed: {str(e)}'}, 
+            status=status.HTTP_400_BAD_REQUEST
+        )

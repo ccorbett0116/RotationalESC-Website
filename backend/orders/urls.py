@@ -7,5 +7,6 @@ urlpatterns = [
     path('orders/<str:order_number>/', views.OrderDetailView.as_view(), name='order-detail'),
     path('orders/<str:order_number>/confirm-payment/', views.confirm_payment, name='confirm-payment'),
     path('orders/<str:order_number>/create-checkout-session/', views.create_checkout_session, name='create-checkout-session'),
+    path('orders/<str:order_number>/verify-checkout-session/', views.verify_checkout_session, name='verify-checkout-session'),
     path('stripe/webhook/', views.stripe_webhook, name='stripe-webhook'),
 ]

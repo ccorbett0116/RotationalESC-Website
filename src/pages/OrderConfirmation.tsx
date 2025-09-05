@@ -4,8 +4,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { CheckCircle, Package, Truck, Download } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CheckCircle, Package, Truck, CreditCard, ArrowLeft, Download, Mail, Phone } from "lucide-react";
 import { apiService, Order } from "@/services/api";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
 const OrderConfirmation = () => {
@@ -143,13 +145,13 @@ const OrderConfirmation = () => {
                           Quantity: {item.quantity}
                         </p>
                         <p className="text-sm text-muted-foreground">
-                          ${Number(item.price).toFixed(2)} each
+                          {formatCAD(Number(item.price))} each
                         </p>
                       </div>
                     </div>
                     <div className="text-right">
                       <p className="font-semibold">
-                        ${Number(item.total_price).toFixed(2)}
+                        {formatCAD(Number(item.total_price))}
                       </p>
                     </div>
                   </div>
@@ -163,7 +165,7 @@ const OrderConfirmation = () => {
             <div className="space-y-2">
               <div className="flex justify-between">
                 <span>Subtotal</span>
-                <span>${order.subtotal.toLocaleString()}</span>
+                <span>{formatCAD(Number(order.subtotal))}</span>
               </div>
               <div className="flex justify-between">
                 <span>Shipping</span>
@@ -171,18 +173,18 @@ const OrderConfirmation = () => {
                   {order.shipping_amount === 0 ? (
                     <span className="text-green-600">FREE</span>
                   ) : (
-                    `$${Number(order.shipping_amount).toFixed(2)}`
+                    formatCAD(Number(order.shipping_amount))
                   )}
                 </span>
               </div>
               <div className="flex justify-between">
                 <span>Tax</span>
-                <span>${Number(order.tax_amount).toFixed(2)}</span>
+                <span>{formatCAD(Number(order.tax_amount))}</span>
               </div>
               <Separator />
               <div className="flex justify-between font-semibold text-lg">
                 <span>Total</span>
-                <span>${order.total_amount.toLocaleString()}</span>
+                <span>{formatCAD(Number(order.total_amount))}</span>
               </div>
             </div>
           </CardContent>

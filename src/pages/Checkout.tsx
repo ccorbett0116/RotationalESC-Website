@@ -7,15 +7,17 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { CreditCard, Shield, ArrowLeft, ShoppingBag } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 // import StripePaymentWrapper from "@/components/StripePayment"; // Replaced by Stripe Checkout redirect
 
 const Checkout = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { items: cartItems, clearCart } = useCart();
   const { toast } = useToast();
   const [sameAsShipping, setSameAsShipping] = useState(true);
@@ -51,6 +53,21 @@ const Checkout = () => {
     shipping_postal_code: "",
     shipping_country: "CA",
   });
+
+  // Handle retry parameter for failed payments
+  useEffect(() => {
+    const retryOrder = searchParams.get('retry');
+    if (retryOrder) {
+      toast({
+        title: "Retrying Payment",
+        description: `Continuing with order #${retryOrder}. Please complete the payment below.`,
+      });
+      // Clear the retry parameter from URL
+      const newSearchParams = new URLSearchParams(searchParams);
+      newSearchParams.delete('retry');
+      navigate(`/checkout?${newSearchParams.toString()}`, { replace: true });
+    }
+  }, [searchParams, navigate, toast]);
 
   useEffect(() => {
     const fetchCartProducts = async () => {
@@ -640,7 +657,7 @@ const Checkout = () => {
                           </div>
                         </div>
                         <p className="font-medium text-sm">
-                          ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                          {formatCAD(Number(item.product.price) * item.quantity)}
                         </p>
                       </div>
                     );
@@ -653,11 +670,11 @@ const Checkout = () => {
                 <div className="space-y-2">
                   <div className="flex justify-between">
                     <span>Subtotal</span>
-                    <span>${orderTotals.subtotal.toFixed(2)}</span>
+                    <span>{formatCAD(orderTotals.subtotal)}</span>
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>${orderTotals.tax_amount.toFixed(2)}</span>
+                    <span>{formatCAD(orderTotals.tax_amount)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
                     * Shipping will be calculated and communicated via email
@@ -668,7 +685,7 @@ const Checkout = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${orderTotals.total_amount.toFixed(2)}</span>
+                  <span>{formatCAD(orderTotals.total_amount)}</span>
                 </div>
 
                 {currentStep === 'form' && (

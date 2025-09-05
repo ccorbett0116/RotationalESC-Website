@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { CreditCard, Shield } from 'lucide-react';
 import { apiService } from '@/services/api';
 import { useToast } from '@/hooks/use-toast';
+import { formatCAD } from '@/lib/currency';
 import { config } from '@/lib/config';
 
 // Initialize Stripe with safety checks so empty key isn't silently used
@@ -128,7 +129,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
               Secure payment with SSL encryption
             </div>
             <div className="text-lg font-semibold">
-              ${totalAmount.toFixed(2)}
+              {formatCAD(totalAmount)}
             </div>
           </div>
           
@@ -138,7 +139,7 @@ const StripePaymentForm: React.FC<StripePaymentFormProps> = ({
             className="w-full"
             size="lg"
           >
-            {loading ? 'Processing...' : `Pay $${totalAmount.toFixed(2)}`}
+            {loading ? 'Processing...' : `Pay ${formatCAD(totalAmount)}`}
           </Button>
         </form>
       </CardContent>

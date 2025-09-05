@@ -9,6 +9,7 @@ import { ArrowLeft, ShoppingCart, Share2, ZoomIn } from "lucide-react";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
 const ProductDetail = () => {
@@ -201,7 +202,7 @@ const ProductDetail = () => {
               </div>
               <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
               <div className="text-3xl font-bold text-primary mb-6">
-                ${Number(product.price).toFixed(2)}
+                {formatCAD(Number(product.price))}
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed">
                 {product.description}
@@ -354,7 +355,7 @@ const ProductDetail = () => {
                   <CardHeader>
                     <CardTitle className="text-lg">{relatedProduct.name}</CardTitle>
                     <div className="text-xl font-bold text-primary">
-                      ${Number(relatedProduct.price).toFixed(2)}
+                      {formatCAD(Number(relatedProduct.price))}
                     </div>
                   </CardHeader>
                   <CardContent>

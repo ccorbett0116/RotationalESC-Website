@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {CheckCircle, Settings, Users, Phone, BookOpenCheck} from "lucide-react";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/hero-industrial.jpg";
 import { apiService, Product, CompanyInfo } from "@/services/api";
@@ -215,7 +216,9 @@ const Home = () => {
                     </div>
                     <div className="text-right sm:text-left">
                       <p className="text-xl lg:text-2xl font-bold text-primary">
-                        ${Number(product.price).toFixed(2)}
+                                              <div className="text-lg font-semibold text-primary">
+                        {formatCAD(Number(product.price))}
+                      </div>
                       </p>
                     </div>
                   </div>

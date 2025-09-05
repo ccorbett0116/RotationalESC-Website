@@ -9,6 +9,7 @@ import { Search, Filter, ShoppingCart, X } from "lucide-react";
 import { apiService, Product, Category, ProductSpecification } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import ShopImage from "@/assets/ShopImage.jpg"; 
 
@@ -355,7 +356,7 @@ const Shop = () => {
                       </div>
                       <CardTitle className="text-lg leading-tight">{product.name}</CardTitle>
                       <div className="text-2xl font-bold text-primary">
-                        ${Number(product.price).toFixed(2)}
+                        {formatCAD(Number(product.price))}
                       </div>
                     </CardHeader>
                     <CardContent>

@@ -34,8 +34,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Stripe Configuration
 STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
 VITE_STRIPE_PUBLISHABLE_KEY = os.environ.get('VITE_STRIPE_PUBLISHABLE_KEY', '')
-STRIPE_SUCCESS_URL = os.environ.get('STRIPE_SUCCESS_URL', 'http://localhost:3000/order-success')
-STRIPE_CANCEL_URL = os.environ.get('STRIPE_CANCEL_URL', 'http://localhost:3000/checkout')
+
+# Construct Stripe URLs using production domain
+PRODUCTION_DOMAIN = os.environ.get('PRODUCTION_DOMAIN', 'localhost:3000')
+BASE_URL = f"https://{PRODUCTION_DOMAIN}" if PRODUCTION_DOMAIN != 'localhost:3000' else 'http://localhost:3000'
+STRIPE_SUCCESS_URL = f"{BASE_URL}/order-success"
+STRIPE_CANCEL_URL = f"{BASE_URL}/payment-failed"
 
 
 # Quick-start development settings - unsuitable for production

@@ -13,6 +13,8 @@ import Contact from "./pages/Contact";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import OrderConfirmation from "./pages/OrderConfirmation";
+import OrderSuccess from "./pages/OrderSuccess";
+import PaymentFailed from "./pages/PaymentFailed";
 import NotFound from "./pages/NotFound";
 import Pumps from "@/pages/Pumps.tsx";
 import Service from "@/pages/Service.tsx";
@@ -37,6 +39,8 @@ const App = () => (
             <Route path="/contact" element={<Contact />} />
             <Route path="/cart" element={<Cart />} />
             <Route path="/checkout" element={<Checkout />} />
+            <Route path="/order-success" element={<OrderSuccess />} />
+            <Route path="/payment-failed" element={<PaymentFailed />} />
             <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
             <Route path="/pumps" element={<Pumps />} />
             <Route path="/mechanical-seals" element={<Seals />} />

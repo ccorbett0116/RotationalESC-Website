@@ -261,7 +261,7 @@ export const apiService = {
 
   // Orders
   calculateOrderTotal: async (data: {
-    items: Array<{ product_id: number; quantity: number }>;
+    items: Array<{ product_id: string; quantity: number }>;
     billing_country?: string;
   }): Promise<OrderTotals> => {
     const response = await api.post('/orders/calculate-total/', data);
@@ -287,6 +287,13 @@ export const apiService = {
 
   getOrder: async (orderNumber: string): Promise<Order> => {
     const response = await api.get(`/orders/${orderNumber}/`);
+    return response.data;
+  },
+
+  verifyCheckoutSession: async (sessionId: string, orderNumber: string): Promise<{ verified: boolean; order: Order }> => {
+    const response = await api.post(`/orders/${orderNumber}/verify-checkout-session/`, {
+      session_id: sessionId
+    });
     return response.data;
   },
 

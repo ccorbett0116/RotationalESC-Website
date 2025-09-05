@@ -49,7 +49,7 @@ class StripeService:
             stripe_price = stripe.Price.create(
                 product=stripe_product.id,
                 unit_amount=int(price_amount * 100),  # Convert to cents
-                currency='usd',
+                currency='cad',
             )
             return stripe_price
         except stripe.error.StripeError as e:
@@ -103,7 +103,7 @@ class StripeService:
             # Create payment intent
             intent = stripe.PaymentIntent.create(
                 amount=total_amount_cents,
-                currency='usd',  # You can make this configurable based on billing_country
+                currency='cad',  # You can make this configurable based on billing_country
                 metadata=metadata,
                 description=description,
                 receipt_email=order_data['customer_email'],
@@ -224,7 +224,7 @@ class StripeService:
                                     # Fallback to price_data if price creation fails
                                     line_item = {
                                         'price_data': {
-                                            'currency': 'usd',
+                                            'currency': 'cad',
                                             'product': stripe_product.id,
                                             'unit_amount': int(Decimal(str(item['price'])) * 100),
                                         },
@@ -238,7 +238,7 @@ class StripeService:
                             
                             line_item = {
                                 'price_data': {
-                                    'currency': 'usd',
+                                    'currency': 'cad',
                                     'product_data': {
                                         'name': product_name,
                                         'metadata': {
@@ -260,7 +260,7 @@ class StripeService:
                         product_name = item.get('name', f'Product ID {item["product_id"]}')
                         line_item = {
                             'price_data': {
-                                'currency': 'usd',
+                                'currency': 'cad',
                                 'product_data': {
                                     'name': product_name,
                                     'metadata': {
@@ -279,7 +279,7 @@ class StripeService:
                     
                     line_item = {
                         'price_data': {
-                            'currency': 'usd',
+                            'currency': 'cad',
                             'product_data': {
                                 'name': product_name,
                                 'metadata': {
@@ -316,3 +316,14 @@ class StripeService:
             raise Exception(f"Stripe error: {str(e)}")
         except Exception as e:
             raise Exception(f"Checkout session error: {str(e)}")
+
+    @staticmethod
+    def get_checkout_session(session_id):
+        """Retrieve a Stripe Checkout Session."""
+        try:
+            session = stripe.checkout.Session.retrieve(session_id)
+            return session
+        except stripe.error.StripeError as e:
+            raise Exception(f"Stripe error: {str(e)}")
+        except Exception as e:
+            raise Exception(f"Checkout session retrieval error: {str(e)}")

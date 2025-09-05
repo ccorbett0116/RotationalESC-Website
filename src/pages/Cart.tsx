@@ -9,6 +9,7 @@ import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle } from "lucide-react";
 import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
 const Cart = () => {
@@ -193,10 +194,10 @@ const Cart = () => {
                         {/* Price */}
                         <div className="text-right">
                           <div className="text-lg font-semibold text-primary">
-                            ${(Number(item.product.price) * item.quantity).toFixed(2)}
+                            {formatCAD(Number(item.product.price) * item.quantity)}
                           </div>
                           <div className="text-sm text-muted-foreground">
-                            ${Number(item.product.price).toFixed(2)} each
+                            {formatCAD(Number(item.product.price))} each
                           </div>
                         </div>
                       </div>
@@ -223,12 +224,12 @@ const Cart = () => {
               <CardContent className="space-y-4">
                 <div className="flex justify-between">
                   <span>Subtotal ({cartItems.length} items)</span>
-                  <span>${subtotal.toFixed(2)}</span>
+                  <span>{formatCAD(subtotal)}</span>
                 </div>
 
                 <div className="flex justify-between">
                   <span>Estimated Tax</span>
-                  <span>${tax.toFixed(2)}</span>
+                  <span>{formatCAD(tax)}</span>
                 </div>
 
                 <div className="text-xs text-muted-foreground mt-2">
@@ -239,7 +240,7 @@ const Cart = () => {
 
                 <div className="flex justify-between font-semibold text-lg">
                   <span>Total</span>
-                  <span>${total.toFixed(2)}</span>
+                  <span>{formatCAD(total)}</span>
                 </div>
 
                 <Link to="/checkout" className="block">
