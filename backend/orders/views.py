@@ -1,17 +1,12 @@
-ffrom rest_framework import status
+from rest_framework import status, generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from .models import Order, OrderItem
-from .serializers import OrderSerializer, OrderItemSerializer
-from .stripe_service import StripeService
-from .email_service import OrderEmailServicecimal import Decimal
-from rest_framework import generics, status
-from rest_framework.decorators import api_view
-from rest_framework.response import Response
+from decimal import Decimal
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderCreateSerializer
 from .stripe_service import StripeService
+from .email_service import OrderEmailService
 from products.models import Product
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
