@@ -1,12 +1,10 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {CheckCircle, Settings, Users, Phone, BookOpenCheck} from "lucide-react";
-import { formatCAD } from "@/lib/currency";
+import {CheckCircle, Settings, Users, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/hero-industrial.jpg";
-import placeholderImage from "@/assets/centrifugal-pump.jpg";
+import ProductCard from "@/components/ProductCard";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useEffect, useState } from "react";
 // Define services inline
@@ -199,42 +197,7 @@ const Home = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {products.slice(0, 3).map((product) => (
-              <Card key={product.id} className="h-full flex flex-col">
-                <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                  <img
-                    src={product.primary_image || placeholderImage}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <CardHeader className="flex-grow pb-2">
-                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
-                    <div className="flex-grow">
-                      <CardTitle className="text-lg line-clamp-2">{product.name}</CardTitle>
-                      <Badge variant="secondary" className="mt-2 text-xs">
-                        {product.category.name}
-                      </Badge>
-                    </div>
-                    <div className="text-right sm:text-left">
-                      <p className="text-xl lg:text-2xl font-bold text-primary">
-                                              <div className="text-lg font-semibold text-primary">
-                        {formatCAD(Number(product.price))}
-                      </div>
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 mt-auto">
-                  <CardDescription className="mb-4 text-sm line-clamp-3">
-                    {product.description.substring(0, 100)}...
-                  </CardDescription>
-                  <Link to={`/product/${product.id}`}>
-                    <Button variant="outline" className="w-full">
-                      View Details
-                    </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+              <ProductCard key={product.id} product={product} />
             ))}
           </div>
           <div className="text-center mt-12">

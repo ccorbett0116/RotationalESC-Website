@@ -248,16 +248,16 @@ class ProductAdmin(admin.ModelAdmin):
         quantity_color = '#e74c3c' if obj.quantity == 0 else '#f39c12' if obj.quantity <= 5 else '#27ae60'
         
         summary = f'''
-        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+        <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; color: #333;">
             <h4 style="margin-top: 0; color: #2c3e50;">📋 Product Summary</h4>
             <div style="display: flex; gap: 20px;">
                 <div style="flex: 1;">
-                    <p><strong>Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
-                    <p><strong>Active:</strong> {'✅ Yes' if obj.active else '❌ Disabled'}</p>
-                    <p><strong>Quantity:</strong> <span style="color: {quantity_color}; font-weight: bold;">{obj.quantity}</span></p>
-                    <p><strong>Stock Status:</strong> {'✅ Available' if obj.is_available else '❌ Not Available'}</p>
-                    <p><strong>Images:</strong> {images_count}</p>
-                    <p><strong>Specifications:</strong> {specs_count}</p>
+                    <p style="color: #333;"><strong style="color: #333;">Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
+                    <p style="color: #333;"><strong style="color: #333;">Active:</strong> {'✅ Yes' if obj.active else '❌ Disabled'}</p>
+                    <p style="color: #333;"><strong style="color: #333;">Quantity:</strong> <span style="color: {quantity_color}; font-weight: bold;">{obj.quantity}</span></p>
+                    <p style="color: #333;"><strong style="color: #333;">Stock Status:</strong> {'✅ Available' if obj.is_available else '❌ Not Available'}</p>
+                    <p style="color: #333;"><strong style="color: #333;">Images:</strong> {images_count}</p>
+                    <p style="color: #333;"><strong style="color: #333;">Specifications:</strong> {specs_count}</p>
                 </div>
         '''
         

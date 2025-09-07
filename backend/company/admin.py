@@ -39,22 +39,22 @@ class CompanyInfoAdmin(admin.ModelAdmin):
         
         return format_html(
             '''
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; border-left: 4px solid #3498db; color: #333;">
                 <h3 style="margin-top: 0; color: #2c3e50;">🏢 Company Information</h3>
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
-                        <p><strong>Name:</strong> {}</p>
-                        <p><strong>Founded:</strong> {}</p>
-                        <p><strong>Phone:</strong> {}</p>
-                        <p><strong>Email:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Name:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Founded:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Phone:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Email:</strong> {}</p>
                     </div>
                     <div>
-                        <p><strong>Address:</strong><br>{}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Address:</strong><br>{}</p>
                     </div>
                 </div>
                 <div style="margin-top: 20px;">
-                    <h4>Description:</h4>
-                    <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #ddd;">
+                    <h4 style="color: #333;">Description:</h4>
+                    <div style="background: white; padding: 15px; border-radius: 6px; border: 1px solid #ddd; color: #333;">
                         {}
                     </div>
                 </div>

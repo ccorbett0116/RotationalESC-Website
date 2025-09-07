@@ -1,0 +1,185 @@
+import React from 'react';
+import { Link } from "react-router-dom";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { ShoppingCart, X } from "lucide-react";
+import { Product, ProductSpecification } from "@/services/api";
+import { formatCAD } from "@/lib/currency";
+
+interface ProductCardProps {
+  product: Product;
+  showAddToCart?: boolean;
+  showSpecifications?: boolean;
+  showAvailabilityBadge?: boolean;
+  searchTerm?: string;
+  onAddToCart?: (product: Product) => void;
+  className?: string;
+}
+
+interface ProductCardSpecsProps {
+  product: Product;
+  searchTerm?: string;
+  getSpecificationMatches?: (product: Product, searchTerm: string) => ProductSpecification[];
+}
+
+const ProductCardSpecs: React.FC<ProductCardSpecsProps> = ({ 
+  product, 
+  searchTerm, 
+  getSpecificationMatches 
+}) => {
+  if (!product.specifications || product.specifications.length === 0) return null;
+
+  const specMatches = searchTerm && getSpecificationMatches 
+    ? getSpecificationMatches(product, searchTerm) 
+    : [];
+
+  return (
+    <div className="mb-4">
+      <div className="text-xs text-muted-foreground mb-2 font-medium">
+        Key Specifications
+        {searchTerm && specMatches.length > 0 && (
+          <Badge variant="secondary" className="ml-2 text-xs">
+            {specMatches.length} match{specMatches.length !== 1 ? 'es' : ''}
+          </Badge>
+        )}:
+      </div>
+      <div className="grid grid-cols-1 gap-1 text-xs">
+        {product.specifications.slice(0, 3).map((spec) => {
+          const isMatch = searchTerm && specMatches.some(s => s.id === spec.id);
+          return (
+            <div 
+              key={spec.id} 
+              className={`flex justify-between border-b border-border/30 pb-1 ${
+                isMatch ? 'bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded' : ''
+              }`}
+            >
+              <span className="font-medium text-foreground">{spec.key}:</span>
+              <span className="text-muted-foreground">{spec.value}</span>
+            </div>
+          );
+        })}
+        {product.specifications.length > 3 && (
+          <div className="text-center text-xs text-muted-foreground mt-1 italic">
+            +{product.specifications.length - 3} more specifications
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const ProductCard: React.FC<ProductCardProps> = ({
+  product,
+  showAddToCart = false,
+  showSpecifications = false,
+  showAvailabilityBadge = false,
+  searchTerm,
+  onAddToCart,
+  className = "",
+}) => {
+  const getSpecificationMatches = (product: Product, searchTerm: string): ProductSpecification[] => {
+    if (!searchTerm.trim() || !product.specifications) return [];
+    
+    const query = searchTerm.toLowerCase().trim();
+    const searchTerms = query.split(' ').filter(term => term.length > 0);
+    
+    return product.specifications.filter(spec =>
+      searchTerms.some(term =>
+        spec.key.toLowerCase().includes(term) ||
+        spec.value.toLowerCase().includes(term)
+      )
+    );
+  };
+
+  return (
+    <Card className={`h-full flex flex-col ${className}`}>
+      <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+        {product.primary_image ? (
+          <img
+            src={product.primary_image}
+            alt={product.name}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+            <span className="text-muted-foreground">No Image</span>
+          </div>
+        )}
+      </div>
+
+      <CardHeader className={showSpecifications ? "flex-1" : "flex-grow pb-2"}>
+        {showAvailabilityBadge && (
+          <div className="flex justify-between items-start mb-2">
+            <Badge 
+              variant={product.is_available ? "default" : "secondary"}
+              className={product.is_available ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}
+            >
+              {product.is_available ? "In Stock" : "Out of Stock"}
+            </Badge>
+            <Badge variant="outline">
+              {product.category.name}
+            </Badge>
+          </div>
+        )}
+        
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2">
+          <div className="flex-grow">
+            <CardTitle className={`${showSpecifications ? "text-lg leading-tight" : "text-lg line-clamp-2"}`}>
+              {product.name}
+            </CardTitle>
+            {!showAvailabilityBadge && (
+              <Badge variant="secondary" className="mt-2 text-xs">
+                {product.category.name}
+              </Badge>
+            )}
+          </div>
+          <div className="text-right sm:text-left">
+            <div className={`${showSpecifications ? "text-2xl" : "text-xl lg:text-2xl"} font-bold text-primary`}>
+              {formatCAD(Number(product.price))}
+            </div>
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardContent className="pt-0 mt-auto">
+        <CardDescription className={`mb-4 text-sm ${showSpecifications ? "" : "line-clamp-3"}`}>
+          {showSpecifications 
+            ? (product.description.length > 120 
+                ? `${product.description.substring(0, 120)}...`
+                : product.description)
+            : `${product.description.substring(0, 100)}...`
+          }
+        </CardDescription>
+        
+        {showSpecifications && (
+          <ProductCardSpecs 
+            product={product}
+            searchTerm={searchTerm}
+            getSpecificationMatches={getSpecificationMatches}
+          />
+        )}
+
+        <div className="space-y-2">
+          <Link to={`/product/${product.id}`}>
+            <Button variant="outline" className="w-full">
+              View Details
+            </Button>
+          </Link>
+          {showAddToCart && (
+            <Button 
+              className="w-full" 
+              disabled={!product.is_available}
+              onClick={() => onAddToCart?.(product)}
+            >
+              <ShoppingCart className="w-4 h-4 mr-2" />
+              {product.is_available ? "Add to Cart" : "Out of Stock"}
+            </Button>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default ProductCard;
