@@ -112,7 +112,7 @@ const About = () => {
                 <Calendar className="h-8 w-8 text-primary" />
               </div>
               <h3 className="text-3xl font-bold text-foreground mb-2">
-                {new Date().getFullYear() - parseInt(companyInfo.founded)}+
+                {new Date().getFullYear() - 1981}+
               </h3>
               <p className="text-muted-foreground">Years of Experience</p>
             </div>
@@ -120,14 +120,14 @@ const About = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Users className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">{companyInfo.employees}</h3>
-              <p className="text-muted-foreground">PLACEHOLDER</p>
+              <h3 className="text-3xl font-bold text-foreground mb-2">{1000}+</h3>
+              <p className="text-muted-foreground">Graduated Students</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Award className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">3</h3>
+              <h3 className="text-3xl font-bold text-foreground mb-2">PLACEHOLDER</h3>
               <p className="text-muted-foreground">PLACEHOLDER</p>
             </div>
           </div>
@@ -142,10 +142,9 @@ const About = () => {
               <h2 className="text-3xl font-bold text-foreground mb-6">Our Story</h2>
               <div className="space-y-4 text-muted-foreground">
                 <p>
-                  {companyInfo.name} is a trusted supplier of industrial pumps and mechanical seals, serving
-                  critical industries like wastewater treatment, petroleum, steel, and food processing. With over {new Date().getFullYear() - parseInt(companyInfo.founded)} years of hands-
-                  on experience and a strong base of repeat business, {companyInfo.name} has built a reputation for reliability, technical knowledge,
-                  and responsive service.
+                  Rotational Equipment Services (RES) is a trusted supplier of industrial pumps and mechanical seals, serving critical industries such as wastewater treatment, petroleum, steel, and food processing. With over 40 years of hands-on experience and a strong base of repeat business, RES has built a reputation for reliability, technical knowledge, and responsive service.
+
+                  Our founder brings a distinguished background working directly for leading pump and seal manufacturers, where he became a recognized subject matter expert in product development. He has spent years training professionals in hydraulic fundamentals and root cause failure analysis, personally graduating thousands of students across North America. This combination of practical industry expertise and deep technical insight continues to shape RES’s approach—delivering solutions that are not only reliable, but informed by decades of frontline experience and innovation.
                 </p>
               </div>
             </div>

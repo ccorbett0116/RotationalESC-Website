@@ -18,9 +18,9 @@ const services = [
   },
   {
     id: 2,
-    title: "Maintenance Services",
-    description: "Preventive maintenance to keep your equipment running",
-    features: ["Scheduled inspections", "Preventive care", "Extended equipment life"]
+    title: "Equipment Sales",
+    description: "A dedicated team of sales professionals committed to finding the right solution for you",
+    features: ["Equipment selection", "Pump and part sales", "Custom built solutions"]
   },
   {
     id: 3,
@@ -276,7 +276,7 @@ const Home = () => {
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
                 <CheckCircle className="h-8 w-8 text-primary" />
               </div>
-              <h3 className="text-lg lg:text-xl font-semibold mb-2">Industry Experience & Compliance</h3>
+              <h3 className="text-lg lg:text-xl font-semibold mb-2">Industry Experience & Knowledge</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
                 Our professionals have experience working in highly regulated industries, and we understand the importance of compliance and safety.
               </p>
