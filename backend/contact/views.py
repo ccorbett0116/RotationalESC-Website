@@ -7,6 +7,7 @@ from django.template.loader import render_to_string
 from django.views.decorators.csrf import csrf_exempt
 from .models import ContactSubmission
 from .serializers import ContactSubmissionSerializer
+from company.models import CompanyInfo
 
 @api_view(['POST'])
 def submit_contact_form(request):
@@ -49,18 +50,25 @@ Submitted on: {submission.created_at.strftime('%B %d, %Y at %I:%M %p')}
                 fail_silently=False,
             )
             
+            # Get company info for email
+            try:
+                company_info = CompanyInfo.objects.first()
+                company_name = company_info.name if company_info else "Rotational Equipment Services"
+            except CompanyInfo.DoesNotExist:
+                company_name = "Rotational Equipment Services"
+            
             # Send confirmation email to customer
-            confirmation_subject = "Thank you for contacting Rotational Equipment Services"
+            confirmation_subject = f"Thank you for contacting {company_name}"
             confirmation_body = f"""
 Dear {submission.name},
 
-Thank you for contacting Rotational Equipment Services. We have received your message regarding "{subject_dict.get(submission.subject, 'General Inquiry')}" and will get back to you within 24 hours.
+Thank you for contacting {company_name}. We have received your message regarding "{subject_dict.get(submission.subject, 'General Inquiry')}" and will get back to you within 24 hours.
 
 Your message:
 {submission.message}
 
 Best regards,
-Rotational Equipment Services Team
+{company_name} Team
             """
             
             send_mail(

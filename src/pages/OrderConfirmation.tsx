@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Package, Truck, CreditCard, ArrowLeft, Download, Mail, Phone } from "lucide-react";
-import { apiService, Order } from "@/services/api";
+import { apiService, Order, CompanyInfo } from "@/services/api";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
@@ -14,6 +14,7 @@ const OrderConfirmation = () => {
   const { orderNumber } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -21,8 +22,12 @@ const OrderConfirmation = () => {
       
       try {
         setLoading(true);
-        const orderData = await apiService.getOrder(orderNumber);
+        const [orderData, companyData] = await Promise.all([
+          apiService.getOrder(orderNumber),
+          apiService.getCompanyInfo()
+        ]);
         setOrder(orderData);
+        setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching order:', error);
       } finally {
@@ -76,7 +81,7 @@ const OrderConfirmation = () => {
         </head>
         <body>
           <div class="header">
-            <div class="company-name">Rotational Equipment Services</div>
+            <div class="company-name">${companyInfo?.name || 'Rotational Equipment Services'}</div>
             <div>Receipt</div>
           </div>
           

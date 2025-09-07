@@ -124,8 +124,8 @@ const Home = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-center lg:text-left order-2 lg:order-1">
               <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-6 text-white">
-                 Rotational Equipment
-                <span className="block text-primary">Services</span>
+                {companyInfo.name.split(' ').slice(0, -1).join(' ')}
+                <span className="block text-primary">{companyInfo.name.split(' ').slice(-1)[0]}</span>
               </h1>
               <p className="text-lg sm:text-xl text-gray-200 mb-8">
                 {companyInfo.description}

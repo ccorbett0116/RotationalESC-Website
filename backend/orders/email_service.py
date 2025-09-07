@@ -4,6 +4,7 @@ from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from decimal import Decimal
 import logging
+from company.models import CompanyInfo
 
 logger = logging.getLogger(__name__)
 
@@ -252,6 +253,13 @@ You can view the order details in the admin panel.
             for item in order_items:
                 items_list.append(f"• {item.product.name} x{item.quantity} - ${item.total_price:.2f} CAD")
             
+            # Get company info for email
+            try:
+                company_info = CompanyInfo.objects.first()
+                company_name = company_info.name if company_info else "Rotational Equipment Services"
+            except CompanyInfo.DoesNotExist:
+                company_name = "Rotational Equipment Services"
+            
             email_body = f"""
 Dear {order.customer_first_name} {order.customer_last_name},
 
@@ -272,7 +280,7 @@ We will contact you shortly regarding shipping arrangements and delivery details
 If you have any questions about your order, please don't hesitate to contact us.
 
 Best regards,
-Rotational Equipment Services Team
+{company_name} Team
 
 Phone: [Your phone number]
 Email: {settings.DEFAULT_FROM_EMAIL}

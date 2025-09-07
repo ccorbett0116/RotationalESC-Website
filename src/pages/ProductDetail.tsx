@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { ArrowLeft, ShoppingCart, Share2, ZoomIn } from "lucide-react";
-import { apiService, Product } from "@/services/api";
+import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
@@ -22,6 +22,7 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   
   useEffect(() => {
     const fetchProduct = async () => {
@@ -40,6 +41,10 @@ const ProductDetail = () => {
           .filter(p => p.id !== productData.id)
           .slice(0, 3);
         setRelatedProducts(related);
+        
+        // Fetch company info for share functionality
+        const companyData = await apiService.getCompanyInfo();
+        setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
@@ -77,7 +82,7 @@ const ProductDetail = () => {
     
     const shareData = {
       title: product.name,
-      text: `Check out this ${product.name} from Rotational Equipment Services`,
+      text: `Check out this ${product.name} from ${companyInfo?.name || 'Rotational Equipment Services'}`,
       url: window.location.href,
     };
 
