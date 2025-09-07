@@ -19,15 +19,28 @@
     <div id="root"></div>
     <!-- Runtime configuration injected by nginx entrypoint -->
     <script>
-      // Dynamically load config.js to avoid Vite bundling issues
+      // Load config.js first, then load main app
       const configScript = document.createElement('script');
       configScript.src = '/config.js';
-      configScript.onerror = () => {
-        // If config.js fails to load (e.g., in development), continue without it
-        console.warn('config.js not available, using development defaults');
+      
+      const loadMainApp = () => {
+        const mainScript = document.createElement('script');
+        mainScript.type = 'module';
+        mainScript.src = '/src/main.tsx';
+        document.head.appendChild(mainScript);
       };
+      
+      configScript.onload = () => {
+        console.log('Runtime config loaded:', window.ENV);
+        loadMainApp();
+      };
+      
+      configScript.onerror = () => {
+        console.warn('config.js not available, using development defaults');
+        loadMainApp();
+      };
+      
       document.head.appendChild(configScript);
     </script>
-    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
