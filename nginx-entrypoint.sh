@@ -12,7 +12,7 @@ echo "Creating runtime configuration..."
 cat > /usr/share/nginx/html/config.js << EOF
 window.ENV = {
   VITE_STRIPE_PUBLISHABLE_KEY: "${VITE_STRIPE_PUBLISHABLE_KEY:-}",
-  VITE_API_URL: "${VITE_API_URL:-https://${PRODUCTION_DOMAIN}}"
+  VITE_API_URL: "${VITE_API_URL:-https://${PRODUCTION_DOMAIN}/api}"
 };
 EOF
 
