@@ -10,10 +10,17 @@ declare global {
   }
 }
 
-const getConfig = () => ({
-  stripePublishableKey: window.ENV?.VITE_STRIPE_PUBLISHABLE_KEY || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
-  apiUrl: window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || 'http://localhost:8000',
-});
+const getConfig = () => {
+  // If window.ENV is not available yet, wait a bit and try again
+  if (!window.ENV && typeof window !== 'undefined') {
+    console.log('window.ENV not available yet, using fallback');
+  }
+  
+  return {
+    stripePublishableKey: window.ENV?.VITE_STRIPE_PUBLISHABLE_KEY || import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY || '',
+    apiUrl: window.ENV?.VITE_API_URL || import.meta.env.VITE_API_URL || 'https://rotationales.com/api',
+  };
+};
 
 export const config = new Proxy({} as ReturnType<typeof getConfig>, {
   get(target, prop) {
