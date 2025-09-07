@@ -213,6 +213,21 @@ export interface OrderTotals {
   total_amount: number;
 }
 
+// Gallery types
+export interface GalleryImage {
+  id: number;
+  title: string;
+  description: string;
+  image_url: string;
+  filename: string;
+  content_type: string;
+  alt_text: string;
+  order: number;
+  is_featured: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // Company Info types
 export interface CompanyInfo {
   id?: number;
@@ -354,6 +369,12 @@ export const apiService = {
   getSectionsWithManufacturers: async (page?: string): Promise<SectionWithManufacturers[]> => {
     const params = page ? { page } : {};
     const response = await api.get('/sections-with-manufacturers/', { params });
+    return response.data;
+  },
+
+  // Gallery
+  getGalleryImages: async (): Promise<GalleryImage[]> => {
+    const response = await api.get('/gallery/');
     return response.data;
   },
 
