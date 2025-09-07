@@ -18,29 +18,16 @@
   <body>
     <div id="root"></div>
     <!-- Runtime configuration injected by nginx entrypoint -->
+    <!-- Runtime configuration injected by nginx entrypoint -->
     <script>
-      // Load config.js first, then load main app
+      // Load config.js asynchronously but don't block main app
       const configScript = document.createElement('script');
       configScript.src = '/config.js';
-      
-      const loadMainApp = () => {
-        const mainScript = document.createElement('script');
-        mainScript.type = 'module';
-        mainScript.src = '/src/main.tsx';
-        document.head.appendChild(mainScript);
-      };
-      
-      configScript.onload = () => {
-        console.log('Runtime config loaded:', window.ENV);
-        loadMainApp();
-      };
-      
       configScript.onerror = () => {
         console.warn('config.js not available, using development defaults');
-        loadMainApp();
       };
-      
       document.head.appendChild(configScript);
     </script>
+    <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
