@@ -52,7 +52,7 @@ const PrivacyPolicy = () => {
             <CardHeader>
               <CardTitle>Privacy Policy for {companyInfo.name}</CardTitle>
               <p className="text-muted-foreground">
-                Last updated: {new Date().toLocaleDateString()}
+                Last updated: {new Date('2025-09-06').toLocaleDateString()}
               </p>
             </CardHeader>
             <CardContent className="prose prose-sm max-w-none space-y-6">
@@ -74,9 +74,7 @@ const PrivacyPolicy = () => {
                       We may collect personal information that you voluntarily provide to us when you:
                     </p>
                     <ul className="list-disc list-inside text-muted-foreground mt-2 space-y-1">
-                      <li>Register for an account</li>
                       <li>Make a purchase</li>
-                      <li>Subscribe to our newsletter</li>
                       <li>Contact us for support</li>
                       <li>Fill out forms on our website</li>
                     </ul>
@@ -107,7 +105,6 @@ const PrivacyPolicy = () => {
                 <ul className="list-disc list-inside text-muted-foreground space-y-1">
                   <li>Processing and fulfilling your orders</li>
                   <li>Providing customer service and support</li>
-                  <li>Sending you marketing communications (with your consent)</li>
                   <li>Improving our website and services</li>
                   <li>Preventing fraud and enhancing security</li>
                   <li>Complying with legal obligations</li>
@@ -121,8 +118,6 @@ const PrivacyPolicy = () => {
                   except in the following circumstances:
                 </p>
                 <ul className="list-disc list-inside text-muted-foreground space-y-1">
-                  <li>With your explicit consent</li>
-                  <li>To trusted service providers who assist us in operating our business</li>
                   <li>When required by law or legal process</li>
                   <li>To protect our rights, property, or safety</li>
                   <li>In connection with a business transaction or reorganization</li>

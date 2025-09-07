@@ -64,7 +64,7 @@ const RefundPolicy = () => {
               <CardHeader>
                 <CardTitle>Return and Refund Policy</CardTitle>
                 <p className="text-muted-foreground">
-                  Last updated: {new Date().toLocaleDateString()}
+                  Last updated: {new Date('2025-09-06').toLocaleDateString()}
                 </p>
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none space-y-6">
