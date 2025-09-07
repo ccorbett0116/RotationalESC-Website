@@ -81,13 +81,10 @@ class OrderCreateSerializer(serializers.ModelSerializer):
                         f'Only {product.quantity} units of "{product.name}" are available'
                     )
                 
-                # Verify the price matches current product price (allow for small decimal differences)
+                # Use current product price instead of validating against frontend price
+                # This prevents validation errors due to price sync issues
                 from decimal import Decimal
-                item_price = Decimal(str(item_data.get('price', 0)))
-                if abs(item_price - product.price) > Decimal('0.01'):
-                    raise serializers.ValidationError(
-                        f'Price for "{product.name}" has changed. Please refresh your cart.'
-                    )
+                item_data['price'] = product.price
                     
             except Product.DoesNotExist:
                 raise serializers.ValidationError(
