@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery
 import base64
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -158,3 +158,16 @@ class SectionWithManufacturersSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ['id', 'label', 'page', 'manufacturers', 'created_at', 'updated_at']
+
+
+class GallerySerializer(serializers.ModelSerializer):
+    image_base64 = serializers.SerializerMethodField()
+    
+    class Meta:
+        model = Gallery
+        fields = ['id', 'title', 'description', 'alt_text', 'order', 'is_featured', 'created_at', 'image_base64']
+    
+    def get_image_base64(self, obj):
+        if obj.image_data:
+            return base64.b64encode(obj.image_data).decode('utf-8')
+        return None

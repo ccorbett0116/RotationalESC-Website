@@ -233,7 +233,11 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </header>
 
       {/* Main Content */}
-      <main>{children}</main>
+      <main>
+        <div className="page-enter">
+          {children}
+        </div>
+      </main>
 
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-20">
@@ -245,12 +249,46 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                <span className="font-bold text-lg text-foreground">{companyInfo?.name || ""}</span>
+                {companyInfo?.name ? (
+                  <span className="font-bold text-lg text-foreground animate-fade-in">
+                    {companyInfo.name}
+                  </span>
+                ) : (
+                  <div className="h-7 w-48 bg-muted rounded animate-pulse"></div>
+                )}
               </div>
-              <p className="text-muted-foreground mb-4">{companyInfo?.tagline || ""}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.address || ""}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.phone || ""}</p>
-              <p className="text-sm text-muted-foreground">{companyInfo?.email || ""}</p>
+              
+              {companyInfo?.tagline ? (
+                <p className="text-muted-foreground mb-4 animate-fade-in">
+                  {companyInfo.tagline}
+                </p>
+              ) : (
+                <div className="h-4 w-64 bg-muted rounded animate-pulse mb-4"></div>
+              )}
+              
+              {companyInfo?.address ? (
+                <p className="text-sm text-muted-foreground animate-fade-in">
+                  {companyInfo.address}
+                </p>
+              ) : (
+                <div className="h-4 w-56 bg-muted rounded animate-pulse mb-2"></div>
+              )}
+              
+              {companyInfo?.phone ? (
+                <p className="text-sm text-muted-foreground animate-fade-in">
+                  {companyInfo.phone}
+                </p>
+              ) : (
+                <div className="h-4 w-36 bg-muted rounded animate-pulse mb-2"></div>
+              )}
+              
+              {companyInfo?.email ? (
+                <p className="text-sm text-muted-foreground animate-fade-in">
+                  {companyInfo.email}
+                </p>
+              ) : (
+                <div className="h-4 w-44 bg-muted rounded animate-pulse"></div>
+              )}
             </div>
 
             {/* Quick Links */}
@@ -309,7 +347,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
-              © {new Date().getFullYear()} {companyInfo?.name || ""}. All rights reserved.
+              {companyInfo?.name ? (
+                <span className="animate-fade-in">
+                  © {new Date().getFullYear()} {companyInfo.name}. All rights reserved.
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-2">
+                  © {new Date().getFullYear()}{" "}
+                  <div className="h-4 w-32 bg-muted rounded animate-pulse inline-block"></div>
+                  . All rights reserved.
+                </span>
+              )}
             </p>
           </div>
         </div>

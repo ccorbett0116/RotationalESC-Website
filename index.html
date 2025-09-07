@@ -6,12 +6,47 @@
     <title>Rotational Equipment Services</title>
     <meta name="description" content="Professional rotational equipment services including pumps, compressors, turbines, and motors. Expert maintenance, repair, and consulting services since 1985." />
     <meta name="author" content="Chance Page" />
+    
+    <!-- Canonical URL for SEO -->
+    <link rel="canonical" href="https://rotationales.com/" />
 
   <meta property="og:title" content="Rotational Equipment Services" />
   <meta property="og:description" content="Industrial equipment services." />
   <meta property="og:type" content="website" />
-  <meta property="og:image" content="/logo.png" />
+  <meta property="og:url" content="https://rotationales.com/" />
+  <meta property="og:image" content="https://rotationales.com/logo.png" />
+  <meta property="og:site_name" content="Rotational Equipment Services" />
   <meta name="twitter:card" content="summary" />
+  <meta name="twitter:url" content="https://rotationales.com/" />
+  <meta name="twitter:title" content="Rotational Equipment Services" />
+  <meta name="twitter:description" content="Industrial equipment services." />
+  <meta name="twitter:image" content="https://rotationales.com/logo.png" />
+  
+  <!-- JSON-LD Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Rotational Equipment Services",
+    "url": "https://rotationales.com",
+    "logo": "https://rotationales.com/logo.png",
+    "description": "Professional rotational equipment services including pumps, compressors, turbines, and motors. Expert maintenance, repair, and consulting services since 1985.",
+    "foundingDate": "1985",
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "telephone": "+1-XXX-XXX-XXXX",
+      "contactType": "customer service"
+    },
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Your City",
+      "addressRegion": "Your State",
+      "addressCountry": "US"
+    },
+    "sameAs": []
+  }
+  </script>
+  
   <link rel="icon" type="image/png" href="/logo.png" />
   </head>
 
@@ -27,6 +62,19 @@
         console.warn('config.js not available, using development defaults');
       };
       document.head.appendChild(configScript);
+      
+      // Register service worker for caching
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', () => {
+          navigator.serviceWorker.register('/sw.js')
+            .then((registration) => {
+              console.log('SW registered: ', registration);
+            })
+            .catch((registrationError) => {
+              console.log('SW registration failed: ', registrationError);
+            });
+        });
+      }
     </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>

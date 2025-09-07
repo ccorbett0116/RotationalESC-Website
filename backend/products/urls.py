@@ -16,4 +16,7 @@ urlpatterns = [
     path('manufacturers/<int:pk>/', views.ManufacturerDetailView.as_view(), name='manufacturer-detail'),
     path('manufacturers/upload/', views.upload_manufacturer, name='upload-manufacturer'),
     path('sections-with-manufacturers/', views.sections_with_manufacturers, name='sections-with-manufacturers'),
+    
+    # Gallery
+    path('gallery/', views.GalleryListView.as_view(), name='gallery-list'),
 ]

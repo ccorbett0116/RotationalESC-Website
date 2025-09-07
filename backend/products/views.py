@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Category, Product, ProductImage, Section, Manufacturer
+from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery
 from .serializers import (
     CategorySerializer, 
     ProductListSerializer, 
@@ -13,7 +13,8 @@ from .serializers import (
     SectionSerializer,
     ManufacturerSerializer,
     ManufacturerUploadSerializer,
-    SectionWithManufacturersSerializer
+    SectionWithManufacturersSerializer,
+    GallerySerializer
 )
 
 class CategoryListView(APIView):
@@ -335,3 +336,13 @@ def _import_specifications_from_csv_api(csv_file):
             continue  # Skip problematic rows
     
     return imported_count
+
+
+class GalleryListView(APIView):
+    """
+    List all gallery images without pagination
+    """
+    def get(self, request):
+        gallery_items = Gallery.objects.all()
+        serializer = GallerySerializer(gallery_items, many=True)
+        return Response(serializer.data)
