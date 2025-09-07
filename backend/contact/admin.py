@@ -71,9 +71,9 @@ class ContactSubmissionAdmin(admin.ModelAdmin):
         
         return format_html(
             '''
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; border-left: 4px solid #3498db; color: #333;">
                 <h4 style="margin-top: 0; color: #2c3e50;">💬 Message Content</h4>
-                <div style="white-space: pre-wrap; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.4;">
+                <div style="white-space: pre-wrap; max-height: 200px; overflow-y: auto; font-family: monospace; font-size: 13px; line-height: 1.4; color: #333;">
                     {}
                 </div>
             </div>

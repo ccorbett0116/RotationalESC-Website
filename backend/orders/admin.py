@@ -123,12 +123,12 @@ class OrderAdmin(admin.ModelAdmin):
         
         summary = format_html(
             '''
-            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0;">
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; color: #333;">
                 <h4 style="margin-top: 0; color: #2c3e50;">📋 Order Summary</h4>
-                <p><strong>Items:</strong> {} product(s)</p>
-                <p><strong>Subtotal:</strong> ${:.2f}</p>
-                <p><strong>Tax:</strong> ${:.2f}</p>
-                <p><strong>Total:</strong> <span style="font-weight: bold; color: #27ae60; font-size: 16px;">${:.2f}</span></p>
+                <p style="color: #333;"><strong style="color: #333;">Items:</strong> {} product(s)</p>
+                <p style="color: #333;"><strong style="color: #333;">Subtotal:</strong> ${:.2f}</p>
+                <p style="color: #333;"><strong style="color: #333;">Tax:</strong> ${:.2f}</p>
+                <p style="color: #333;"><strong style="color: #333;">Total:</strong> <span style="font-weight: bold; color: #27ae60; font-size: 16px;">${:.2f}</span></p>
             </div>
             ''',
             items_count, obj.subtotal, obj.tax_amount, obj.total_amount

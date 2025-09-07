@@ -1,16 +1,14 @@
 import { useState, useEffect, useMemo, useCallback } from "react";
-import { Link } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, ShoppingCart, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Search, Filter, X } from "lucide-react";
 import { apiService, Product, Category, ProductSpecification } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
-import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import ProductCard from "@/components/ProductCard";
 import ShopImage from "@/assets/ShopImage.jpg"; 
 
 const Shop = () => {
@@ -340,97 +338,15 @@ const Shop = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredAndSortedProducts.map((product) => (
-                  <Card key={product.id} className="h-full flex flex-col">
-                    <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
-                      {product.primary_image ? (
-                        <img
-                          src={product.primary_image}
-                          alt={product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                          <span className="text-muted-foreground">No Image</span>
-                        </div>
-                      )}
-                    </div>
-                    <CardHeader className="flex-1">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge 
-                          variant={product.is_available ? "default" : "secondary"}
-                          className={product.is_available ? "bg-green-100 text-green-800" : ""}
-                        >
-                          {product.is_available ? "In Stock" : "Out of Stock"}
-                        </Badge>
-                        <Badge variant="outline">
-                          {product.category.name}
-                        </Badge>
-                      </div>
-                      <CardTitle className="text-lg leading-tight">{product.name}</CardTitle>
-                      <div className="text-2xl font-bold text-primary">
-                        {formatCAD(Number(product.price))}
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <CardDescription className="mb-4">
-                        {product.description.length > 120 
-                          ? `${product.description.substring(0, 120)}...`
-                          : product.description
-                        }
-                      </CardDescription>
-                      
-                      {/* Show key specifications if available */}
-                      {product.specifications && product.specifications.length > 0 && (
-                        <div className="mb-4">
-                          <div className="text-xs text-muted-foreground mb-2 font-medium">
-                            Key Specifications
-                            {searchTerm && getSpecificationMatches(product, searchTerm).length > 0 && (
-                              <Badge variant="secondary" className="ml-2 text-xs">
-                                {getSpecificationMatches(product, searchTerm).length} match{getSpecificationMatches(product, searchTerm).length !== 1 ? 'es' : ''}
-                              </Badge>
-                            )}:
-                          </div>
-                          <div className="grid grid-cols-1 gap-1 text-xs">
-                            {product.specifications.slice(0, 3).map((spec) => {
-                              const isMatch = searchTerm && getSpecificationMatches(product, searchTerm).some(s => s.id === spec.id);
-                              return (
-                                <div 
-                                  key={spec.id} 
-                                  className={`flex justify-between border-b border-border/30 pb-1 ${
-                                    isMatch ? 'bg-yellow-50 dark:bg-yellow-900/20 px-2 py-1 rounded' : ''
-                                  }`}
-                                >
-                                  <span className="font-medium text-foreground">{spec.key}:</span>
-                                  <span className="text-muted-foreground">{spec.value}</span>
-                                </div>
-                              );
-                            })}
-                            {product.specifications.length > 3 && (
-                              <div className="text-center text-xs text-muted-foreground mt-1 italic">
-                                +{product.specifications.length - 3} more specifications
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="space-y-2">
-                        <Link to={`/product/${product.id}`}>
-                          <Button variant="outline" className="w-full">
-                            View Details
-                          </Button>
-                        </Link>
-                        <Button 
-                          className="w-full" 
-                          disabled={!product.is_available}
-                          onClick={() => handleAddToCart(product)}
-                        >
-                          <ShoppingCart className="w-4 h-4 mr-2" />
-                          {product.is_available ? "Add to Cart" : "Out of Stock"}
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <ProductCard 
+                    key={product.id}
+                    product={product}
+                    showAddToCart={true}
+                    showSpecifications={true}
+                    showAvailabilityBadge={true}
+                    searchTerm={searchTerm}
+                    onAddToCart={handleAddToCart}
+                  />
                 ))}
               </div>
             </>
