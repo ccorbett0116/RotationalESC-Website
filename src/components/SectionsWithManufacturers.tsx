@@ -64,7 +64,7 @@ const ManufacturerImage: React.FC<{
   return (
     <div className={`relative ${className}`}>
       {isLoading && (
-        <div className={`${imageHeight} bg-gradient-to-br from-gray-100 to-gray-50 flex items-center justify-center`}>
+        <div className={`${imageHeight} bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center`}>
           <Skeleton className="w-16 h-16 rounded-lg" />
         </div>
       )}
@@ -137,11 +137,11 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                     <Card key={j} className="overflow-hidden">
                       <CardContent className="p-0">
                         {/* Image skeleton */}
-                        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-4">
+                        <div className="bg-gradient-to-br from-muted/30 to-muted/10 p-4">
                           <Skeleton className="w-full h-40 rounded-lg" />
                         </div>
                         {/* Label skeleton */}
-                        <div className="p-4 border-t border-gray-100">
+                        <div className="p-4 border-t border-border">
                           <Skeleton className="h-4 w-3/4 mx-auto" />
                         </div>
                       </CardContent>
@@ -230,12 +230,12 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                     {section.manufacturers.map((manufacturer) => (
                       <Card 
                         key={manufacturer.id}
-                        className="group relative hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-white border-2 border-transparent hover:border-primary/20 overflow-hidden"
+                        className="group relative hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-card border-2 border-transparent hover:border-primary/20 overflow-hidden"
                         onClick={() => handleManufacturerClick(manufacturer.url)}
                       >
                         <CardContent className="p-0">
                           {/* Image Container with Dynamic Aspect Ratio */}
-                          <div className="relative bg-gradient-to-br from-gray-50 to-gray-100">
+                          <div className="relative bg-gradient-to-br from-muted/50 to-muted/30">
                             {manufacturer.image_url ? (
                               <ManufacturerImage 
                                 src={manufacturer.image_url}
@@ -259,15 +259,15 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                             
                             {/* External link indicator */}
                             <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="bg-white/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
+                              <div className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
                                 <ExternalLink className="h-3 w-3 text-primary" />
                               </div>
                             </div>
                           </div>
                           
                           {/* Manufacturer Name - Fixed Height Section */}
-                          <div className="p-4 bg-white border-t border-gray-100">
-                            <h3 className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors duration-300 text-center leading-tight min-h-[2.5rem] flex items-center justify-center">
+                          <div className="p-4 bg-card border-t border-border">
+                            <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors duration-300 text-center leading-tight min-h-[2.5rem] flex items-center justify-center">
                               <span className="line-clamp-2">
                                 {manufacturer.label}
                               </span>

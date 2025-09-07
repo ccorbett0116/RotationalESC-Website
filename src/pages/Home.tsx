@@ -6,6 +6,7 @@ import {CheckCircle, Settings, Users, Phone, BookOpenCheck} from "lucide-react";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/hero-industrial.jpg";
+import placeholderImage from "@/assets/centrifugal-pump.jpg";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useEffect, useState } from "react";
 // Define services inline
@@ -201,7 +202,7 @@ const Home = () => {
               <Card key={product.id} className="h-full flex flex-col">
                 <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
                   <img
-                    src={product.primary_image || "/api/placeholder/400/300"}
+                    src={product.primary_image || placeholderImage}
                     alt={product.name}
                     className="w-full h-full object-cover"
                   />
