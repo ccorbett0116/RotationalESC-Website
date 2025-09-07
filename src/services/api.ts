@@ -112,6 +112,23 @@ export interface ProductSpecification {
   order: number;
 }
 
+export interface ProductAttachment {
+  id: number;
+  filename: string;
+  content_type: string;
+  file_size: number;
+  file_size_human: string;
+  description: string;
+  order: number;
+  is_public: boolean;
+  is_image: boolean;
+  is_pdf: boolean;
+  is_document: boolean;
+  data_url: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Section {
   id: number;
   label: string;
@@ -153,6 +170,7 @@ export interface Product {
   primary_image?: string;
   images?: ProductImage[];
   specifications?: ProductSpecification[];
+  attachments?: ProductAttachment[];
   created_at?: string;
   updated_at?: string;
 }

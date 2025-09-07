@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, ProductAttachment
 import base64
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -52,18 +52,41 @@ class ProductSpecificationSerializer(serializers.ModelSerializer):
         model = ProductSpecification
         fields = ['id', 'key', 'value', 'order']
 
+class ProductAttachmentSerializer(serializers.ModelSerializer):
+    data_url = serializers.SerializerMethodField()
+    file_size_human = serializers.ReadOnlyField()
+    is_image = serializers.ReadOnlyField()
+    is_pdf = serializers.ReadOnlyField()
+    is_document = serializers.ReadOnlyField()
+    
+    class Meta:
+        model = ProductAttachment
+        fields = [
+            'id', 'filename', 'content_type', 'file_size', 'file_size_human',
+            'description', 'order', 'is_public', 'is_image', 'is_pdf', 
+            'is_document', 'data_url', 'created_at', 'updated_at'
+        ]
+        extra_kwargs = {
+            'file_data': {'write_only': True}
+        }
+    
+    def get_data_url(self, obj):
+        return obj.data_url
+
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     primary_image = serializers.SerializerMethodField()
     tags_list = serializers.ReadOnlyField()
     specifications = ProductSpecificationSerializer(many=True, read_only=True)
+    attachments = ProductAttachmentSerializer(many=True, read_only=True)
     is_available = serializers.ReadOnlyField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'category',
-            'active', 'quantity', 'is_available', 'tags_list', 'primary_image', 'specifications'
+            'active', 'quantity', 'is_available', 'tags_list', 'primary_image', 
+            'specifications', 'attachments'
         ]
 
     def get_primary_image(self, obj):
@@ -76,6 +99,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
     images = ProductImageSerializer(many=True, read_only=True)
     specifications = ProductSpecificationSerializer(many=True, read_only=True)
+    attachments = ProductAttachmentSerializer(many=True, read_only=True)
     tags_list = serializers.ReadOnlyField()
     is_available = serializers.ReadOnlyField()
 
@@ -84,7 +108,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'description', 'price', 'category',
             'active', 'quantity', 'is_available', 'tags_list', 'images', 
-            'specifications', 'created_at', 'updated_at'
+            'specifications', 'attachments', 'created_at', 'updated_at'
         ]
 
 
@@ -161,13 +185,14 @@ class SectionWithManufacturersSerializer(serializers.ModelSerializer):
 
 
 class GallerySerializer(serializers.ModelSerializer):
-    image_base64 = serializers.SerializerMethodField()
+    image_url = serializers.SerializerMethodField()
     
     class Meta:
         model = Gallery
-        fields = ['id', 'title', 'description', 'alt_text', 'order', 'is_featured', 'created_at', 'image_base64']
+        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'is_featured', 'created_at', 'updated_at', 'image_url']
     
-    def get_image_base64(self, obj):
+    def get_image_url(self, obj):
         if obj.image_data:
-            return base64.b64encode(obj.image_data).decode('utf-8')
+            base64_data = base64.b64encode(obj.image_data).decode('utf-8')
+            return f"data:{obj.content_type};base64,{base64_data}"
         return None

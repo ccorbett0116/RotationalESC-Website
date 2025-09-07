@@ -5,13 +5,47 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, ShoppingCart, Share2, ZoomIn } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Share2, ZoomIn, Download, FileText, Image, File } from "lucide-react";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import placeholderImage from "@/assets/centrifugal-pump.jpg";
+
+const getFileIcon = (attachment: any) => {
+  if (attachment.is_image) {
+    return <Image className="h-5 w-5" />;
+  } else if (attachment.is_pdf) {
+    return <FileText className="h-5 w-5" />;
+  } else if (attachment.is_document) {
+    return <FileText className="h-5 w-5" />;
+  } else {
+    return <File className="h-5 w-5" />;
+  }
+};
+
+const downloadFile = (attachment: any, toast: any) => {
+  try {
+    const link = document.createElement('a');
+    link.href = attachment.data_url;
+    link.download = attachment.filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast({
+      title: "Download started",
+      description: `${attachment.filename} is being downloaded`,
+    });
+  } catch (error) {
+    toast({
+      title: "Download failed",
+      description: "Unable to download the file. Please try again.",
+      variant: "destructive",
+    });
+  }
+};
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -303,9 +337,20 @@ const ProductDetail = () => {
 
         {/* Product Details Tabs */}
         <Tabs defaultValue="specifications" className="mb-16">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="specifications">Specifications</TabsTrigger>
-            <TabsTrigger value="description">Description</TabsTrigger>
+          <TabsList className={`grid w-full ${product.attachments && product.attachments.length > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsTrigger value="specifications" className="text-xs sm:text-sm">
+              <span className="hidden sm:inline">Specifications</span>
+              <span className="sm:hidden">Specs</span>
+            </TabsTrigger>
+            <TabsTrigger value="description" className="text-xs sm:text-sm">
+              Description
+            </TabsTrigger>
+            {product.attachments && product.attachments.length > 0 && (
+              <TabsTrigger value="attachments" className="text-xs sm:text-sm">
+                <span className="hidden sm:inline">Files ({product.attachments.length})</span>
+                <span className="sm:hidden">Files</span>
+              </TabsTrigger>
+            )}
           </TabsList>
           <TabsContent value="specifications" className="mt-6">
             <Card>
@@ -343,6 +388,70 @@ const ProductDetail = () => {
               </CardContent>
             </Card>
           </TabsContent>
+          
+          {product.attachments && product.attachments.length > 0 && (
+            <TabsContent value="attachments" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Product Files & Documents</CardTitle>
+                  <CardDescription>
+                    Download product documentation, manuals, and related files
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-3 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                    {product.attachments
+                      .filter(attachment => attachment.is_public)
+                      .sort((a, b) => a.order - b.order)
+                      .map((attachment) => (
+                      <div
+                        key={attachment.id}
+                        className="flex items-start sm:items-center gap-3 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors group"
+                      >
+                        <div className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors mt-0.5 sm:mt-0">
+                          {getFileIcon(attachment)}
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-1">
+                          <div className="flex items-start justify-between gap-2">
+                            <p className="text-sm font-medium text-foreground leading-tight">
+                              {attachment.filename}
+                            </p>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="flex-shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-9"
+                              onClick={() => downloadFile(attachment, toast)}
+                            >
+                              <Download className="h-4 w-4" />
+                              <span className="sr-only">Download {attachment.filename}</span>
+                            </Button>
+                          </div>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span>{attachment.file_size_human}</span>
+                            <span>•</span>
+                            <span className="capitalize">
+                              {attachment.content_type.split('/')[1] || attachment.content_type}
+                            </span>
+                          </div>
+                          {attachment.description && (
+                            <p className="text-xs text-muted-foreground line-clamp-2 sm:line-clamp-1">
+                              {attachment.description}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {product.attachments.filter(attachment => attachment.is_public).length === 0 && (
+                    <p className="text-muted-foreground text-center py-8">
+                      No public files available for this product.
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+          )}
         </Tabs>
 
         {/* Related Products */}

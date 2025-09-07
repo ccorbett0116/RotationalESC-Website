@@ -3,7 +3,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, ProductAttachment
 
 class ProductImageAdminForm(forms.ModelForm):
     image_file = forms.ImageField(required=False, help_text="Upload an image file")
@@ -80,39 +80,76 @@ class ProductSpecificationInline(admin.TabularInline):
     model = ProductSpecification
     extra = 1
 
-
-class ProductAdminForm(forms.ModelForm):
-    attachment_file = forms.FileField(required=False, help_text="Upload a product attachment file (PDF, DOC, etc.)")
+class ProductAttachmentAdminForm(forms.ModelForm):
+    file_upload = forms.FileField(required=False, help_text="Upload a file (PDF, DOC, XLS, etc.)")
     
     class Meta:
-        model = Product
-        fields = '__all__'
-        exclude = ['attachment_data', 'attachment_filename', 'attachment_content_type']
+        model = ProductAttachment
+        fields = ['file_upload', 'description', 'order', 'is_public']
+        exclude = ['file_data', 'filename', 'content_type', 'file_size']
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # If this is an existing instance with attachment data, show info
-        if self.instance and self.instance.pk and self.instance.attachment_data:
-            self.fields['current_attachment'] = forms.CharField(
+        if self.instance and self.instance.pk and self.instance.file_data:
+            self.fields['current_file'] = forms.CharField(
                 required=False,
                 widget=forms.HiddenInput(),
-                initial="has_attachment"
+                initial="has_file"
             )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        file_upload = cleaned_data.get('file_upload')
+        
+        # For new instances, require a file
+        if not self.instance.pk and not file_upload:
+            raise forms.ValidationError("A file is required for new attachments.")
+        
+        # For existing instances without file_data, require a file
+        if self.instance.pk and not self.instance.file_data and not file_upload:
+            raise forms.ValidationError("A file is required.")
+            
+        return cleaned_data
     
     def save(self, commit=True):
         instance = super().save(commit=False)
         
         # Handle file upload
-        attachment_file = self.cleaned_data.get('attachment_file')
-        if attachment_file:
+        file_upload = self.cleaned_data.get('file_upload')
+        if file_upload:
             # Read the uploaded file and store as binary data
-            instance.attachment_data = attachment_file.read()
-            instance.attachment_filename = attachment_file.name
-            instance.attachment_content_type = attachment_file.content_type or 'application/octet-stream'
+            instance.file_data = file_upload.read()
+            instance.filename = file_upload.name
+            instance.content_type = file_upload.content_type or 'application/octet-stream'
+            instance.file_size = len(instance.file_data)
         
         if commit:
             instance.save()
         return instance
+
+class ProductAttachmentInline(admin.TabularInline):
+    model = ProductAttachment
+    form = ProductAttachmentAdminForm
+    extra = 1
+    fields = ['file_upload', 'description', 'order', 'is_public', 'file_preview']
+    readonly_fields = ['file_preview']
+    
+    def file_preview(self, obj):
+        if obj and obj.file_data:
+            return format_html(
+                '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 4px; font-size: 10px;">{} ({}) - {}</span>',
+                obj.filename or 'File',
+                obj.content_type or 'Unknown',
+                obj.file_size_human
+            )
+        return "No file"
+    file_preview.short_description = "File Info"
+
+
+class ProductAdminForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
 
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
@@ -165,21 +202,17 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
-    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'attachment_status', 'created_date']
+    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'attachments_count', 'created_date']
     list_filter = ['category', 'active', 'created_at']
     search_fields = ['name', 'description', 'tags']
-    inlines = [ProductImageInline, ProductSpecificationInline]
-    readonly_fields = ['created_at', 'updated_at', 'product_summary', 'attachment_info']
+    inlines = [ProductImageInline, ProductSpecificationInline, ProductAttachmentInline]
+    readonly_fields = ['created_at', 'updated_at', 'product_summary']
     actions = ['export_to_csv', 'mark_active', 'mark_inactive', 'bulk_import_csv']
     list_per_page = 20
     date_hierarchy = 'created_at'
     fieldsets = (
         (None, {
             'fields': ('name', 'description', 'price', 'category', 'active', 'quantity', 'tags')
-        }),
-        ('Attachment', {
-            'fields': ('attachment_file', 'attachment_info'),
-            'classes': ('collapse',),
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -188,7 +221,7 @@ class ProductAdmin(admin.ModelAdmin):
     )
     
     def get_queryset(self, request):
-        return super().get_queryset(request).select_related('category').prefetch_related('images')
+        return super().get_queryset(request).select_related('category').prefetch_related('images', 'attachments')
     
     def product_info(self, obj):
         return format_html(
@@ -277,14 +310,15 @@ class ProductAdmin(admin.ModelAdmin):
         return format_html('<span style="color: #999;">No images</span>')
     image_count.short_description = "Images"
     
-    def attachment_status(self, obj):
-        if obj.has_attachment:
+    def attachments_count(self, obj):
+        count = obj.attachments.count()
+        if count > 0:
             return format_html(
                 '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px;">📄 {}</span>',
-                obj.attachment_filename[:15] + "..." if len(obj.attachment_filename or "") > 15 else obj.attachment_filename or "File"
+                count
             )
-        return format_html('<span style="color: #999;">No file</span>')
-    attachment_status.short_description = "Attachment"
+        return format_html('<span style="color: #999;">No files</span>')
+    attachments_count.short_description = "Files"
     
     def created_date(self, obj):
         return format_html(
@@ -329,26 +363,6 @@ class ProductAdmin(admin.ModelAdmin):
         return mark_safe(summary)
     product_summary.short_description = "Product Summary"
     
-    def attachment_info(self, obj):
-        if not obj.has_attachment:
-            return "No attachment uploaded"
-        
-        file_size = len(obj.attachment_data) if obj.attachment_data else 0
-        file_size_mb = file_size / (1024 * 1024) if file_size > 0 else 0
-        
-        return format_html(
-            '''
-            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
-                <p><strong>Filename:</strong> {}</p>
-                <p><strong>Type:</strong> {}</p>
-                <p><strong>Size:</strong> {:.2f} MB</p>
-            </div>
-            ''',
-            obj.attachment_filename or "Unknown",
-            obj.attachment_content_type or "Unknown",
-            file_size_mb
-        )
-    attachment_info.short_description = "Attachment Details"
     
     def mark_active(self, request, queryset):
         updated = queryset.update(active=True)
@@ -472,6 +486,44 @@ class ProductSpecificationAdmin(admin.ModelAdmin):
         return response
 
     export_to_csv.short_description = "Export selected specifications to CSV"
+
+@admin.register(ProductAttachment)
+class ProductAttachmentAdmin(admin.ModelAdmin):
+    form = ProductAttachmentAdminForm
+    list_display = ['product', 'get_filename', 'content_type', 'file_size_human', 'is_public', 'order', 'created_at']
+    list_filter = ['content_type', 'is_public', 'created_at']
+    search_fields = ['filename', 'description', 'product__name']
+    fields = ['product', 'file_upload', 'description', 'order', 'is_public', 'file_info']
+    readonly_fields = ['file_info']
+    ordering = ['product', 'order']
+    
+    def get_filename(self, obj):
+        return obj.filename or "No filename"
+    get_filename.short_description = "Filename"
+    
+    def file_info(self, obj):
+        if not obj.file_data:
+            return "No file uploaded"
+        
+        return format_html(
+            '''
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                <p><strong>Filename:</strong> {}</p>
+                <p><strong>Type:</strong> {}</p>
+                <p><strong>Size:</strong> {}</p>
+                <p><strong>Is Image:</strong> {}</p>
+                <p><strong>Is PDF:</strong> {}</p>
+                <p><strong>Is Document:</strong> {}</p>
+            </div>
+            ''',
+            obj.filename or "Unknown",
+            obj.content_type or "Unknown",
+            obj.file_size_human,
+            "✅ Yes" if obj.is_image else "❌ No",
+            "✅ Yes" if obj.is_pdf else "❌ No",
+            "✅ Yes" if obj.is_document else "❌ No"
+        )
+    file_info.short_description = "File Details"
 
 
 class ManufacturerAdminForm(forms.ModelForm):

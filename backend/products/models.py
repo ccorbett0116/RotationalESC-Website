@@ -26,9 +26,6 @@ class Product(models.Model):
     active = models.BooleanField(default=True, help_text="Whether this product is available for sale")
     quantity = models.PositiveIntegerField(default=0, help_text="Available quantity in stock")
     tags = models.CharField(max_length=500, help_text="Comma-separated tags")
-    attachment_data = models.BinaryField(blank=True, null=True, help_text="Product attachment file (PDF, doc, etc.)")
-    attachment_filename = models.CharField(max_length=255, blank=True, null=True)
-    attachment_content_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -56,18 +53,6 @@ class Product(models.Model):
             self.save()
             return True
         return False
-    
-    @property
-    def has_attachment(self):
-        """Returns True if product has an attachment file"""
-        return bool(self.attachment_data and self.attachment_filename)
-    
-    @property
-    def attachment_base64(self):
-        """Return base64 encoded attachment data"""
-        if self.attachment_data:
-            return base64.b64encode(self.attachment_data).decode('utf-8')
-        return None
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
@@ -145,6 +130,81 @@ class ProductImage(models.Model):
             base64_data = self.image_base64
             return f"data:{self.content_type};base64,{base64_data}"
         return None
+
+class ProductAttachment(models.Model):
+    product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='attachments')
+    file_data = models.BinaryField()
+    filename = models.CharField(max_length=255)
+    content_type = models.CharField(max_length=100)
+    file_size = models.PositiveIntegerField(help_text="File size in bytes")
+    description = models.CharField(max_length=500, blank=True, help_text="Optional description of the file")
+    order = models.PositiveIntegerField(default=0, help_text="Display order")
+    is_public = models.BooleanField(default=True, help_text="Whether this file is publicly accessible")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['order', 'created_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product', 'order'],
+                name='unique_product_attachment_order'
+            ),
+        ]
+    
+    def __str__(self):
+        return f"{self.product.name} - {self.filename}"
+    
+    @property
+    def file_base64(self):
+        """Return base64 encoded file data"""
+        if self.file_data:
+            return base64.b64encode(self.file_data).decode('utf-8')
+        return None
+    
+    @property
+    def data_url(self):
+        """Return data URL for the file"""
+        if self.file_data:
+            base64_data = self.file_base64
+            return f"data:{self.content_type};base64,{base64_data}"
+        return None
+    
+    @property
+    def file_size_human(self):
+        """Return human-readable file size"""
+        if self.file_size:
+            for unit in ['B', 'KB', 'MB', 'GB']:
+                if self.file_size < 1024.0:
+                    return f"{self.file_size:.1f} {unit}"
+                self.file_size /= 1024.0
+            return f"{self.file_size:.1f} TB"
+        return "0 B"
+    
+    @property
+    def is_image(self):
+        """Check if the file is an image"""
+        return self.content_type.startswith('image/') if self.content_type else False
+    
+    @property
+    def is_pdf(self):
+        """Check if the file is a PDF"""
+        return self.content_type == 'application/pdf' if self.content_type else False
+    
+    @property
+    def is_document(self):
+        """Check if the file is a document (Word, Excel, PowerPoint, etc.)"""
+        document_types = [
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/vnd.ms-powerpoint',
+            'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+            'text/plain',
+            'text/csv',
+        ]
+        return self.content_type in document_types if self.content_type else False
 
 class ProductSpecification(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='specifications')

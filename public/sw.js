@@ -1,8 +1,6 @@
 const CACHE_NAME = 'rotational-equipment-v1';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
   '/logo.png',
 ];
 

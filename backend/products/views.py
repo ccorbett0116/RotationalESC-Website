@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q
-from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery
+from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, ProductAttachment
 from .serializers import (
     CategorySerializer, 
     ProductListSerializer, 
@@ -27,7 +27,7 @@ class CategoryListView(APIView):
         return Response(serializer.data)
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications')
+    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications', 'attachments')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category']  # Removed 'page' to avoid conflict with pagination
@@ -59,7 +59,7 @@ class ProductListView(generics.ListAPIView):
         return queryset
 
 class ProductDetailView(generics.RetrieveAPIView):
-    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications')
+    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications', 'attachments')
     serializer_class = ProductDetailSerializer
 
 @api_view(['GET'])
