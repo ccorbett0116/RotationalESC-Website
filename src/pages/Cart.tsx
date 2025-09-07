@@ -283,7 +283,7 @@ const Cart = () => {
     (sum, item) => sum + (Number(item.product.price) * item.quantity),
     0
   );
-  const tax = subtotal * 0.1; // 10% tax
+  const tax = subtotal * 0.13; // 13% tax
   const total = subtotal + tax;
 
   if (loading) {
@@ -369,9 +369,9 @@ const Cart = () => {
                 )}
                 {(validationResults.removed_items.length > 0 || validationResults.updated_items.length > 0) && (
                   <div className="mt-4 pt-3 border-t border-gray-200">
-                    <div className="flex items-center justify-between">
-                      <p className="text-sm text-muted-foreground">Need more stock or have questions?</p>
-                      <div className="flex gap-2">
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                      <p className="text-sm text-muted-foreground text-center sm:text-left">Need more stock or have questions?</p>
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Link to="/contact">
                           <Button variant="outline" size="sm" className="flex items-center gap-1.5">
                             <MessageCircle className="h-3 w-3" />
@@ -407,15 +407,15 @@ const Cart = () => {
           </Alert>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
           <div className="lg:col-span-2 space-y-4">
             {cartWithDetails.map((item) => (
               <Card key={item.productId}>
                 <CardContent className="p-6">
-                  <div className="flex gap-4">
+                  <div className="flex flex-col sm:flex-row gap-4">
                     {/* Product Image */}
-                    <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
+                    <div className="w-full sm:w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
                       {item.product.primary_image ? (
                         <img
                           src={item.product.primary_image}
@@ -430,8 +430,8 @@ const Cart = () => {
                     </div>
 
                     {/* Product Details */}
-                    <div className="flex-1 min-w-0">
-                      <div className="flex justify-between items-start mb-2">
+                    <div className="flex-1 min-w-0 space-y-3 sm:space-y-0">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-2">
                         <div>
                           <h3 className="font-semibold text-foreground">
                             <Link
@@ -451,11 +451,7 @@ const Cart = () => {
                             >
                               {item.product.is_available ? `${item.product.quantity} in stock` : "Out of Stock"}
                             </Badge>
-                            {item.product.is_available && item.product.quantity <= 5 && (
-                              <Badge variant="outline" className="text-amber-600 border-amber-200 bg-amber-50">
-                                Low Stock
-                              </Badge>
-                            )}
+                              {/* Removed Low Stock badge as requested */}
                           </div>
                         </div>
                         <Button
@@ -468,9 +464,9 @@ const Cart = () => {
                         </Button>
                       </div>
 
-                      <div className="flex justify-between items-center">
+                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
                         {/* Quantity Controls */}
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-2 justify-center sm:justify-start">
                           <Button
                             variant="outline"
                             size="sm"
@@ -491,7 +487,7 @@ const Cart = () => {
                         </div>
 
                         {/* Price */}
-                        <div className="text-right">
+                        <div className="text-center sm:text-right">
                           <div className="text-lg font-semibold text-primary">
                             {formatCAD(Number(item.product.price) * item.quantity)}
                           </div>
@@ -500,7 +496,7 @@ const Cart = () => {
                           </div>
                           {item.product.is_available && item.product.quantity <= 3 && (
                             <div className="text-xs text-amber-600 mt-1">
-                              <Link to="/contact" className="hover:underline flex items-center gap-1 justify-end">
+                              <Link to="/contact" className="hover:underline flex items-center gap-1 justify-center sm:justify-end">
                                 <MessageCircle className="h-2.5 w-2.5" />
                                 Need more?
                               </Link>
@@ -515,7 +511,7 @@ const Cart = () => {
             ))}
 
             {/* Continue Shopping */}
-            <div className="pt-4">
+            <div className="pt-4 text-center sm:text-left">
               <Link to="/shop">
                 <Button variant="outline">Continue Shopping</Button>
               </Link>
@@ -523,8 +519,8 @@ const Cart = () => {
           </div>
 
           {/* Cart Summary */}
-          <div className="lg:col-span-1">
-            <Card className="sticky top-4">
+          <div className="lg:col-span-1 order-first lg:order-last">
+            <Card className="lg:sticky lg:top-4">
               <CardHeader>
                 <CardTitle>Order Summary</CardTitle>
               </CardHeader>
@@ -561,7 +557,7 @@ const Cart = () => {
                       <p className="text-xs text-blue-700">
                         Some items were out of stock or had limited quantities. Contact us to check for additional inventory or place a special order.
                       </p>
-                      <div className="flex gap-2 justify-center">
+                      <div className="flex flex-col sm:flex-row gap-2 justify-center">
                         <Link to="/contact">
                           <Button variant="outline" size="sm" className="bg-white hover:bg-blue-50 border-blue-200 text-blue-700 hover:text-blue-800">
                             <Mail className="h-3 w-3 mr-1.5" />
@@ -620,7 +616,7 @@ const Cart = () => {
 
         {/* Validation Dialog */}
         <Dialog open={showValidationDialog} onOpenChange={setShowValidationDialog}>
-          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto mx-4 sm:mx-auto">
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <AlertTriangle className="h-5 w-5 text-amber-500" />
@@ -696,14 +692,14 @@ const Cart = () => {
                 {/* Contact Section */}
                 {(validationResults.removed_items.length > 0 || validationResults.updated_items.length > 0) && (
                   <div className="bg-muted/30 p-4 rounded-lg">
-                    <div className="flex items-center justify-between">
-                      <div>
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-0">
+                      <div className="text-center sm:text-left">
                         <h5 className="font-medium text-sm">Need More Stock?</h5>
                         <p className="text-xs text-muted-foreground mt-1">
                           Contact us to check availability or place a special order
                         </p>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                         <Link to="/contact">
                           <Button variant="outline" size="sm" className="flex items-center gap-1.5">
                             <MessageCircle className="h-3 w-3" />
@@ -726,7 +722,7 @@ const Cart = () => {
                   </div>
                 )}
 
-                <div className="flex gap-3 pt-4">
+                <div className="flex flex-col sm:flex-row gap-3 pt-4">
                   <Button
                     variant="outline"
                     onClick={() => setShowValidationDialog(false)}

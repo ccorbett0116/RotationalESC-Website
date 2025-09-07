@@ -255,21 +255,52 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Quick Links */}
             <div>
-              <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
-              <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
+              <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
+              <ul className="space-y-2">
                 {navigation.map((item, idx) => {
-                  if (idx === navigation.length - 3) return null; // skip last one
+                  if (idx === navigation.length - 1) return null; // skip contact
                   return (
-                      <li key={item.name}>
-                        <Link
-                            to={item.href}
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
                   );
                 })}
+              </ul>
+            </div>
+
+            {/* Legal */}
+            <div>
+              <h3 className="font-semibold text-foreground mb-4">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    to="/privacy-policy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/refund-policy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Refund Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/contact"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
               </ul>
             </div>
 

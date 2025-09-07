@@ -20,6 +20,8 @@ import Pumps from "@/pages/Pumps.tsx";
 import Service from "@/pages/Service.tsx";
 import Seals from "@/pages/Seals.tsx";
 import Packing from "@/pages/Packing.tsx";
+import PrivacyPolicy from "@/pages/PrivacyPolicy";
+import RefundPolicy from "@/pages/RefundPolicy";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +48,8 @@ const App = () => (
             <Route path="/mechanical-seals" element={<Seals />} />
             <Route path="/packing" element={<Packing />} />
             <Route path="/service-repair" element={<Service />} />
+            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+            <Route path="/refund-policy" element={<RefundPolicy />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -149,7 +149,7 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden relative group">
+            <div className="aspect-square bg-muted rounded-lg overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
                 <Dialog>
                   <DialogTrigger asChild>
@@ -195,7 +195,7 @@ const ProductDetail = () => {
                     <img
                       src={image.image_url}
                       alt={image.alt_text || `${product.name} ${index + 1}`}
-                      className="w-full h-full object-contain"
+                      className="w-full h-full object-cover"
                     />
                   </button>
                 ))}
@@ -346,7 +346,7 @@ const ProductDetail = () => {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <Card key={relatedProduct.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
-                  <div className="aspect-video bg-muted relative group">
+                  <div className="aspect-square bg-muted relative group">
                     {relatedProduct.primary_image ? (
                       <Dialog>
                         <DialogTrigger asChild>
