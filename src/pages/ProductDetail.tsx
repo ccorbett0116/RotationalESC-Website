@@ -11,6 +11,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import placeholderImage from "@/assets/centrifugal-pump.jpg";
 
 const ProductDetail = () => {
   const { id } = useParams();
@@ -160,7 +161,7 @@ const ProductDetail = () => {
                   <DialogTrigger asChild>
                     <div className="relative cursor-pointer">
                       <img
-                        src={product.images[currentImageIndex]?.image_url || "/api/placeholder/600/400"}
+                        src={product.images[currentImageIndex]?.image_url || placeholderImage}
                         alt={product.images[currentImageIndex]?.alt_text || product.name}
                         className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
                       />
@@ -172,7 +173,7 @@ const ProductDetail = () => {
                   <DialogContent className="max-w-4xl max-h-[90vh] p-0">
                     <div className="relative">
                       <img
-                        src={product.images[currentImageIndex]?.image_url || "/api/placeholder/800/600"}
+                        src={product.images[currentImageIndex]?.image_url || placeholderImage}
                         alt={product.images[currentImageIndex]?.alt_text || product.name}
                         className="w-full h-auto max-h-[85vh] object-contain"
                       />

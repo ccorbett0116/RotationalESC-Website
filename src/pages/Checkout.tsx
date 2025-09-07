@@ -677,7 +677,7 @@ const Checkout = () => {
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                                <span className="text-xs text-muted-foreground">No Image</span>
+                                <span className="text-xs text-muted-foreground text-center">No Image</span>
                               </div>
                             )}
                           </div>

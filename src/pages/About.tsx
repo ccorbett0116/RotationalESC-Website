@@ -25,7 +25,8 @@ const services = [
 import { apiService, CompanyInfo } from "@/services/api";
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
-import AboutUsImage from "@/assets/AboutusImage.jpg"; 
+import AboutUsImage from "@/assets/AboutusImage.jpg";
+import NewAboutUsImage from "@/assets/NewAboutUs.png"; 
 
 
 const About = () => {
@@ -150,7 +151,7 @@ const About = () => {
             </div>
             <div className="aspect-video bg-muted rounded-lg overflow-hidden">
               <img
-                src="/src/assets/NewAboutUs.png"
+                src={NewAboutUsImage}
                 alt="Industry professionals talking"
                 className="w-full h-full object-cover"
               />
