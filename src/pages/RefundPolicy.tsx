@@ -3,10 +3,49 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { AlertCircle, Phone, Mail } from "lucide-react";
-import { companyInfo } from "@/data/mockData";
 import Layout from "@/components/Layout";
+import { useState, useEffect } from "react";
+import { apiService, CompanyInfo } from "@/services/api";
 
 const RefundPolicy = () => {
+  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchCompanyInfo = async () => {
+      try {
+        const data = await apiService.getCompanyInfo();
+        setCompanyInfo(data);
+      } catch (error) {
+        console.error('Error fetching company info:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCompanyInfo();
+  }, []);
+
+  if (loading) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Loading...</div>
+        </div>
+      </Layout>
+    );
+  }
+
+  if (!companyInfo) {
+    return (
+      <Layout>
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Error loading company information</div>
+        </div>
+      </Layout>
+    );
+  }
+
   return (
     <Layout>
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
