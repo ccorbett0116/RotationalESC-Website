@@ -150,8 +150,8 @@ const About = () => {
             </div>
             <div className="aspect-video bg-muted rounded-lg overflow-hidden">
               <img
-                src="/api/placeholder/600/400"
-                alt="Company facility"
+                src="/src/assets/NewAboutUs.png"
+                alt="Industry professionals talking"
                 className="w-full h-full object-cover"
               />
             </div>
