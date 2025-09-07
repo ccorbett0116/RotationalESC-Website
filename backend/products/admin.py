@@ -3,7 +3,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery
 
 class ProductImageAdminForm(forms.ModelForm):
     image_file = forms.ImageField(required=False, help_text="Upload an image file")
@@ -80,6 +80,40 @@ class ProductSpecificationInline(admin.TabularInline):
     model = ProductSpecification
     extra = 1
 
+
+class ProductAdminForm(forms.ModelForm):
+    attachment_file = forms.FileField(required=False, help_text="Upload a product attachment file (PDF, DOC, etc.)")
+    
+    class Meta:
+        model = Product
+        fields = '__all__'
+        exclude = ['attachment_data', 'attachment_filename', 'attachment_content_type']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If this is an existing instance with attachment data, show info
+        if self.instance and self.instance.pk and self.instance.attachment_data:
+            self.fields['current_attachment'] = forms.CharField(
+                required=False,
+                widget=forms.HiddenInput(),
+                initial="has_attachment"
+            )
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Handle file upload
+        attachment_file = self.cleaned_data.get('attachment_file')
+        if attachment_file:
+            # Read the uploaded file and store as binary data
+            instance.attachment_data = attachment_file.read()
+            instance.attachment_filename = attachment_file.name
+            instance.attachment_content_type = attachment_file.content_type or 'application/octet-stream'
+        
+        if commit:
+            instance.save()
+        return instance
+
 @admin.register(Category)
 class CategoryAdmin(admin.ModelAdmin):
     list_display = ['name_with_icon', 'product_count', 'description_excerpt', 'created_at']
@@ -130,14 +164,28 @@ class CategoryAdmin(admin.ModelAdmin):
 
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
-    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'created_date']
+    form = ProductAdminForm
+    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'attachment_status', 'created_date']
     list_filter = ['category', 'active', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline]
-    readonly_fields = ['created_at', 'updated_at', 'product_summary']
+    readonly_fields = ['created_at', 'updated_at', 'product_summary', 'attachment_info']
     actions = ['export_to_csv', 'mark_active', 'mark_inactive', 'bulk_import_csv']
     list_per_page = 20
     date_hierarchy = 'created_at'
+    fieldsets = (
+        (None, {
+            'fields': ('name', 'description', 'price', 'category', 'active', 'quantity', 'tags')
+        }),
+        ('Attachment', {
+            'fields': ('attachment_file', 'attachment_info'),
+            'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
     
     def get_queryset(self, request):
         return super().get_queryset(request).select_related('category').prefetch_related('images')
@@ -229,6 +277,15 @@ class ProductAdmin(admin.ModelAdmin):
         return format_html('<span style="color: #999;">No images</span>')
     image_count.short_description = "Images"
     
+    def attachment_status(self, obj):
+        if obj.has_attachment:
+            return format_html(
+                '<span style="background: #28a745; color: white; padding: 2px 6px; border-radius: 8px; font-size: 10px;">📄 {}</span>',
+                obj.attachment_filename[:15] + "..." if len(obj.attachment_filename or "") > 15 else obj.attachment_filename or "File"
+            )
+        return format_html('<span style="color: #999;">No file</span>')
+    attachment_status.short_description = "Attachment"
+    
     def created_date(self, obj):
         return format_html(
             '<span style="color: #666;">{}</span>',
@@ -271,6 +328,27 @@ class ProductAdmin(admin.ModelAdmin):
         summary += '</div></div>'
         return mark_safe(summary)
     product_summary.short_description = "Product Summary"
+    
+    def attachment_info(self, obj):
+        if not obj.has_attachment:
+            return "No attachment uploaded"
+        
+        file_size = len(obj.attachment_data) if obj.attachment_data else 0
+        file_size_mb = file_size / (1024 * 1024) if file_size > 0 else 0
+        
+        return format_html(
+            '''
+            <div style="background: #f8f9fa; padding: 10px; border-radius: 6px;">
+                <p><strong>Filename:</strong> {}</p>
+                <p><strong>Type:</strong> {}</p>
+                <p><strong>Size:</strong> {:.2f} MB</p>
+            </div>
+            ''',
+            obj.attachment_filename or "Unknown",
+            obj.attachment_content_type or "Unknown",
+            file_size_mb
+        )
+    attachment_info.short_description = "Attachment Details"
     
     def mark_active(self, request, queryset):
         updated = queryset.update(active=True)
@@ -474,3 +552,80 @@ class ManufacturerAdmin(admin.ModelAdmin):
             return mark_safe(f'<img src="{obj.data_url}" style="max-height: 150px; max-width: 150px; border: 1px solid #ddd;" />')
         return "No image"
     image_preview.short_description = "Logo Preview"
+
+
+class GalleryAdminForm(forms.ModelForm):
+    image_file = forms.ImageField(required=False, help_text="Upload an image file")
+    
+    class Meta:
+        model = Gallery
+        fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured']
+        exclude = ['image_data', 'filename', 'content_type']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If this is an existing instance with image data, show a preview
+        if self.instance and self.instance.pk and self.instance.image_data:
+            self.fields['current_image'] = forms.CharField(
+                required=False,
+                widget=forms.HiddenInput(),
+                initial="has_image"
+            )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        image_file = cleaned_data.get('image_file')
+        
+        # For new instances, require an image file
+        if not self.instance.pk and not image_file:
+            raise forms.ValidationError("An image file is required for new gallery images.")
+        
+        # For existing instances without image_data, require an image file
+        if self.instance.pk and not self.instance.image_data and not image_file:
+            raise forms.ValidationError("An image file is required.")
+            
+        return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Handle file upload
+        image_file = self.cleaned_data.get('image_file')
+        if image_file:
+            # Read the uploaded file and store as binary data
+            instance.image_data = image_file.read()
+            instance.filename = image_file.name
+            instance.content_type = image_file.content_type
+        
+        if commit:
+            instance.save()
+        return instance
+
+
+@admin.register(Gallery)
+class GalleryAdmin(admin.ModelAdmin):
+    form = GalleryAdminForm
+    list_display = ['title', 'description_excerpt', 'is_featured', 'order', 'image_preview_small', 'created_at']
+    list_filter = ['is_featured', 'created_at']
+    search_fields = ['title', 'description', 'alt_text']
+    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured', 'image_preview']
+    readonly_fields = ['image_preview', 'created_at', 'updated_at']
+    ordering = ['order', 'created_at']
+    
+    def description_excerpt(self, obj):
+        if obj.description and len(obj.description) > 50:
+            return obj.description[:50] + "..."
+        return obj.description or "—"
+    description_excerpt.short_description = "Description"
+    
+    def image_preview_small(self, obj):
+        if obj and obj.image_data:
+            return mark_safe(f'<img src="{obj.data_url}" style="max-height: 60px; max-width: 60px; border-radius: 4px;" />')
+        return "No image"
+    image_preview_small.short_description = "Preview"
+    
+    def image_preview(self, obj):
+        if obj and obj.image_data:
+            return mark_safe(f'<img src="{obj.data_url}" style="max-height: 300px; max-width: 300px; border: 1px solid #ddd;" />')
+        return "No image"
+    image_preview.short_description = "Current Image"

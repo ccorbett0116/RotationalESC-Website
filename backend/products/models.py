@@ -26,6 +26,9 @@ class Product(models.Model):
     active = models.BooleanField(default=True, help_text="Whether this product is available for sale")
     quantity = models.PositiveIntegerField(default=0, help_text="Available quantity in stock")
     tags = models.CharField(max_length=500, help_text="Comma-separated tags")
+    attachment_data = models.BinaryField(blank=True, null=True, help_text="Product attachment file (PDF, doc, etc.)")
+    attachment_filename = models.CharField(max_length=255, blank=True, null=True)
+    attachment_content_type = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -53,6 +56,18 @@ class Product(models.Model):
             self.save()
             return True
         return False
+    
+    @property
+    def has_attachment(self):
+        """Returns True if product has an attachment file"""
+        return bool(self.attachment_data and self.attachment_filename)
+    
+    @property
+    def attachment_base64(self):
+        """Return base64 encoded attachment data"""
+        if self.attachment_data:
+            return base64.b64encode(self.attachment_data).decode('utf-8')
+        return None
 
 class ProductImage(models.Model):
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='images')
@@ -237,3 +252,38 @@ class Manufacturer(models.Model):
                 pass
         
         super().save(*args, **kwargs)
+
+
+class Gallery(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    image_data = models.BinaryField()
+    filename = models.CharField(max_length=255, blank=True, null=True)
+    content_type = models.CharField(max_length=100, default='image/jpeg')
+    alt_text = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0, help_text="Display order (lower numbers appear first)")
+    is_featured = models.BooleanField(default=False, help_text="Show on homepage or featured sections")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name_plural = "Gallery Images"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def image_base64(self):
+        """Return base64 encoded image data"""
+        if self.image_data:
+            return base64.b64encode(self.image_data).decode('utf-8')
+        return None
+
+    @property
+    def data_url(self):
+        """Return data URL for the image"""
+        if self.image_data:
+            base64_data = self.image_base64
+            return f"data:{self.content_type};base64,{base64_data}"
+        return None

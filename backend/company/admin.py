@@ -9,10 +9,13 @@ class CompanyInfoAdmin(admin.ModelAdmin):
     readonly_fields = ['company_summary']
     
     def company_overview(self, obj):
+        tagline_display = f'<em style="color: #3498db;">"{obj.tagline}"</em><br>' if obj.tagline else ""
+        description = obj.description[:80] + "..." if len(obj.description or "") > 80 else obj.description or "No description"
         return format_html(
-            '<div><strong style="color: #2c3e50; font-size: 16px;">🏢 {}</strong><br><small style="color: #666;">{}</small></div>',
+            '<div><strong style="color: #2c3e50; font-size: 16px;">🏢 {}</strong><br>{}<small style="color: #666;">{}</small></div>',
             obj.name,
-            obj.description[:100] + "..." if len(obj.description or "") > 100 else obj.description or "No description"
+            tagline_display,
+            description
         )
     company_overview.short_description = "Company"
     
@@ -44,9 +47,11 @@ class CompanyInfoAdmin(admin.ModelAdmin):
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
                     <div>
                         <p style="color: #333;"><strong style="color: #333;">Name:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Tagline:</strong> <em style="color: #3498db;">{}</em></p>
                         <p style="color: #333;"><strong style="color: #333;">Founded:</strong> {}</p>
                         <p style="color: #333;"><strong style="color: #333;">Phone:</strong> {}</p>
                         <p style="color: #333;"><strong style="color: #333;">Email:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Business Hours:</strong> {}</p>
                     </div>
                     <div>
                         <p style="color: #333;"><strong style="color: #333;">Address:</strong><br>{}</p>
@@ -61,9 +66,11 @@ class CompanyInfoAdmin(admin.ModelAdmin):
             </div>
             ''',
             obj.name,
+            obj.tagline or "No tagline",
             obj.founded or "Not specified",
             obj.phone or "Not specified",
             obj.email or "Not specified",
+            obj.hours or "Not specified",
             obj.address or "Not specified",
             obj.description or "No description provided"
         )
@@ -71,11 +78,11 @@ class CompanyInfoAdmin(admin.ModelAdmin):
     
     fieldsets = (
         ('🏢 Basic Information', {
-            'fields': ('name', 'founded', 'description'),
+            'fields': ('name', 'tagline', 'founded', 'description'),
             'classes': ('wide',)
         }),
         ('📞 Contact Details', {
-            'fields': ('phone', 'email', 'address'),
+            'fields': ('phone', 'email', 'address', 'hours'),
             'classes': ('wide',)
         }),
         ('📊 Summary', {
