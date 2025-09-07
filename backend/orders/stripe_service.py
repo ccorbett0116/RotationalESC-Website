@@ -97,6 +97,10 @@ class StripeService:
                     metadata[f'item_{i+1}_quantity'] = str(item['quantity'])
                     metadata[f'item_{i+1}_price'] = str(item['price'])
                     metadata[f'item_{i+1}_total'] = str(float(item['price']) * item['quantity'])
+                    # Add product URL for admin access
+                    production_domain = settings.PRODUCTION_DOMAIN
+                    base_url = f"https://{production_domain}" if production_domain != 'localhost:3000' else 'http://localhost:3000'
+                    metadata[f'item_{i+1}_url'] = f"{base_url}/admin/products/product/{product.id}"
                 except Product.DoesNotExist:
                     raise Exception(f'Product with ID {item["product_id"]} not found')
             
@@ -267,7 +271,8 @@ class StripeService:
                                         'name': product_name,
                                         'metadata': {
                                             'product_id': str(item.get('product_id', 'unknown')),
-                                            'category': category_name
+                                            'category': category_name,
+                                            'product_url': f"{settings.BASE_URL}/admin/products/product/{item.get('product_id', 'unknown')}"
                                         }
                                     },
                                     'unit_amount': int(Decimal(str(item['price'])) * 100),
@@ -289,7 +294,8 @@ class StripeService:
                                     'name': product_name,
                                     'metadata': {
                                         'product_id': str(item.get('product_id', 'unknown')),
-                                        'category': 'Unknown'
+                                        'category': 'Unknown',
+                                        'product_url': f"{settings.BASE_URL}/admin/products/product/{item.get('product_id', 'unknown')}"
                                     }
                                 },
                                 'unit_amount': int(Decimal(str(item['price'])) * 100),
@@ -308,7 +314,8 @@ class StripeService:
                                 'name': product_name,
                                 'metadata': {
                                     'product_id': 'unknown',
-                                    'category': 'Unknown'
+                                    'category': 'Unknown',
+                                    'product_url': f"{settings.BASE_URL}/admin/products/unknown"
                                 }
                             },
                             'unit_amount': int(Decimal(str(item['price'])) * 100),

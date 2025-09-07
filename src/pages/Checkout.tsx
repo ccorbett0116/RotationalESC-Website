@@ -682,7 +682,12 @@ const Checkout = () => {
                             )}
                           </div>
                           <div>
-                            <p className="font-medium text-sm">{item.product.name}</p>
+                            <Link 
+                              to={`/product/${item.product.id}`}
+                              className="font-medium text-sm text-primary hover:underline"
+                            >
+                              {item.product.name}
+                            </Link>
                             <p className="text-xs text-muted-foreground">Qty: {item.quantity}</p>
                           </div>
                         </div>
