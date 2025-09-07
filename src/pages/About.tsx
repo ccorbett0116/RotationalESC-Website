@@ -26,7 +26,7 @@ import { apiService, CompanyInfo } from "@/services/api";
 import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
 import AboutUsImage from "@/assets/AboutusImage.jpg";
-import NewAboutUsImage from "@/assets/NewAboutUs.png"; 
+import NewAboutUsImage from "@/assets/aboutUs.png";
 
 
 const About = () => {
