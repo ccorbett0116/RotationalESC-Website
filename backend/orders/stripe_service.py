@@ -88,6 +88,7 @@ class StripeService:
                         raise Exception(f'Only {product.quantity} units of "{product.name}" are available')
                     
                     # Validate price hasn't changed
+                    print(">>> Price debug:", item['price'], type(item['price']), product.price, type(product.price))
                     if item['price'] != product.price:
                         raise Exception(f'Price for "{product.name}" has changed. Please refresh your cart.')
                     
