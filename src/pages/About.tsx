@@ -11,9 +11,9 @@ const services = [
   },
   {
     id: 2,
-    title: "Maintenance Services",
-    description: "Preventive maintenance to keep your equipment running",
-    features: ["Scheduled inspections", "Preventive care", "Extended equipment life"]
+    title: "Equipment Sales",
+    description: "A dedicated team of sales professionals committed to finding the right solution for you",
+    features: ["Equipment selection", "Pump and part sales", "Custom built solutions"]
   },
   {
     id: 3,
