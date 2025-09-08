@@ -16,7 +16,7 @@ class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderCreateSerializer
 
     def create(self, request, *args, **kwargs):
-        print(">>> Incoming /api/orders/)
+        print(">>> Incoming /api/orders/")
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
