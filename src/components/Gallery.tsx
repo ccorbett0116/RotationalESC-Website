@@ -14,11 +14,11 @@ const Gallery = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
   const nextSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev + 1) % Math.ceil(images.length / getImagesPerSlide()));
+    setCurrentIndex((prev) => (prev + 1) % images.length);
   }, [images.length]);
 
   const prevSlide = useCallback(() => {
-    setCurrentIndex((prev) => (prev - 1 + Math.ceil(images.length / getImagesPerSlide())) % Math.ceil(images.length / getImagesPerSlide()));
+    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   }, [images.length]);
 
   useEffect(() => {
@@ -39,21 +39,21 @@ const Gallery = () => {
     fetchGalleryImages();
   }, []);
 
-  // Auto-flip functionality
+  // Auto-scroll functionality
   useEffect(() => {
-    if (images.length <= getImagesPerSlide()) return; // Don't auto-flip if all images fit on one slide
+    if (images.length <= 3) return; // Don't auto-scroll if 3 or fewer images
     
-    const startAutoFlip = () => {
+    const startAutoScroll = () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
       intervalRef.current = setInterval(() => {
         if (!isPaused && !isModalOpen) {
           nextSlide();
         }
-      }, 4000); // Flip every 4 seconds
+      }, 4000); // Move every 4 seconds
     };
 
     if (!isPaused && !isModalOpen) {
-      startAutoFlip();
+      startAutoScroll();
     } else {
       if (intervalRef.current) {
         clearInterval(intervalRef.current);
@@ -84,13 +84,28 @@ const Gallery = () => {
     setIsModalOpen(false);
   };
 
-  const getImagesPerSlide = () => {
+  const getVisibleImages = () => {
     if (typeof window !== 'undefined') {
       if (window.innerWidth >= 1024) return 3; // lg and above
       if (window.innerWidth >= 768) return 2;  // md
       return 1; // sm and below
     }
     return 3;
+  };
+
+  const getDisplayImages = () => {
+    if (images.length === 0) return [];
+    
+    const visibleCount = getVisibleImages();
+    const startIndex = Math.max(0, currentIndex - Math.floor(visibleCount / 2));
+    const endIndex = Math.min(images.length, startIndex + visibleCount);
+    const adjustedStartIndex = Math.max(0, endIndex - visibleCount);
+    
+    return images.slice(adjustedStartIndex, endIndex).map((image, index) => ({
+      ...image,
+      displayIndex: adjustedStartIndex + index,
+      isCenter: adjustedStartIndex + index === currentIndex
+    }));
   };
 
 
@@ -141,10 +156,7 @@ const Gallery = () => {
     );
   }
 
-  const imagesPerSlide = getImagesPerSlide();
-  const totalSlides = Math.ceil(images.length / imagesPerSlide);
-  const startIndex = currentIndex * imagesPerSlide;
-  const visibleImages = images.slice(startIndex, startIndex + imagesPerSlide);
+  const displayImages = getDisplayImages();
 
   return (
     <>
@@ -160,55 +172,58 @@ const Gallery = () => {
           </div>
 
           <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {visibleImages.map((image, index) => (
-                <ImageModal
-                  key={image.id}
-                  images={images.map(img => ({
-                    id: img.id,
-                    url: img.image_url,
-                    alt: img.alt_text || img.title,
-                    title: img.title,
-                    description: img.description
-                  }))}
-                  initialIndex={startIndex + index}
-                  onModalOpen={handleModalOpen}
-                  onModalClose={handleModalClose}
-                  trigger={
-                    <div className="group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer h-full flex flex-col">
-                      <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
-                        <ImageWithHover
-                          src={image.image_url}
-                          alt={image.alt_text || image.title}
-                          className="w-full h-full object-cover"
-                        />
+            <div className="flex justify-center">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 transition-all duration-500 ease-in-out">
+                {displayImages.map((image) => (
+                  <ImageModal
+                    key={image.id}
+                    images={images.map(img => ({
+                      id: img.id,
+                      url: img.image_url,
+                      alt: img.alt_text || img.title,
+                      title: img.title,
+                      description: img.description
+                    }))}
+                    initialIndex={image.displayIndex}
+                    onModalOpen={handleModalOpen}
+                    onModalClose={handleModalClose}
+                    trigger={
+                      <div className={`group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer h-full flex flex-col ${
+                        image.isCenter ? 'scale-105 shadow-lg border-primary/50' : 'scale-95 opacity-75'
+                      }`}>
+                        <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
+                          <ImageWithHover
+                            src={image.image_url}
+                            alt={image.alt_text || image.title}
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                        <div className="p-4 flex-1 flex flex-col justify-between">
+                          <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
+                          {image.description && (
+                            <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
+                          )}
+                        </div>
                       </div>
-                      <div className="p-4 flex-1 flex flex-col justify-between">
-                        <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
-                        {image.description && (
-                          <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
-                        )}
-                      </div>
-                    </div>
-                  }
-                />
-              ))}
+                    }
+                  />
+                ))}
+              </div>
             </div>
 
-            {totalSlides > 1 && (
+            {images.length > 3 && (
               <div className="flex justify-center items-center space-x-4">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={prevSlide}
-                  disabled={currentIndex === 0}
                   className="h-10 w-10 rounded-full p-0"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
                 
                 <div className="flex space-x-2">
-                  {Array.from({ length: totalSlides }).map((_, index) => (
+                  {images.map((_, index) => (
                     <button
                       key={index}
                       onClick={() => setCurrentIndex(index)}
@@ -223,7 +238,6 @@ const Gallery = () => {
                   variant="outline"
                   size="sm"
                   onClick={nextSlide}
-                  disabled={currentIndex === totalSlides - 1}
                   className="h-10 w-10 rounded-full p-0"
                 >
                   <ChevronRight className="h-4 w-4" />
