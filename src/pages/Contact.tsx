@@ -184,6 +184,9 @@ const Contact = () => {
                 <p className="text-muted-foreground">
                   {companyInfo?.hours || ""}
                 </p>
+                <p className="text-muted-foreground">
+                  {companyInfo?.days || ""}
+                </p>
               </CardContent>
             </Card>
           </div>

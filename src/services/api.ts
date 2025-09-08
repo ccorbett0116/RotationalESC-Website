@@ -256,6 +256,7 @@ export interface CompanyInfo {
   phone: string;
   email: string;
   hours: string;
+  days: string;
   founded: string;
   employees: string;
 }
