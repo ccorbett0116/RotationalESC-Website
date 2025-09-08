@@ -31,7 +31,7 @@ export const ImageZoom = ({ src, alt, className = "", trigger }: ImageZoomProps)
       <DialogTrigger asChild>
         {trigger}
       </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-black/95 border-0">
+      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-gray-900 border-0">
         <div className="relative">
           <img
             src={src}
@@ -108,7 +108,7 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }
 
       {isOpen && (
         <div 
-          className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center p-4"
+          className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-4"
           onClick={(e) => {
             // Only close if clicking on the backdrop, not the image content
             if (e.target === e.currentTarget) {
