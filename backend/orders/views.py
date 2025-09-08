@@ -16,34 +16,29 @@ class OrderCreateView(generics.CreateAPIView):
     serializer_class = OrderCreateSerializer
 
     def create(self, request, *args, **kwargs):
-        print(">>> Incoming /api/orders/ payload:", request.data)
+        print(">>> Incoming /api/orders/)
 
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
-            print(">>> Serializer validated successfully")
 
             # Check if this is a card payment
             payment_method = request.data.get('payment_method', '')
-            print(">>> Payment method:", payment_method)
 
             if payment_method == 'card':
                 try:
                     # Create Stripe payment intent
                     order_items = request.data.get('order_items', [])
-                    print(">>> Order items being sent to StripeService:", order_items)
 
                     stripe_response = StripeService.create_payment_intent(
                         request.data,
                         order_items
                     )
-                    print(">>> StripeService response:", stripe_response)
 
                     # Save the order with Stripe payment intent details
                     order = serializer.save(
                         stripe_payment_intent_id=stripe_response['payment_intent_id'],
                         stripe_payment_intent_client_secret=stripe_response['client_secret']
                     )
-                    print(f">>> Order {order.order_number} saved successfully with Stripe intent {stripe_response['payment_intent_id']}")
 
                     # Return order data with Stripe client secret
                     response_serializer = OrderSerializer(order, context={'request': request})
@@ -51,7 +46,6 @@ class OrderCreateView(generics.CreateAPIView):
                     response_data['stripe_client_secret'] = stripe_response['client_secret']
                     response_data['stripe_payment_intent_id'] = stripe_response['payment_intent_id']
 
-                    print(f">>> Returning successful order response for {order.order_number}")
                     return Response(response_data, status=status.HTTP_201_CREATED)
 
                 except Exception as e:
