@@ -10,53 +10,65 @@ from .email_service import OrderEmailService
 from products.models import Product
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import logging
+logger = logging.getLogger(__name__)
 
 class OrderCreateView(generics.CreateAPIView):
     queryset = Order.objects.all()
     serializer_class = OrderCreateSerializer
 
     def create(self, request, *args, **kwargs):
+        logger.debug("Incoming order data: %s", request.data)
+
         serializer = self.get_serializer(data=request.data)
         if serializer.is_valid():
             # Check if this is a card payment
             payment_method = request.data.get('payment_method', '')
-            
+
             if payment_method == 'card':
                 try:
                     # Create Stripe payment intent
                     order_items = request.data.get('order_items', [])
+                    logger.debug("Order items for Stripe: %s", order_items)
+
                     stripe_response = StripeService.create_payment_intent(
-                        request.data, 
+                        request.data,
                         order_items
                     )
-                    
+                    logger.debug("Stripe response: %s", stripe_response)
+
                     # Save the order with Stripe payment intent details
                     order = serializer.save(
                         stripe_payment_intent_id=stripe_response['payment_intent_id'],
                         stripe_payment_intent_client_secret=stripe_response['client_secret']
                     )
-                    
+
+                    logger.info("Order %s created successfully", order.order_number)
+
                     # Return order data with Stripe client secret
                     response_serializer = OrderSerializer(order, context={'request': request})
                     response_data = response_serializer.data
                     response_data['stripe_client_secret'] = stripe_response['client_secret']
                     response_data['stripe_payment_intent_id'] = stripe_response['payment_intent_id']
-                    
+
                     return Response(response_data, status=status.HTTP_201_CREATED)
-                    
+
                 except Exception as e:
+                    logger.error("StripeService error while creating order: %s", str(e), exc_info=True)
                     return Response(
-                        {'error': f'Payment processing failed: {str(e)}'}, 
+                        {'error': f'Payment processing failed: {str(e)}'},
                         status=status.HTTP_400_BAD_REQUEST
                     )
             else:
                 # For non-card payments (e.g., purchase orders), create order normally
                 order = serializer.save()
+                logger.info("Non-card order %s created successfully", order.order_number)
                 response_serializer = OrderSerializer(order, context={'request': request})
                 return Response(response_serializer.data, status=status.HTTP_201_CREATED)
-                
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+        else:
+            logger.warning("OrderCreateSerializer validation failed: %s", serializer.errors)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 class OrderDetailView(generics.RetrieveAPIView):
     queryset = Order.objects.prefetch_related('items__product')
     serializer_class = OrderSerializer
