@@ -16,6 +16,8 @@ interface ImageModalProps {
   initialIndex?: number;
   trigger: React.ReactNode;
   className?: string;
+  onModalOpen?: () => void;
+  onModalClose?: () => void;
 }
 
 interface ImageZoomProps {
@@ -69,7 +71,7 @@ export const ImageWithHover = ({
   );
 };
 
-export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }: ImageModalProps) => {
+export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", onModalOpen, onModalClose }: ImageModalProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
 
@@ -80,7 +82,10 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (isOpen) {
-        if (e.key === "Escape") setIsOpen(false);
+        if (e.key === "Escape") {
+          setIsOpen(false);
+          onModalClose?.();
+        }
         if (e.key === "ArrowLeft") prevImage();
         if (e.key === "ArrowRight") nextImage();
       }
@@ -102,7 +107,10 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }
 
   return (
     <>
-      <div onClick={() => setIsOpen(true)} className={className}>
+      <div onClick={() => {
+        setIsOpen(true);
+        onModalOpen?.();
+      }} className={className}>
         {trigger}
       </div>
 
@@ -113,6 +121,7 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }
             // Only close if clicking on the backdrop, not the image content
             if (e.target === e.currentTarget) {
               setIsOpen(false);
+              onModalClose?.();
             }
           }}
         >
@@ -120,7 +129,10 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "" }
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => setIsOpen(false)}
+              onClick={() => {
+                setIsOpen(false);
+                onModalClose?.();
+              }}
               className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
             >
               <X className="h-4 w-4" />

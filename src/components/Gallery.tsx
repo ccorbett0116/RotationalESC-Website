@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiService, GalleryImage } from "@/services/api";
@@ -9,6 +9,17 @@ const Gallery = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isPaused, setIsPaused] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+
+  const nextSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev + 1) % Math.ceil(images.length / getImagesPerSlide()));
+  }, [images.length]);
+
+  const prevSlide = useCallback(() => {
+    setCurrentIndex((prev) => (prev - 1 + Math.ceil(images.length / getImagesPerSlide())) % Math.ceil(images.length / getImagesPerSlide()));
+  }, [images.length]);
 
   useEffect(() => {
     const fetchGalleryImages = async () => {
@@ -28,13 +39,49 @@ const Gallery = () => {
     fetchGalleryImages();
   }, []);
 
+  // Auto-flip functionality
+  useEffect(() => {
+    if (images.length <= getImagesPerSlide()) return; // Don't auto-flip if all images fit on one slide
+    
+    const startAutoFlip = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      intervalRef.current = setInterval(() => {
+        if (!isPaused && !isModalOpen) {
+          nextSlide();
+        }
+      }, 4000); // Flip every 4 seconds
+    };
 
-  const nextSlide = () => {
-    setCurrentIndex((prev) => (prev + 1) % Math.ceil(images.length / getImagesPerSlide()));
+    if (!isPaused && !isModalOpen) {
+      startAutoFlip();
+    } else {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    }
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+      }
+    };
+  }, [isPaused, isModalOpen, images.length, nextSlide]);
+
+  const handleMouseEnter = () => {
+    setIsPaused(true);
   };
 
-  const prevSlide = () => {
-    setCurrentIndex((prev) => (prev - 1 + Math.ceil(images.length / getImagesPerSlide())) % Math.ceil(images.length / getImagesPerSlide()));
+  const handleMouseLeave = () => {
+    setIsPaused(false);
+  };
+
+  const handleModalOpen = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
   };
 
   const getImagesPerSlide = () => {
@@ -112,7 +159,7 @@ const Gallery = () => {
             </p>
           </div>
 
-          <div className="relative">
+          <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {visibleImages.map((image, index) => (
                 <ImageModal
@@ -125,16 +172,18 @@ const Gallery = () => {
                     description: img.description
                   }))}
                   initialIndex={startIndex + index}
+                  onModalOpen={handleModalOpen}
+                  onModalClose={handleModalClose}
                   trigger={
-                    <div className="group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
-                      <div className="aspect-[4/3] overflow-hidden relative group">
+                    <div className="group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer h-full flex flex-col">
+                      <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
                         <ImageWithHover
                           src={image.image_url}
                           alt={image.alt_text || image.title}
-                          className="w-full h-full"
+                          className="w-full h-full object-cover"
                         />
                       </div>
-                      <div className="p-4">
+                      <div className="p-4 flex-1 flex flex-col justify-between">
                         <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
                         {image.description && (
                           <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>

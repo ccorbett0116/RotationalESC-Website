@@ -17,7 +17,7 @@ reload_nginx() {
 
 # Check if certificate already exists
 if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    echo "No certificate found for $DOMAIN. Creating initial certificate..."
+    echo "No certificate found for $DOMAIN and www.$DOMAIN. Creating initial certificate..."
     
     # Create dummy certificate first to allow nginx to start
     mkdir -p "/etc/letsencrypt/live/$DOMAIN"
@@ -35,10 +35,11 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     rm -rf "/etc/letsencrypt/renewal/$DOMAIN.conf"
     
     # Request real certificate
-    echo "Requesting real certificate for $DOMAIN..."
+    echo "Requesting real certificate for $DOMAIN and www.$DOMAIN..."
     certbot certonly --webroot -w /var/www/certbot \
         --email "$EMAIL" \
         -d "$DOMAIN" \
+        -d "www.$DOMAIN" \
         --rsa-key-size 4096 \
         --agree-tos \
         --non-interactive \
@@ -48,7 +49,7 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     # Reload nginx
     reload_nginx
 else
-    echo "Certificate already exists for $DOMAIN"
+    echo "Certificate already exists for $DOMAIN and www.$DOMAIN"
 fi
 
 # Start renewal loop
