@@ -132,7 +132,14 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
       {isOpen && (
         <div 
           className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-4"
-          style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}
+          style={{ 
+            position: 'fixed', 
+            top: 0, 
+            left: 0, 
+            right: 0, 
+            bottom: 0,
+            zIndex: 9999
+          }}
           onClick={(e) => {
             // Only close if clicking on the backdrop, not the image content
             if (e.target === e.currentTarget) {
