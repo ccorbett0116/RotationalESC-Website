@@ -8,6 +8,7 @@ class CompanyInfo(models.Model):
     phone = models.CharField(max_length=20, blank=True, null=True)
     email = models.EmailField(blank=True, null=True)
     hours = models.CharField(max_length=200, blank=True, null=True)
+    days = models.CharField(max_length=100, blank=True, null=True)
     founded = models.CharField(max_length=10, blank=True, null=True)
     employees = models.CharField(max_length=50, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

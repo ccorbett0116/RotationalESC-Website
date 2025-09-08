@@ -6,5 +6,5 @@ class CompanyInfoSerializer(serializers.ModelSerializer):
         model = CompanyInfo
         fields = [
             'id', 'name', 'tagline', 'description', 'address', 
-            'phone', 'email', 'hours', 'founded', 'employees'
+            'phone', 'email', 'hours', 'days', 'founded', 'employees'
         ]

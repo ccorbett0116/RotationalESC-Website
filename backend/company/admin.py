@@ -52,6 +52,7 @@ class CompanyInfoAdmin(admin.ModelAdmin):
                         <p style="color: #333;"><strong style="color: #333;">Phone:</strong> {}</p>
                         <p style="color: #333;"><strong style="color: #333;">Email:</strong> {}</p>
                         <p style="color: #333;"><strong style="color: #333;">Business Hours:</strong> {}</p>
+                        <p style="color: #333;"><strong style="color: #333;">Business Days:</strong> {}</p>
                     </div>
                     <div>
                         <p style="color: #333;"><strong style="color: #333;">Address:</strong><br>{}</p>
@@ -71,6 +72,7 @@ class CompanyInfoAdmin(admin.ModelAdmin):
             obj.phone or "Not specified",
             obj.email or "Not specified",
             obj.hours or "Not specified",
+            obj.days or "Not specified",
             obj.address or "Not specified",
             obj.description or "No description provided"
         )
@@ -82,7 +84,7 @@ class CompanyInfoAdmin(admin.ModelAdmin):
             'classes': ('wide',)
         }),
         ('📞 Contact Details', {
-            'fields': ('phone', 'email', 'address', 'hours'),
+            'fields': ('phone', 'email', 'address', 'hours', 'days'),
             'classes': ('wide',)
         }),
         ('📊 Summary', {

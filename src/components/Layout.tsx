@@ -263,7 +263,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   {companyInfo.tagline}
                 </p>
               ) : (
-                <div className="h-4 w-64 bg-muted rounded animate-pulse mb-4"></div>
+                <div></div>
               )}
               
               {companyInfo?.address ? (
