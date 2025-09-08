@@ -296,7 +296,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
               <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 {navigation.map((item, idx) => {
-                  if (idx === navigation.length - 1) return null; // skip contact
+                  if (idx === navigation.length - 3) return null; // skip contact
                   return (
                     <li key={item.name}>
                       <Link

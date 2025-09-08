@@ -189,7 +189,7 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="aspect-square bg-muted rounded-lg overflow-hidden relative group">
+            <div className="bg-muted rounded-lg overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
                 <ImageZoom
                   src={product.images[currentImageIndex]?.image_url || placeholderImage}
