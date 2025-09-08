@@ -166,7 +166,7 @@ export interface Product {
   active: boolean;
   quantity: number;
   is_available: boolean;
-  tags_list: string[];
+  tags_list: string[] | null;
   primary_image?: string;
   images?: ProductImage[];
   specifications?: ProductSpecification[];

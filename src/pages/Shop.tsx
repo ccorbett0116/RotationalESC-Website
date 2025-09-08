@@ -80,7 +80,7 @@ const Shop = () => {
           product.description.toLowerCase().includes(term) ||
           product.material?.toLowerCase().includes(term) ||
           product.category.name.toLowerCase().includes(term) ||
-          product.tags_list.some(tag => tag.toLowerCase().includes(term));
+          product.tags_list?.some(tag => tag.toLowerCase().includes(term)) || false;
         
         // Search in specifications (both key and value)
         const specsMatch = product.specifications?.some(spec => 
