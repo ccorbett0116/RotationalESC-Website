@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiService, GalleryImage } from "@/services/api";
+import { ImageModal, ImageWithHover } from "@/components/ImageModal";
 
 const Gallery = () => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [selectedImage, setSelectedImage] = useState<number | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
@@ -28,22 +28,6 @@ const Gallery = () => {
     fetchGalleryImages();
   }, []);
 
-  const openLightbox = (index: number) => {
-    setSelectedImage(index);
-    setCurrentIndex(index);
-  };
-
-  const closeLightbox = () => {
-    setSelectedImage(null);
-  };
-
-  const nextImage = () => {
-    setCurrentIndex((prev) => (prev + 1) % images.length);
-  };
-
-  const prevImage = () => {
-    setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
-  };
 
   const nextSlide = () => {
     setCurrentIndex((prev) => (prev + 1) % Math.ceil(images.length / getImagesPerSlide()));
@@ -62,18 +46,6 @@ const Gallery = () => {
     return 3;
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (selectedImage !== null) {
-        if (e.key === "Escape") closeLightbox();
-        if (e.key === "ArrowLeft") prevImage();
-        if (e.key === "ArrowRight") nextImage();
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedImage]);
 
   if (loading) {
     return (
@@ -143,25 +115,34 @@ const Gallery = () => {
           <div className="relative">
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
               {visibleImages.map((image, index) => (
-                <div
+                <ImageModal
                   key={image.id}
-                  className="group cursor-pointer overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300"
-                  onClick={() => openLightbox(startIndex + index)}
-                >
-                  <div className="aspect-[4/3] overflow-hidden">
-                    <img
-                      src={image.image_url}
-                      alt={image.alt_text || image.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
-                    {image.description && (
-                      <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
-                    )}
-                  </div>
-                </div>
+                  images={images.map(img => ({
+                    id: img.id,
+                    url: img.image_url,
+                    alt: img.alt_text || img.title,
+                    title: img.title,
+                    description: img.description
+                  }))}
+                  initialIndex={startIndex + index}
+                  trigger={
+                    <div className="group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer">
+                      <div className="aspect-[4/3] overflow-hidden relative group">
+                        <ImageWithHover
+                          src={image.image_url}
+                          alt={image.alt_text || image.title}
+                          className="w-full h-full"
+                        />
+                      </div>
+                      <div className="p-4">
+                        <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
+                        {image.description && (
+                          <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
+                        )}
+                      </div>
+                    </div>
+                  }
+                />
               ))}
             </div>
 
@@ -203,60 +184,6 @@ const Gallery = () => {
           </div>
         </div>
       </section>
-
-      {selectedImage !== null && (
-        <div className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4">
-          <div className="relative max-w-5xl max-h-full">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={closeLightbox}
-              className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={prevImage}
-              className="absolute left-4 top-1/2 transform -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70"
-            >
-              <ChevronLeft className="h-6 w-6" />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={nextImage}
-              className="absolute right-4 top-1/2 transform -translate-y-1/2 z-10 h-12 w-12 rounded-full bg-black/50 text-white hover:bg-black/70"
-            >
-              <ChevronRight className="h-6 w-6" />
-            </Button>
-
-            <div className="flex flex-col items-center">
-              <img
-                src={images[currentIndex].image_url}
-                alt={images[currentIndex].alt_text || images[currentIndex].title}
-                className="max-w-full max-h-[80vh] object-contain"
-              />
-              <div className="text-center mt-4 px-4">
-                <h3 className="text-white text-xl font-semibold mb-2">
-                  {images[currentIndex].title}
-                </h3>
-                {images[currentIndex].description && (
-                  <p className="text-white/80 text-sm max-w-2xl">
-                    {images[currentIndex].description}
-                  </p>
-                )}
-                <p className="text-white/60 text-xs mt-2">
-                  {currentIndex + 1} of {images.length}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 };

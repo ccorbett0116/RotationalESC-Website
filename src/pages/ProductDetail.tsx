@@ -4,13 +4,13 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { ArrowLeft, ShoppingCart, Share2, ZoomIn, Download, FileText, Image, File } from "lucide-react";
+import { ArrowLeft, ShoppingCart, Share2, Download, FileText, Image, File } from "lucide-react";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import { ImageZoom, ImageWithHover } from "@/components/ImageModal";
 import placeholderImage from "@/assets/centrifugal-pump.jpg";
 
 const getFileIcon = (attachment: any) => {
@@ -191,29 +191,16 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="aspect-square bg-muted rounded-lg overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
-                <Dialog>
-                  <DialogTrigger asChild>
-                    <div className="relative cursor-pointer">
-                      <img
-                        src={product.images[currentImageIndex]?.image_url || placeholderImage}
-                        alt={product.images[currentImageIndex]?.alt_text || product.name}
-                        className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
-                      />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
-                        <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                      </div>
-                    </div>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-                    <div className="relative">
-                      <img
-                        src={product.images[currentImageIndex]?.image_url || placeholderImage}
-                        alt={product.images[currentImageIndex]?.alt_text || product.name}
-                        className="w-full h-auto max-h-[85vh] object-contain"
-                      />
-                    </div>
-                  </DialogContent>
-                </Dialog>
+                <ImageZoom
+                  src={product.images[currentImageIndex]?.image_url || placeholderImage}
+                  alt={product.images[currentImageIndex]?.alt_text || product.name}
+                  trigger={
+                    <ImageWithHover
+                      src={product.images[currentImageIndex]?.image_url || placeholderImage}
+                      alt={product.images[currentImageIndex]?.alt_text || product.name}
+                    />
+                  }
+                />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                   <span className="text-muted-foreground text-lg">No Image Available</span>
@@ -463,29 +450,16 @@ const ProductDetail = () => {
                 <Card key={relatedProduct.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
                   <div className="aspect-square bg-muted relative group">
                     {relatedProduct.primary_image ? (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <div className="relative cursor-pointer">
-                            <img
-                              src={relatedProduct.primary_image}
-                              alt={relatedProduct.name}
-                              className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
-                            />
-                            <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
-                              <ZoomIn className="h-6 w-6 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
-                            </div>
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-4xl max-h-[90vh] p-0">
-                          <div className="relative">
-                            <img
-                              src={relatedProduct.primary_image}
-                              alt={relatedProduct.name}
-                              className="w-full h-auto max-h-[85vh] object-contain"
-                            />
-                          </div>
-                        </DialogContent>
-                      </Dialog>
+                      <ImageZoom
+                        src={relatedProduct.primary_image}
+                        alt={relatedProduct.name}
+                        trigger={
+                          <ImageWithHover
+                            src={relatedProduct.primary_image}
+                            alt={relatedProduct.name}
+                          />
+                        }
+                      />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
                         <span className="text-muted-foreground">No Image</span>
