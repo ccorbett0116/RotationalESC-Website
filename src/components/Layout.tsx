@@ -12,6 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -24,16 +25,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       isDropdown: true,
       categories: [
         {
-          title: 'Pumps'
+          title: 'Pumps',
+         
         },
         {
-          title: 'Mechanical Seals'
+          title: 'Mechanical Seals',
+        
         },
         {
-          title: 'Packing'
+          title: 'Packing',
+       
         },
         {
-          title: 'Service & Repair'
+          title: 'Service & Repair',
         }
       ]
     },
@@ -182,26 +186,29 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                   'isDropdown' in item ? (
                     <div key={item.name} className="space-y-2">
                       <button
-                        onClick={() => setIsProductsOpen(!isProductsOpen)}
+                        onClick={() => {
+                          setIsMobileProductsOpen(!isMobileProductsOpen);
+                        }}
                         className="w-full flex items-center justify-between px-4 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
                       >
                         {item.name}
                         <ChevronDown
                           className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                            isProductsOpen ? 'rotate-180' : ''
+                            isMobileProductsOpen ? 'rotate-180' : ''
                           }`}
                         />
                       </button>
                       
-                      {isProductsOpen && (
-                        <div className="bg-muted/50 py-2">
+                      {isMobileProductsOpen && (
+                        <div className="bg-muted/50 py-2 relative z-50">
                           {item.categories.map((category) => (
                             <Link
                               key={category.title}
                               to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
                               onClick={() => {
-                                setIsProductsOpen(false);
+                                console.log('Navigating to', category.title);
+                                setIsMobileProductsOpen(false);
                                 setIsMobileMenuOpen(false);
                               }}
                             >
@@ -220,7 +227,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           ? 'text-primary bg-primary/10'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => {setIsMobileMenuOpen(false);
+                      }}
                     >
                       {item.name}
                     </Link>
