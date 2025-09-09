@@ -12,6 +12,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { getTotalItems } = useCart();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
+  const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -24,16 +25,19 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       isDropdown: true,
       categories: [
         {
-          title: 'Pumps'
+          title: 'Pumps',
+         
         },
         {
-          title: 'Mechanical Seals'
+          title: 'Mechanical Seals',
+        
         },
         {
-          title: 'Packing'
+          title: 'Packing',
+       
         },
         {
-          title: 'Service & Repair'
+          title: 'Service & Repair',
         }
       ]
     },
@@ -85,7 +89,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-6 lg:space-x-8">
               {navigation.map((item) => (
-                item.isDropdown ? (
+                'isDropdown' in item ? (
                   <div
                     key={item.name}
                     className="relative group"
@@ -179,29 +183,32 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
             <div className="md:hidden py-4 border-t border-border">
               <nav className="flex flex-col space-y-2">
                 {navigation.map((item) => (
-                  item.isDropdown ? (
+                  'isDropdown' in item ? (
                     <div key={item.name} className="space-y-2">
                       <button
-                        onClick={() => setIsProductsOpen(!isProductsOpen)}
+                        onClick={() => {
+                          setIsMobileProductsOpen(!isMobileProductsOpen);
+                        }}
                         className="w-full flex items-center justify-between px-4 py-2 text-base font-medium text-muted-foreground hover:text-foreground"
                       >
                         {item.name}
                         <ChevronDown
                           className={`ml-1 h-4 w-4 transition-transform duration-200 ${
-                            isProductsOpen ? 'rotate-180' : ''
+                            isMobileProductsOpen ? 'rotate-180' : ''
                           }`}
                         />
                       </button>
                       
-                      {isProductsOpen && (
-                        <div className="bg-muted/50 py-2">
+                      {isMobileProductsOpen && (
+                        <div className="bg-muted/50 py-2 relative z-50">
                           {item.categories.map((category) => (
                             <Link
                               key={category.title}
                               to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
                               onClick={() => {
-                                setIsProductsOpen(false);
+                                console.log('Navigating to', category.title);
+                                setIsMobileProductsOpen(false);
                                 setIsMobileMenuOpen(false);
                               }}
                             >
@@ -220,7 +227,8 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                           ? 'text-primary bg-primary/10'
                           : 'text-muted-foreground hover:text-foreground'
                       }`}
-                      onClick={() => setIsMobileMenuOpen(false)}
+                      onClick={() => {setIsMobileMenuOpen(false);
+                      }}
                     >
                       {item.name}
                     </Link>
@@ -233,11 +241,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       </header>
 
       {/* Main Content */}
-      <main>
-        <div className="page-enter">
-          {children}
-        </div>
-      </main>
+      <main>{children}</main>
 
       {/* Footer */}
       <footer className="bg-card border-t border-border mt-20">
@@ -249,96 +253,31 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                {companyInfo?.name ? (
-                  <span className="font-bold text-lg text-foreground animate-fade-in">
-                    {companyInfo.name}
-                  </span>
-                ) : (
-                  <div className="h-7 w-48 bg-muted rounded animate-pulse"></div>
-                )}
+                <span className="font-bold text-lg text-foreground">{companyInfo?.name || ""}</span>
               </div>
-              
-              {companyInfo?.tagline ? (
-                <p className="text-muted-foreground mb-4 animate-fade-in">
-                  {companyInfo.tagline}
-                </p>
-              ) : (
-                <div></div>
-              )}
-              
-              {companyInfo?.address ? (
-                <p className="text-sm text-muted-foreground animate-fade-in">
-                  {companyInfo.address}
-                </p>
-              ) : (
-                <div className="h-4 w-56 bg-muted rounded animate-pulse mb-2"></div>
-              )}
-              
-              {companyInfo?.phone ? (
-                <p className="text-sm text-muted-foreground animate-fade-in">
-                  {companyInfo.phone}
-                </p>
-              ) : (
-                <div className="h-4 w-36 bg-muted rounded animate-pulse mb-2"></div>
-              )}
-              
-              {companyInfo?.email ? (
-                <p className="text-sm text-muted-foreground animate-fade-in">
-                  {companyInfo.email}
-                </p>
-              ) : (
-                <div className="h-4 w-44 bg-muted rounded animate-pulse"></div>
-              )}
+              <p className="text-muted-foreground mb-4">{companyInfo?.tagline || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.address || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.phone || ""}</p>
+              <p className="text-sm text-muted-foreground">{companyInfo?.email || ""}</p>
             </div>
 
             {/* Quick Links */}
             <div>
-              <h3 className="font-semibold text-foreground mb-4">Quick Links</h3>
-              <ul className="space-y-2">
+              <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
+              <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
                 {navigation.map((item, idx) => {
-                  if (idx === navigation.length - 3) return null; // skip contact
+                  if (idx === navigation.length - 3) return null; // skip last one
                   return (
-                    <li key={item.name}>
-                      <Link
-                        to={item.href}
-                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                      >
-                        {item.name}
-                      </Link>
-                    </li>
+                      <li key={item.name}>
+                        <Link
+                            to={item.href}
+                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                          {item.name}
+                        </Link>
+                      </li>
                   );
                 })}
-              </ul>
-            </div>
-
-            {/* Legal */}
-            <div>
-              <h3 className="font-semibold text-foreground mb-4">Legal</h3>
-              <ul className="space-y-2">
-                <li>
-                  <Link
-                    to="/privacy-policy"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Privacy Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/refund-policy"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Refund Policy
-                  </Link>
-                </li>
-                <li>
-                  <Link
-                    to="/contact"
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    Contact Us
-                  </Link>
-                </li>
               </ul>
             </div>
 
@@ -347,17 +286,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
-              {companyInfo?.name ? (
-                <span className="animate-fade-in">
-                  © {new Date().getFullYear()} {companyInfo.name}. All rights reserved.
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-2">
-                  © {new Date().getFullYear()}{" "}
-                  <div className="h-4 w-32 bg-muted rounded animate-pulse inline-block"></div>
-                  . All rights reserved.
-                </span>
-              )}
+              © {new Date().getFullYear()} {companyInfo?.name || ""}. All rights reserved.
             </p>
           </div>
         </div>
