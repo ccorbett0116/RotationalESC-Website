@@ -1,4 +1,6 @@
 from django.db import models
+from django.conf import settings
+import uuid
 from products.models import Product
 
 class Order(models.Model):
@@ -52,6 +54,9 @@ class Order(models.Model):
     # Stripe Checkout Session (alternative to direct PaymentIntent via Elements)
     stripe_checkout_session_id = models.CharField(max_length=255, blank=True, null=True)
     
+    # Security token for order confirmation links
+    confirmation_token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    
     # Note: Shipping will be handled via email contact basis
 
     # Timestamps
@@ -63,6 +68,12 @@ class Order(models.Model):
 
     def __str__(self):
         return f"Order {self.order_number} - {self.customer_email}"
+
+    @property
+    def confirmation_url(self):
+        """Generate the secure confirmation URL for this order."""
+        domain = getattr(settings, 'FRONTEND_URL', 'https://rotationales.com')
+        return f"{domain}/order-confirmation/token/{self.confirmation_token}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:

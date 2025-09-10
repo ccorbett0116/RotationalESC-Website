@@ -213,6 +213,8 @@ export interface Order extends OrderData {
   stripe_payment_intent_id?: string;
   stripe_payment_intent_client_secret?: string;
   stripe_client_secret?: string; // For response from order creation
+  confirmation_token?: string;
+  confirmation_url?: string;
   items: Array<{
     id: number;
     product: Product;
@@ -350,6 +352,11 @@ export const apiService = {
 
   getOrder: async (orderNumber: string): Promise<Order> => {
     const response = await api.get(`/orders/${orderNumber}/`);
+    return response.data;
+  },
+
+  getOrderByToken: async (token: string): Promise<Order> => {
+    const response = await api.get(`/orders/token/${token}/`);
     return response.data;
   },
 

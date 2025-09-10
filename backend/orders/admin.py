@@ -24,11 +24,11 @@ class OrderItemInline(admin.TabularInline):
 class OrderAdmin(admin.ModelAdmin):
     list_display = [
         'order_number_link', 'customer_info', 'status_badge', 
-        'payment_status_badge', 'formatted_total', 'order_date', 'actions_column'
+        'payment_status_badge', 'formatted_total', 'order_date', 'confirmation_link'
     ]
     list_filter = ['status', 'payment_status', 'created_at', 'billing_country']
     search_fields = ['order_number', 'customer_email', 'customer_first_name', 'customer_last_name']
-    readonly_fields = ['order_number', 'created_at', 'updated_at', 'order_summary']
+    readonly_fields = ['order_number', 'created_at', 'updated_at', 'confirmation_token', 'order_summary', 'secure_links']
     inlines = [OrderItemInline]
     list_per_page = 25
     date_hierarchy = 'created_at'
@@ -102,17 +102,15 @@ class OrderAdmin(admin.ModelAdmin):
     order_date.short_description = "Date"
     order_date.admin_order_field = 'created_at'
     
-    def actions_column(self, obj):
-        actions = []
-        if obj.status == 'pending':
-            actions.append('<span style="color: #f39c12;">⏳ Processing</span>')
-        elif obj.status == 'processing':
-            actions.append('<span style="color: #17a2b8;">📦 Ship</span>')
-        elif obj.status == 'shipped':
-            actions.append('<span style="color: #27ae60;">✅ Delivered</span>')
-        
-        return format_html('<br>'.join(actions)) if actions else '—'
-    actions_column.short_description = "Quick Actions"
+    def confirmation_link(self, obj):
+        """Display secure confirmation link for admin use."""
+        if obj and obj.confirmation_token:
+            return format_html(
+                '<a href="{}" target="_blank" style="color: #17a2b8; text-decoration: none;">🔒 Secure Link</a>',
+                obj.confirmation_url
+            )
+        return '—'
+    confirmation_link.short_description = "Order Link"
     
     def order_summary(self, obj):
         if not obj.pk:
@@ -147,6 +145,30 @@ class OrderAdmin(admin.ModelAdmin):
         return summary
     order_summary.short_description = "Order Summary"
     
+    def secure_links(self, obj):
+        """Display secure links section for admin."""
+        if not obj or not obj.confirmation_token:
+            return "Save the order to generate secure links"
+        
+        return format_html(
+            '''
+            <div style="background: #e8f4fd; padding: 15px; border-radius: 8px; border-left: 4px solid #17a2b8;">
+                <h4 style="margin-top: 0; color: #17a2b8;">🔒 Secure Order Links</h4>
+                <p><strong>Confirmation URL:</strong><br>
+                   <a href="{}" target="_blank" style="color: #17a2b8; word-break: break-all;">{}</a>
+                </p>
+                <p><strong>Token:</strong> <code style="background: #f8f9fa; padding: 2px 4px; border-radius: 3px;">{}</code></p>
+                <p style="color: #666; font-size: 12px; margin-bottom: 0;">
+                   ⚠️ This secure link should be used instead of direct order number URLs for customer access.
+                </p>
+            </div>
+            ''',
+            obj.confirmation_url,
+            obj.confirmation_url,
+            obj.confirmation_token
+        )
+    secure_links.short_description = "Secure Links"
+    
     fieldsets = (
         ('📋 Order Information', {
             'fields': ('order_number', 'status', 'created_at', 'updated_at'),
@@ -178,6 +200,10 @@ class OrderAdmin(admin.ModelAdmin):
         }),
         ('💳 Payment Information', {
             'fields': ('payment_method', 'payment_status'),
+            'classes': ('wide',)
+        }),
+        ('🔒 Security', {
+            'fields': ('confirmation_token', 'secure_links'),
             'classes': ('wide',)
         }),
         ('📊 Summary', {

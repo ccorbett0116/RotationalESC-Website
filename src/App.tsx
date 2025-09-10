@@ -54,6 +54,7 @@ const App = () => (
             <Route path="/order-success" element={<OrderSuccess />} />
             <Route path="/payment-failed" element={<PaymentFailed />} />
             <Route path="/order-confirmation/:orderNumber" element={<OrderConfirmation />} />
+            <Route path="/order-confirmation/token/:token" element={<OrderConfirmation />} />
             <Route path="/pumps" element={<Pumps />} />
             <Route path="/mechanical-seals" element={<Seals />} />
             <Route path="/packing" element={<Packing />} />
