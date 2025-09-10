@@ -2,7 +2,7 @@ from rest_framework import status, generics
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
-from decimal import Decimal
+from decimal import Decimal, ROUND_HALF_UP
 from .models import Order, OrderItem
 from .serializers import OrderSerializer, OrderCreateSerializer
 from .stripe_service import StripeService
@@ -146,8 +146,8 @@ def calculate_order_total(request):
     
     # Calculate totals for valid items only
     tax_rate = Decimal('0.13')
-    tax_amount = subtotal * tax_rate
-    total_amount = subtotal + tax_amount
+    tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+    total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     
     # Determine response status and structure
     has_issues = bool(unavailable_items or quantity_issues)
