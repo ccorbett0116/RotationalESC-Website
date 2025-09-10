@@ -19,4 +19,5 @@ urlpatterns = [
     
     # Gallery
     path('gallery/', views.GalleryListView.as_view(), name='gallery-list'),
+    path('new-gallery/', views.NewGalleryListView.as_view(), name='new-gallery-list')
 ]

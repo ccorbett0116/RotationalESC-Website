@@ -349,3 +349,37 @@ class Gallery(models.Model):
             base64_data = self.image_base64
             return f"data:{self.content_type};base64,{base64_data}"
         return None
+
+class NewGallery(models.Model):
+    title = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    image_data = models.BinaryField()
+    filename = models.CharField(max_length=255, blank=True, null=True)
+    content_type = models.CharField(max_length=100, default='image/jpeg')
+    alt_text = models.CharField(max_length=200, blank=True)
+    order = models.PositiveIntegerField(default=0, help_text="Display order (lower numbers appear first)")
+    is_featured = models.BooleanField(default=False, help_text="Show on homepage or featured sections")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['order', 'created_at']
+        verbose_name_plural = "Gallery Images"
+
+    def __str__(self):
+        return self.title
+
+    @property
+    def image_base64(self):
+        """Return base64 encoded image data"""
+        if self.image_data:
+            return base64.b64encode(self.image_data).decode('utf-8')
+        return None
+
+    @property
+    def data_url(self):
+        """Return data URL for the image"""
+        if self.image_data:
+            base64_data = self.image_base64
+            return f"data:{self.content_type};base64,{base64_data}"
+        return None

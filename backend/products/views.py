@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Prefetch
-from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, ProductAttachment
+from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
 from .serializers import (
     CategorySerializer, 
     ProductListSerializer, 
@@ -14,7 +14,8 @@ from .serializers import (
     ManufacturerSerializer,
     ManufacturerUploadSerializer,
     SectionWithManufacturersSerializer,
-    GallerySerializer
+    GallerySerializer,
+    NewGallerySerializer
 )
 
 class CategoryListView(APIView):
@@ -350,4 +351,13 @@ class GalleryListView(APIView):
     def get(self, request):
         gallery_items = Gallery.objects.all()
         serializer = GallerySerializer(gallery_items, many=True)
+        return Response(serializer.data)
+
+class NewGalleryListView(APIView):
+    """
+    List all gallery images without pagination
+    """
+    def get(self, request):
+        gallery_items = NewGallery.objects.all()
+        serializer = NewGallerySerializer(gallery_items, many=True)
         return Response(serializer.data)

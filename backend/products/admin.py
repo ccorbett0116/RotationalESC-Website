@@ -3,7 +3,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, ProductAttachment
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
 
 class ProductImageAdminForm(forms.ModelForm):
     image_file = forms.ImageField(required=False, help_text="Upload an image file")
@@ -657,6 +657,82 @@ class GalleryAdminForm(forms.ModelForm):
 @admin.register(Gallery)
 class GalleryAdmin(admin.ModelAdmin):
     form = GalleryAdminForm
+    list_display = ['title', 'description_excerpt', 'is_featured', 'order', 'image_preview_small', 'created_at']
+    list_filter = ['is_featured', 'created_at']
+    search_fields = ['title', 'description', 'alt_text']
+    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured', 'image_preview']
+    readonly_fields = ['image_preview', 'created_at', 'updated_at']
+    ordering = ['order', 'created_at']
+    
+    def description_excerpt(self, obj):
+        if obj.description and len(obj.description) > 50:
+            return obj.description[:50] + "..."
+        return obj.description or "—"
+    description_excerpt.short_description = "Description"
+    
+    def image_preview_small(self, obj):
+        if obj and obj.image_data:
+            return mark_safe(f'<img src="{obj.data_url}" style="max-height: 60px; max-width: 60px; border-radius: 4px;" />')
+        return "No image"
+    image_preview_small.short_description = "Preview"
+    
+    def image_preview(self, obj):
+        if obj and obj.image_data:
+            return mark_safe(f'<img src="{obj.data_url}" style="max-height: 300px; max-width: 300px; border: 1px solid #ddd;" />')
+        return "No image"
+    image_preview.short_description = "Current Image"
+
+class NewGalleryAdminForm(forms.ModelForm):
+    image_file = forms.ImageField(required=False, help_text="Upload an image file")
+    
+    class Meta:
+        model = NewGallery
+        fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured']
+        exclude = ['image_data', 'filename', 'content_type']
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # If this is an existing instance with image data, show a preview
+        if self.instance and self.instance.pk and self.instance.image_data:
+            self.fields['current_image'] = forms.CharField(
+                required=False,
+                widget=forms.HiddenInput(),
+                initial="has_image"
+            )
+    
+    def clean(self):
+        cleaned_data = super().clean()
+        image_file = cleaned_data.get('image_file')
+        
+        # For new instances, require an image file
+        if not self.instance.pk and not image_file:
+            raise forms.ValidationError("An image file is required for new gallery images.")
+        
+        # For existing instances without image_data, require an image file
+        if self.instance.pk and not self.instance.image_data and not image_file:
+            raise forms.ValidationError("An image file is required.")
+            
+        return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Handle file upload
+        image_file = self.cleaned_data.get('image_file')
+        if image_file:
+            # Read the uploaded file and store as binary data
+            instance.image_data = image_file.read()
+            instance.filename = image_file.name
+            instance.content_type = image_file.content_type
+        
+        if commit:
+            instance.save()
+        return instance
+
+
+@admin.register(NewGallery)
+class NewGalleryAdmin(admin.ModelAdmin):
+    form = NewGalleryAdminForm
     list_display = ['title', 'description_excerpt', 'is_featured', 'order', 'image_preview_small', 'created_at']
     list_filter = ['is_featured', 'created_at']
     search_fields = ['title', 'description', 'alt_text']
