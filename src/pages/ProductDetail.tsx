@@ -10,7 +10,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
-import { ImageZoom, ImageWithHover } from "@/components/ImageModal";
+import { ImageModal, ImageWithHover } from "@/components/ImageModal";
 import placeholderImage from "@/assets/centrifugal-pump.jpg";
 
 const getFileIcon = (attachment: any) => {
@@ -191,9 +191,14 @@ const ProductDetail = () => {
             {/* Main Image */}
             <div className="bg-muted rounded-lg overflow-hidden relative group">
               {product.images && product.images.length > 0 ? (
-                <ImageZoom
-                  src={product.images[currentImageIndex]?.image_url || placeholderImage}
-                  alt={product.images[currentImageIndex]?.alt_text || product.name}
+                <ImageModal
+                  images={product.images.map(img => ({
+                    id: img.id,
+                    url: img.image_url,
+                    alt: img.alt_text || product.name,
+                    title: `${product.name} - Image ${product.images.indexOf(img) + 1}`,
+                  }))}
+                  initialIndex={currentImageIndex}
                   trigger={
                     <ImageWithHover
                       src={product.images[currentImageIndex]?.image_url || placeholderImage}
@@ -450,9 +455,14 @@ const ProductDetail = () => {
                 <Card key={relatedProduct.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
                   <div className="aspect-square bg-muted relative group">
                     {relatedProduct.primary_image ? (
-                      <ImageZoom
-                        src={relatedProduct.primary_image}
-                        alt={relatedProduct.name}
+                      <ImageModal
+                        images={[{
+                          id: relatedProduct.id,
+                          url: relatedProduct.primary_image,
+                          alt: relatedProduct.name,
+                          title: relatedProduct.name,
+                        }]}
+                        initialIndex={0}
                         trigger={
                           <ImageWithHover
                             src={relatedProduct.primary_image}

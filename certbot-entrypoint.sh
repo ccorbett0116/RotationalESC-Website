@@ -15,9 +15,28 @@ reload_nginx() {
     fi
 }
 
-# Check if certificate already exists
-if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
-    echo "No certificate found for $DOMAIN. Creating initial certificate..."
+# Function to check if certificate is from Let's Encrypt
+is_letsencrypt_cert() {
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        # Check if the certificate issuer contains "Let's Encrypt"
+        openssl x509 -in "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" -text -noout | grep -q "Let's Encrypt"
+        return $?
+    fi
+    return 1
+}
+
+# Check if certificate already exists and is from Let's Encrypt
+if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ] || ! is_letsencrypt_cert; then
+    if [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
+        echo "Found existing certificate for $DOMAIN, but it's not from Let's Encrypt. Replacing..."
+        # Remove dummy/self-signed certificate
+        rm -rf "/etc/letsencrypt/live/$DOMAIN"
+        rm -rf "/etc/letsencrypt/archive/$DOMAIN"
+        rm -rf "/etc/letsencrypt/renewal/$DOMAIN.conf"
+    else
+        echo "No certificate found for $DOMAIN and www.$DOMAIN."
+    fi
+    echo "Creating initial certificate..."
     
     # Create dummy certificate first to allow nginx to start
     mkdir -p "/etc/letsencrypt/live/$DOMAIN"
@@ -35,20 +54,20 @@ if [ ! -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
     rm -rf "/etc/letsencrypt/renewal/$DOMAIN.conf"
     
     # Request real certificate
-    echo "Requesting real certificate for $DOMAIN..."
+    echo "Requesting real certificate for $DOMAIN and www.$DOMAIN..."
     certbot certonly --webroot -w /var/www/certbot \
         --email "$EMAIL" \
         -d "$DOMAIN" \
+        -d "www.$DOMAIN" \
         --rsa-key-size 4096 \
         --agree-tos \
         --non-interactive \
-        --force-renewal \
         --verbose || echo "Initial certificate request failed, will retry in renewal loop"
     
     # Reload nginx
     reload_nginx
 else
-    echo "Certificate already exists for $DOMAIN"
+    echo "Valid Let's Encrypt certificate already exists for $DOMAIN and www.$DOMAIN"
 fi
 
 # Start renewal loop

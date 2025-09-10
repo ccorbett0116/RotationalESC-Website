@@ -18,6 +18,8 @@ from django.contrib import admin
 from django.urls import path, include
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.http import JsonResponse
+from django.conf import settings
+from django.conf.urls.static import static
 
 # Configure admin titles
 admin.site.site_header = "Rotational Equipment Services Admin"
@@ -35,4 +37,4 @@ urlpatterns = [
     path('api/', include('orders.urls')),
     path('api/contact/', include('contact.urls')),
     path('api/company/', include('company.urls')),
-]
+] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
