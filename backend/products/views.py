@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
-from django.db.models import Q
+from django.db.models import Q, Prefetch
 from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, ProductAttachment
 from .serializers import (
     CategorySerializer, 
@@ -176,7 +176,12 @@ def sections_with_manufacturers(request):
     Get all sections with their associated manufacturers
     Optionally filter by page parameter
     """
-    sections = Section.objects.prefetch_related('manufacturers').all()
+    sections = Section.objects.prefetch_related(
+        Prefetch(
+            'manufacturers',
+            queryset=Manufacturer.objects.order_by('order')
+        )
+    ).all()
     
     # Filter by page if provided
     page = request.GET.get('page')
