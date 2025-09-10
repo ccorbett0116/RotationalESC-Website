@@ -578,21 +578,21 @@ class ManufacturerAdminForm(forms.ModelForm):
 
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
-    list_display = ['label', 'page', 'created_at', 'updated_at']
+    list_display = ['label', 'description', 'page', 'created_at', 'updated_at']
     list_filter = ['page', 'created_at']
     search_fields = ['label']
     readonly_fields = ['created_at', 'updated_at']
-    fields = ['label', 'page', 'created_at', 'updated_at']
+    fields = ['label', 'description', 'page', 'created_at', 'updated_at']
 
 
 @admin.register(Manufacturer)
 class ManufacturerAdmin(admin.ModelAdmin):
     form = ManufacturerAdminForm
-    list_display = ['label', 'url', 'get_sections', 'created_at']
+    list_display = ['label', 'url', 'order', 'get_sections', 'created_at']
     list_filter = ['sections', 'created_at']
     search_fields = ['label']
     filter_horizontal = ['sections']
-    fields = ['label', 'url', 'image_file', 'sections', 'image_preview']
+    fields = ['label', 'url', 'image_file', 'order', 'sections', 'image_preview']
     readonly_fields = ['image_preview', 'created_at', 'updated_at']
     
     def get_sections(self, obj):

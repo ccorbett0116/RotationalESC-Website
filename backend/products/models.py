@@ -231,6 +231,7 @@ class Section(models.Model):
     ]
     
     label = models.CharField(max_length=100, unique=True)
+    description = models.CharField(max_length=800, blank=True, null=True, help_text="Optional description for the section")
     page = models.CharField(max_length=20, choices=PAGE_CHOICES, default='pumps', help_text="Which page should this section appear on")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
