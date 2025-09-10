@@ -25,6 +25,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       isDropdown: true,
       categories: [
         {
+          title: 'New Equipment',
+        },
+        {
           title: 'Pumps',
          
         },
@@ -38,7 +41,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         },
         {
           title: 'Service & Repair',
-        }
+        },
       ]
     },
     { name: 'About', href: '/about' },
