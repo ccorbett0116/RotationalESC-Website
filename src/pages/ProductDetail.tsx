@@ -328,14 +328,14 @@ const ProductDetail = () => {
         </div>
 
         {/* Product Details Tabs */}
-        <Tabs defaultValue="specifications" className="mb-16">
+        <Tabs defaultValue="description" className="mb-16">
           <TabsList className={`grid w-full ${product.attachments && product.attachments.length > 0 ? 'grid-cols-3' : 'grid-cols-2'}`}>
+            <TabsTrigger value="description" className="text-xs sm:text-sm">
+              Description
+            </TabsTrigger>
             <TabsTrigger value="specifications" className="text-xs sm:text-sm">
               <span className="hidden sm:inline">Specifications</span>
               <span className="sm:hidden">Specs</span>
-            </TabsTrigger>
-            <TabsTrigger value="description" className="text-xs sm:text-sm">
-              Description
             </TabsTrigger>
             {product.attachments && product.attachments.length > 0 && (
               <TabsTrigger value="attachments" className="text-xs sm:text-sm">
@@ -344,6 +344,18 @@ const ProductDetail = () => {
               </TabsTrigger>
             )}
           </TabsList>
+          <TabsContent value="description" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Product Description</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-muted-foreground leading-relaxed">
+                  {product.description}
+                </p>
+              </CardContent>
+            </Card>
+          </TabsContent>
           <TabsContent value="specifications" className="mt-6">
             <Card>
               <CardHeader>
@@ -368,19 +380,6 @@ const ProductDetail = () => {
               </CardContent>
             </Card>
           </TabsContent>
-          <TabsContent value="description" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          
           {product.attachments && product.attachments.length > 0 && (
             <TabsContent value="attachments" className="mt-6">
               <Card>
