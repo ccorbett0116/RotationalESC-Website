@@ -242,7 +242,7 @@ const Home = () => {
               </div>
               <h3 className="text-lg lg:text-xl font-semibold mb-2">Industry Experience & Knowledge</h3>
               <p className="text-sm lg:text-base text-muted-foreground">
-                Our professionals have experience working in highly regulated industries, and we understand the importance of compliance and safety.
+               Our professionals have extensive experience in many industries. We understand manufacturing, installation, and operational issues of our customers which enables us to meet todays demanding requirements.
               </p>
             </div>
           </div>
