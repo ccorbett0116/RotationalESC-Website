@@ -531,7 +531,7 @@ class ManufacturerAdminForm(forms.ModelForm):
     
     class Meta:
         model = Manufacturer
-        fields = ['label', 'url', 'image_file', 'sections']
+        fields = ['label', 'url', 'image_file', 'order', 'sections']
         exclude = ['image_data', 'filename', 'content_type']
     
     def __init__(self, *args, **kwargs):
