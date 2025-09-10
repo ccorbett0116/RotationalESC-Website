@@ -330,7 +330,7 @@ class Gallery(models.Model):
 
     class Meta:
         ordering = ['order', 'created_at']
-        verbose_name_plural = "Gallery Images"
+        verbose_name_plural = "Service & Repair Gallery"
 
     def __str__(self):
         return self.title
@@ -364,7 +364,7 @@ class NewGallery(models.Model):
 
     class Meta:
         ordering = ['order', 'created_at']
-        verbose_name_plural = "Gallery Images"
+        verbose_name_plural = "New Equipment Gallery"
 
     def __str__(self):
         return self.title
