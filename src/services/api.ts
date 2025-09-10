@@ -36,7 +36,7 @@ const getCsrfToken = async (): Promise<string> => {
   }
   
   try {
-    const response = await api.get('/csrf-token/');
+    await api.get('/csrf-token/');
     // Extract CSRF token from cookie
     const cookies = document.cookie.split(';');
     for (let cookie of cookies) {
