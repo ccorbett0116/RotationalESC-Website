@@ -22,6 +22,7 @@ import Seals from "@/pages/Seals.tsx";
 import Packing from "@/pages/Packing.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import RefundPolicy from "@/pages/RefundPolicy";
+import NewEquipment from "./pages/NewEquipment";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -59,6 +60,7 @@ const App = () => (
             <Route path="/service-repair" element={<Service />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/refund-policy" element={<RefundPolicy />} />
+            <Route path="/new-equipment" element={<NewEquipment />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
