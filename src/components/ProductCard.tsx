@@ -99,7 +99,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
           <img
             src={product.primary_image}
             alt={product.name}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-contain"
           />
         ) : (
           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
