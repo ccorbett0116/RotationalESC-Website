@@ -94,15 +94,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
   return (
     <Card className={`h-full flex flex-col ${className}`}>
-      <div className="aspect-video bg-muted rounded-t-lg overflow-hidden">
+      <div className="bg-muted rounded-t-lg overflow-hidden p-4">
         {product.primary_image ? (
           <img
             src={product.primary_image}
             alt={product.name}
-            className="w-full h-full object-contain"
+            className="w-full h-auto object-contain max-h-48"
           />
         ) : (
-          <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+          <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
             <span className="text-muted-foreground">No Image</span>
           </div>
         )}
