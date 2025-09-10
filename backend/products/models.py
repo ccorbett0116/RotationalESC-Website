@@ -247,8 +247,9 @@ class Manufacturer(models.Model):
     Manufacturers with logos, URLs, and section tags
     """
     label = models.CharField(max_length=100)
-    url = models.URLField(help_text="Manufacturer's website URL")
+    url = models.URLField(help_text="Manufacturer's website URL", blank=True, null=True)
     image_data = models.BinaryField(help_text="Manufacturer logo image")
+    order = models.PositiveIntegerField(default=0)
     filename = models.CharField(max_length=255, blank=True, null=True)
     content_type = models.CharField(max_length=100, default='image/jpeg')
     sections = models.ManyToManyField(Section, related_name='manufacturers', help_text="Sections this manufacturer belongs to")
