@@ -25,9 +25,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       isDropdown: true,
       categories: [
         {
-          title: 'New Equipment',
-        },
-        {
           title: 'Pumps',
          
         },
@@ -42,6 +39,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         {
           title: 'Service & Repair',
         },
+        {
+          title: 'New Equipment',
+        },
       ]
     },
     { name: 'About', href: '/about' },
@@ -51,7 +51,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const isActive = (path: string, isDropdown?: boolean) => {
     if (isDropdown) {
       // For Products dropdown, check if we're on specific product category pages
-      return ['/pumps', '/mechanical-seals', '/packing', '/service-repair'].includes(location.pathname);
+      return ['/pumps', '/mechanical-seals', '/packing', '/service-repair', '/new-equipment'].includes(location.pathname);
     }
     return location.pathname === path;
   };

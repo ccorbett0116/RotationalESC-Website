@@ -115,7 +115,7 @@ class ProductDetailSerializer(serializers.ModelSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
-        fields = ['id', 'label', 'created_at', 'updated_at']
+        fields = ['id', 'label', 'description', 'created_at', 'updated_at']
 
 
 class ManufacturerSerializer(serializers.ModelSerializer):
@@ -181,7 +181,7 @@ class SectionWithManufacturersSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Section
-        fields = ['id', 'label', 'page', 'manufacturers', 'created_at', 'updated_at']
+        fields = ['id', 'label', 'description', 'page', 'manufacturers', 'created_at', 'updated_at']
 
 
 class GallerySerializer(serializers.ModelSerializer):

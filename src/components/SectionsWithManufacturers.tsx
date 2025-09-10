@@ -219,7 +219,12 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                   </h2>
                   <div className="w-24 h-1 bg-primary mx-auto rounded-full"></div>
                 </div>
-                
+                {/* Section Description (if present) */}
+                {section.description && (
+                  <div className="max-w-2xl mx-auto text-center text-muted-foreground">
+                    <p>{section.description}</p>
+                  </div>
+                )}
                 {section.manufacturers.length === 0 ? (
                   <div className="text-center py-8">
                     <p className="text-muted-foreground">No manufacturers found for this section.</p>
