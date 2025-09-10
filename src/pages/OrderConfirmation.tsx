@@ -11,32 +11,42 @@ import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
 const OrderConfirmation = () => {
-  const { orderNumber } = useParams();
+  const { orderNumber, token } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!orderNumber) return;
+      if (!orderNumber && !token) return;
       
       try {
         setLoading(true);
-        const [orderData, companyData] = await Promise.all([
-          apiService.getOrder(orderNumber),
-          apiService.getCompanyInfo()
-        ]);
+        setError(null);
+        
+        let orderData: Order;
+        if (token) {
+          orderData = await apiService.getOrderByToken(token);
+        } else if (orderNumber) {
+          orderData = await apiService.getOrder(orderNumber);
+        } else {
+          throw new Error('No order identifier provided');
+        }
+        
+        const companyData = await apiService.getCompanyInfo();
         setOrder(orderData);
         setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching order:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load order');
       } finally {
         setLoading(false);
       }
     };
 
     fetchOrder();
-  }, [orderNumber]);
+  }, [orderNumber, token]);
 
   const handleDownloadReceipt = () => {
     if (!order) return;
@@ -165,14 +175,16 @@ const OrderConfirmation = () => {
     );
   }
 
-  if (!order) {
+  if (error || !order) {
     return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-foreground mb-4">Order Not Found</h1>
+            <h1 className="text-2xl font-bold text-foreground mb-4">
+              {error ? 'Access Denied' : 'Order Not Found'}
+            </h1>
             <p className="text-muted-foreground mb-6">
-              We couldn't find an order with that number.
+              {error || "We couldn't find an order with that identifier."}
             </p>
             <Link to="/shop">
               <Button>Continue Shopping</Button>

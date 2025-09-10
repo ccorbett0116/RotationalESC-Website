@@ -27,7 +27,11 @@ const OrderSuccess = () => {
         
         // If verification successful, redirect to order confirmation
         if (result.verified) {
-          navigate(`/order-confirmation/${orderNumber}`, { replace: true });
+          if (result.order.confirmation_token) {
+            navigate(`/order-confirmation/token/${result.order.confirmation_token}`, { replace: true });
+          } else {
+            navigate(`/order-confirmation/${orderNumber}`, { replace: true });
+          }
         } else {
           // Payment verification failed
           navigate(`/payment-failed?order=${orderNumber}&reason=verification_failed`, { replace: true });

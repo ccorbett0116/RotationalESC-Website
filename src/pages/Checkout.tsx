@@ -364,7 +364,11 @@ const Checkout = () => {
       description: `Order #${orderCreated.order_number} has been processed.`,
     });
     
-    navigate(`/order-confirmation/${orderCreated.order_number}`);
+    if (orderCreated.confirmation_token) {
+      navigate(`/order-confirmation/token/${orderCreated.confirmation_token}`);
+    } else {
+      navigate(`/order-confirmation/${orderCreated.order_number}`);
+    }
   };
 
   const handlePaymentError = (error: string) => {
