@@ -11,7 +11,7 @@ import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
 const OrderConfirmation = () => {
-  const { orderNumber, token } = useParams();
+  const { token } = useParams();
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -19,21 +19,13 @@ const OrderConfirmation = () => {
 
   useEffect(() => {
     const fetchOrder = async () => {
-      if (!orderNumber && !token) return;
+      if (!token) return;
       
       try {
         setLoading(true);
         setError(null);
         
-        let orderData: Order;
-        if (token) {
-          orderData = await apiService.getOrderByToken(token);
-        } else if (orderNumber) {
-          orderData = await apiService.getOrder(orderNumber);
-        } else {
-          throw new Error('No order identifier provided');
-        }
-        
+        const orderData = await apiService.getOrderByToken(token);
         const companyData = await apiService.getCompanyInfo();
         setOrder(orderData);
         setCompanyInfo(companyData);
@@ -46,7 +38,7 @@ const OrderConfirmation = () => {
     };
 
     fetchOrder();
-  }, [orderNumber, token]);
+  }, [token]);
 
   const handleDownloadReceipt = () => {
     if (!order) return;

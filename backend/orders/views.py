@@ -66,10 +66,11 @@ class OrderCreateView(generics.CreateAPIView):
             print(">>> Serializer validation failed with errors:", serializer.errors)
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-class OrderDetailView(generics.RetrieveAPIView):
+class OrderDetailByTokenView(generics.RetrieveAPIView):
     queryset = Order.objects.prefetch_related('items__product')
     serializer_class = OrderSerializer
-    lookup_field = 'order_number'
+    lookup_field = 'confirmation_token'
+    lookup_url_kwarg = 'token'
 
 @api_view(['POST', 'OPTIONS'])
 def calculate_order_total(request):
