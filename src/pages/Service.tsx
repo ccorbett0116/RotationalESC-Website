@@ -17,7 +17,11 @@ const Service = () => {
                 </div>
             </section>
             
-            <Gallery />
+            <Gallery 
+                title="Service Gallery"
+                description="See our pump repair professionals in action"
+                galleryType="service"
+            />
         </Layout>
     );
 };

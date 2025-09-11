@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import NewGallery from "@/components/NewGallery";
+import Gallery from "@/components/Gallery";
 
 const NewEquipment = () => {
     return (
@@ -17,7 +17,11 @@ const NewEquipment = () => {
                 </div>
             </section>
             
-            <NewGallery />
+            <Gallery 
+                title="New Equipment Gallery"
+                description="See some of the equipment our specialists sell"
+                galleryType="new-equipment"
+            />
         </Layout>
     );
 };

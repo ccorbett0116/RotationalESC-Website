@@ -4,7 +4,13 @@ import { Button } from "@/components/ui/button";
 import { apiService, GalleryImage } from "@/services/api";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
 
-const Gallery = () => {
+interface GalleryProps {
+  title: string;
+  description: string;
+  galleryType: 'service' | 'new-equipment';
+}
+
+const Gallery = ({ title, description, galleryType }: GalleryProps) => {
   const [images, setImages] = useState<GalleryImage[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,7 +31,9 @@ const Gallery = () => {
     const fetchGalleryImages = async () => {
       try {
         setLoading(true);
-        const data = await apiService.getGalleryImages();
+        const data = galleryType === 'service' 
+          ? await apiService.getGalleryImages()
+          : await apiService.getNewGalleryImages();
         setImages(data);
         setError(null);
       } catch (err) {
@@ -37,7 +45,7 @@ const Gallery = () => {
     };
 
     fetchGalleryImages();
-  }, []);
+  }, [galleryType]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -108,14 +116,13 @@ const Gallery = () => {
     }));
   };
 
-
   if (loading) {
     return (
       <section className="py-16 bg-background">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Service Gallery
+              {title}
             </h2>
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
@@ -132,7 +139,7 @@ const Gallery = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Service Gallery
+              {title}
             </h2>
             <p className="text-muted-foreground">{error}</p>
           </div>
@@ -147,7 +154,7 @@ const Gallery = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Service Gallery
+              {title}
             </h2>
             <p className="text-muted-foreground">No gallery images available at the moment.</p>
           </div>
@@ -164,16 +171,18 @@ const Gallery = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-              Service Gallery
+              {title}
             </h2>
             <p className="text-xl text-muted-foreground">
-              See our pump repair professionals in action
+              {description}
             </p>
           </div>
 
           <div className="relative" onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
             <div className="flex justify-center">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 transition-all duration-500 ease-in-out">
+              <div className={`grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8 transition-all duration-500 ease-in-out ${
+                galleryType === 'new-equipment' ? 'stagger-children' : ''
+              }`}>
                 {displayImages.map((image) => (
                   <ImageModal
                     key={image.id}
