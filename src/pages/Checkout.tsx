@@ -129,10 +129,14 @@ const Checkout = () => {
             return sum + (Number(product.price) * item.quantity);
           }, 0);
           
+          // Apply 0% tax for US, 13% for other countries
+          const taxRate = formData.billing_country === 'US' ? 0 : 0.13;
+          const taxAmount = defaultSubtotal * taxRate;
+          
           setOrderTotals({
             subtotal: defaultSubtotal,
-            tax_amount: defaultSubtotal * 0.13, // Default 13% tax
-            total_amount: defaultSubtotal * 1.13
+            tax_amount: taxAmount,
+            total_amount: defaultSubtotal + taxAmount
           });
           
           toast({
@@ -709,7 +713,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>{formatCAD(orderTotals.tax_amount)}</span>
+                    <span>{orderTotals.tax_amount === 0 ? 'No Tax' : formatCAD(orderTotals.tax_amount)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
                     * Shipping will be calculated and communicated via email

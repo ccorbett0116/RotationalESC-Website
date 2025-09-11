@@ -146,7 +146,8 @@ def calculate_order_total(request):
             })
     
     # Calculate totals for valid items only
-    tax_rate = Decimal('0.13')
+    # Apply 0% tax for US, 13% for other countries
+    tax_rate = Decimal('0.00') if billing_country == 'US' else Decimal('0.13')
     tax_amount = (subtotal * tax_rate).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     total_amount = (subtotal + tax_amount).quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
     
