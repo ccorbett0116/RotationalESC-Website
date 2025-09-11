@@ -411,6 +411,11 @@ export const apiService = {
     return response.data;
   },
 
+  getNewGalleryImages: async (): Promise<GalleryImage[]> => {
+    const response = await api.get('/new-gallery/');
+    return response.data;
+  },
+
   // Company Info
   getCompanyInfo: async (): Promise<CompanyInfo> => {
     const response = await api.get('/company/info/');
