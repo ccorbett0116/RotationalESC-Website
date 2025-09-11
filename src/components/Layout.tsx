@@ -256,7 +256,9 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                 <div className="w-8 h-8 bg-gradient-to-r from-primary to-primary/80 rounded-lg flex items-center justify-center">
                   <span className="text-primary-foreground font-bold text-sm">RES</span>
                 </div>
-                <span className="font-bold text-lg text-foreground">{companyInfo?.name || ""}</span>
+                <span className="font-bold text-lg text-foreground">
+                  {companyInfo?.name || ""}
+                </span>
               </div>
               <p className="text-muted-foreground mb-4">{companyInfo?.tagline || ""}</p>
               <p className="text-sm text-muted-foreground">{companyInfo?.address || ""}</p>
@@ -266,27 +268,65 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
             {/* Quick Links */}
             <div>
-              <h3 className=" flex flex-row font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
-              <ul className="flex md:flex-row md:space-x-5 flex-col space-y-2 md:space-y-0 text-xl">
+              <h3 className="font-semibold text-foreground mb-4 text-2xl">Quick Links</h3>
+              <ul className="space-y-2">
                 {navigation.map((item, idx) => {
                   if (idx === navigation.length - 3) return null; // skip last one
                   return (
-                      <li key={item.name}>
-                        <Link
-                            to={item.href}
-                            className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                        >
-                          {item.name}
-                        </Link>
-                      </li>
+                    <li key={item.name}>
+                      <Link
+                        to={item.href}
+                        className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        {item.name}
+                      </Link>
+                    </li>
                   );
                 })}
               </ul>
             </div>
 
-
+            {/* Legal */}
+            <div>
+              <h3 className="font-semibold text-foreground mb-4 text-2xl">Legal</h3>
+              <ul className="space-y-2">
+                <li>
+                  <Link
+                    to="/privacy-policy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/refund-policy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Refund Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/shipping-policy"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Shipping Policy
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/contact"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    Contact Us
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
 
+          {/* Bottom Bar */}
           <div className="border-t border-border pt-8 mt-8">
             <p className="text-center text-sm text-muted-foreground">
               © {new Date().getFullYear()} {companyInfo?.name || ""}. All rights reserved.
