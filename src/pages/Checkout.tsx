@@ -193,10 +193,62 @@ const Checkout = () => {
     return value;
   };
 
+  const validateCanadianPostalCode = (postalCode: string): boolean => {
+    // Canadian postal code format: A1A 1A1 (letter-digit-letter space digit-letter-digit)
+    const canadianPostalRegex = /^[ABCEGHJ-NPRSTVXY]\d[ABCEGHJ-NPRSTV-Z][ ]?\d[ABCEGHJ-NPRSTV-Z]\d$/i;
+    return canadianPostalRegex.test(postalCode.replace(/\s/g, '').toUpperCase());
+  };
+
+  const validateUSZipCode = (zipCode: string): boolean => {
+    // US ZIP code format: 12345 or 12345-6789
+    const usZipRegex = /^\d{5}(-\d{4})?$/;
+    return usZipRegex.test(zipCode);
+  };
+
+  const formatCanadianPostalCode = (value: string): string => {
+    // Remove all non-alphanumeric characters and convert to uppercase
+    const cleaned = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+    
+    // Format as A1A 1A1
+    if (cleaned.length <= 3) {
+      return cleaned;
+    } else if (cleaned.length <= 6) {
+      return cleaned.slice(0, 3) + ' ' + cleaned.slice(3);
+    } else {
+      return cleaned.slice(0, 3) + ' ' + cleaned.slice(3, 6);
+    }
+  };
+
+  const formatUSZipCode = (value: string): string => {
+    // Remove all non-digit characters
+    const cleaned = value.replace(/\D/g, '');
+    
+    // Format as 12345 or 12345-6789
+    if (cleaned.length <= 5) {
+      return cleaned;
+    } else if (cleaned.length <= 9) {
+      return cleaned.slice(0, 5) + '-' + cleaned.slice(5);
+    } else {
+      return cleaned.slice(0, 5) + '-' + cleaned.slice(5, 9);
+    }
+  };
+
   const handleInputChange = (field: string, value: string) => {
     // Format phone number while typing
     if (field === 'customer_phone') {
       value = formatPhoneNumber(value);
+    }
+    
+    // Format postal codes while typing
+    if (field === 'billing_postal_code' || field === 'shipping_postal_code') {
+      const countryField = field.replace('postal_code', 'country');
+      const country = formData[countryField as keyof typeof formData] as string;
+      
+      if (country === 'CA') {
+        value = formatCanadianPostalCode(value);
+      } else if (country === 'US') {
+        value = formatUSZipCode(value);
+      }
     }
     
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -239,6 +291,13 @@ const Checkout = () => {
     }
     if (!formData.billing_postal_code.trim()) {
       errors.billing_postal_code = 'Postal Code/ZIP is required';
+    } else {
+      // Validate postal code format based on billing country
+      if (formData.billing_country === 'CA' && !validateCanadianPostalCode(formData.billing_postal_code)) {
+        errors.billing_postal_code = 'Please enter a valid Canadian postal code (A1A 1A1)';
+      } else if (formData.billing_country === 'US' && !validateUSZipCode(formData.billing_postal_code)) {
+        errors.billing_postal_code = 'Please enter a valid US ZIP code (12345 or 12345-6789)';
+      }
     }
 
     // Phone validation (if provided)
@@ -259,6 +318,13 @@ const Checkout = () => {
       }
       if (!formData.shipping_postal_code.trim()) {
         errors.shipping_postal_code = 'Shipping postal code/ZIP is required';
+      } else {
+        // Validate shipping postal code format based on shipping country
+        if (formData.shipping_country === 'CA' && !validateCanadianPostalCode(formData.shipping_postal_code)) {
+          errors.shipping_postal_code = 'Please enter a valid Canadian postal code (A1A 1A1)';
+        } else if (formData.shipping_country === 'US' && !validateUSZipCode(formData.shipping_postal_code)) {
+          errors.shipping_postal_code = 'Please enter a valid US ZIP code (12345 or 12345-6789)';
+        }
       }
     }
 

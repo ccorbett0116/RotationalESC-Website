@@ -30,7 +30,9 @@ const OrderSuccess = () => {
           if (result.order.confirmation_token) {
             navigate(`/order-confirmation/token/${result.order.confirmation_token}`, { replace: true });
           } else {
-            navigate(`/order-confirmation/${orderNumber}`, { replace: true });
+            // This should not happen since confirmation_token is auto-generated and now included in serializer
+            console.error('Order verified but missing confirmation token - this is a server error');
+            navigate(`/payment-failed?order=${orderNumber}&reason=missing_token`, { replace: true });
           }
         } else {
           // Payment verification failed

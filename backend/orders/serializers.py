@@ -29,7 +29,7 @@ class OrderSerializer(serializers.ModelSerializer):
             'subtotal', 'tax_amount', 'total_amount',
             'payment_method', 'payment_status', 
             'stripe_payment_intent_id', 'stripe_payment_intent_client_secret', 'stripe_checkout_session_id',
-            'items', 'order_items', 'created_at', 'updated_at'
+            'confirmation_token', 'items', 'order_items', 'created_at', 'updated_at'
         ]
         read_only_fields = ['order_number', 'created_at', 'updated_at']
 
