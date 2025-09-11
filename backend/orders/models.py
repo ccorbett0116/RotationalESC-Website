@@ -72,8 +72,7 @@ class Order(models.Model):
     @property
     def confirmation_url(self):
         """Generate the secure confirmation URL for this order."""
-        domain = getattr(settings, 'FRONTEND_URL', 'https://rotationales.com')
-        return f"{domain}/order-confirmation/token/{self.confirmation_token}"
+        return f"{settings.BASE_URL}/order-confirmation/token/{self.confirmation_token}"
 
     def save(self, *args, **kwargs):
         if not self.order_number:
