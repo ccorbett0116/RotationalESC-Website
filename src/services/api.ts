@@ -84,6 +84,13 @@ api.interceptors.response.use(
   },
   (error) => {
     console.error('API Response Error:', error.response?.status, error.response?.data || error.message);
+    
+    // Enhance error object with network status info
+    if (!error.response && error.request) {
+      error.code = 'NETWORK_ERROR';
+      error.message = 'Network Error - Backend unreachable';
+    }
+    
     return Promise.reject(error);
   }
 );

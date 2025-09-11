@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
+import { MaintenanceProvider, useMaintenanceMode } from "./contexts/MaintenanceContext";
 import ScrollToTop from "./components/ScrollToTop";
 import Home from "./pages/Home";
 import About from "./pages/About";
@@ -16,6 +17,7 @@ import OrderConfirmation from "./pages/OrderConfirmation";
 import OrderSuccess from "./pages/OrderSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import NotFound from "./pages/NotFound";
+import Maintenance from "./pages/Maintenance";
 import Pumps from "@/pages/Pumps.tsx";
 import Service from "@/pages/Service.tsx";
 import Seals from "@/pages/Seals.tsx";
@@ -35,36 +37,50 @@ const queryClient = new QueryClient({
   },
 });
 
+const AppRoutes = () => {
+  const { isMaintenanceMode } = useMaintenanceMode();
+  
+  if (isMaintenanceMode) {
+    return <Maintenance />;
+  }
+  
+  return (
+    <Routes>
+      <Route path="/" element={<Home />} />
+      <Route path="/about" element={<About />} />
+      <Route path="/shop" element={<Shop />} />
+      <Route path="/product/:id" element={<ProductDetail />} />
+      <Route path="/contact" element={<Contact />} />
+      <Route path="/cart" element={<Cart />} />
+      <Route path="/checkout" element={<Checkout />} />
+      <Route path="/order-success" element={<OrderSuccess />} />
+      <Route path="/payment-failed" element={<PaymentFailed />} />
+      <Route path="/order-confirmation/token/:token" element={<OrderConfirmation />} />
+      <Route path="/pumps" element={<Pumps />} />
+      <Route path="/mechanical-seals" element={<Seals />} />
+      <Route path="/packing" element={<Packing />} />
+      <Route path="/service-repair" element={<Service />} />
+      <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+      <Route path="/refund-policy" element={<RefundPolicy />} />
+      <Route path="/new-equipment" element={<NewEquipment />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
+  );
+};
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <CartProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/shop" element={<Shop />} />
-            <Route path="/product/:id" element={<ProductDetail />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/checkout" element={<Checkout />} />
-            <Route path="/order-success" element={<OrderSuccess />} />
-            <Route path="/payment-failed" element={<PaymentFailed />} />
-            <Route path="/order-confirmation/token/:token" element={<OrderConfirmation />} />
-            <Route path="/pumps" element={<Pumps />} />
-            <Route path="/mechanical-seals" element={<Seals />} />
-            <Route path="/packing" element={<Packing />} />
-            <Route path="/service-repair" element={<Service />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/refund-policy" element={<RefundPolicy />} />
-            <Route path="/new-equipment" element={<NewEquipment />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </CartProvider>
+      <MaintenanceProvider>
+        <CartProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <AppRoutes />
+          </BrowserRouter>
+        </CartProvider>
+      </MaintenanceProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
