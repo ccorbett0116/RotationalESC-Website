@@ -7,7 +7,7 @@ import Layout from "@/components/Layout";
 import { useState, useEffect } from "react";
 import { apiService, CompanyInfo } from "@/services/api";
 
-const RefundPolicy = () => {
+const ShippingPolicy = () => {
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -49,7 +49,7 @@ const RefundPolicy = () => {
   return (
       <Layout>
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-3xl font-bold text-foreground mb-8">Refund Policy</h1>
+          <h1 className="text-3xl font-bold text-foreground mb-8">Shipping Policy</h1>
 
           <div className="space-y-6">
             <Alert>
@@ -62,9 +62,9 @@ const RefundPolicy = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Return and Refund Policy</CardTitle>
+                <CardTitle>Shipping Policy</CardTitle>
                 <p className="text-muted-foreground">
-                  Last updated: {new Date('2025-09-06').toLocaleDateString()}
+                  Last updated: {new Date('2025-09-10').toLocaleDateString()}
                 </p>
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none space-y-6">
@@ -235,4 +235,4 @@ const RefundPolicy = () => {
   );
 };
 
-export default RefundPolicy;
+export default ShippingPolicy;
