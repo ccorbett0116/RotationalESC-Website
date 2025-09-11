@@ -716,7 +716,13 @@ const Checkout = () => {
                     <span>{orderTotals.tax_amount === 0 ? 'Tax will be handled at customs' : formatCAD(orderTotals.tax_amount)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
-                    * Shipping will be calculated and communicated via email
+                    *{" "}
+                    <Link 
+                      to="/shipping-policy" 
+                      className="underline hover:text-primary transition-colors"
+                    >
+                      Shipping will be calculated and communicated via email
+                    </Link>
                   </div>
                 </div>
 

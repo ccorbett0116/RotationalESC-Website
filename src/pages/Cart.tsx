@@ -449,7 +449,13 @@ const Cart = () => {
                 </div>
 
                 <div className="text-xs text-muted-foreground mt-2">
-                  * Shipping will be calculated and communicated via email
+                  *{" "}
+                  <Link 
+                    to="/shipping-policy" 
+                    className="underline hover:text-primary transition-colors"
+                  >
+                    Shipping will be calculated and communicated via email
+                  </Link>
                 </div>
 
                 <Separator />
