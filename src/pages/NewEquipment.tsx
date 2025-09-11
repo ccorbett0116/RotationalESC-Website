@@ -1,5 +1,5 @@
 import Layout from "@/components/Layout";
-import Gallery from "@/components/Gallery";
+import NewGallery from "@/components/NewGallery";
 
 const NewEquipment = () => {
     return (
@@ -17,7 +17,7 @@ const NewEquipment = () => {
                 </div>
             </section>
             
-            <Gallery />
+            <NewGallery />
         </Layout>
     );
 };
