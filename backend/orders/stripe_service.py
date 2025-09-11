@@ -352,7 +352,7 @@ class StripeService:
                     'customer_name': f"{order.customer_first_name} {order.customer_last_name}",
                     'total_items': len(order_items)
                 },
-                'success_url': settings.STRIPE_SUCCESS_URL + f'?session_id={{CHECKOUT_SESSION_ID}}&token={order.confirmation_token}',
+                'success_url': settings.STRIPE_SUCCESS_URL + f'?session_id={{CHECKOUT_SESSION_ID}}&order={order.order_number}&token={order.confirmation_token}',
                 'cancel_url': settings.STRIPE_CANCEL_URL + f'?token={order.confirmation_token}',
             }
             
