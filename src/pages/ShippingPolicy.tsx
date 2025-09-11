@@ -221,7 +221,7 @@ const ShippingPolicy = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground mb-4">
-                  If you have questions about our refund policy or need to initiate a return,
+                  If you have questions about our shipping policy,
                   our customer service team is here to help.
                 </p>
                 <Link to="/contact">
