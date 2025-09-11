@@ -713,7 +713,7 @@ const Checkout = () => {
                   </div>
                   <div className="flex justify-between">
                     <span>Tax</span>
-                    <span>{orderTotals.tax_amount === 0 ? 'No Tax' : formatCAD(orderTotals.tax_amount)}</span>
+                    <span>{orderTotals.tax_amount === 0 ? 'Tax will be handled at customs' : formatCAD(orderTotals.tax_amount)}</span>
                   </div>
                   <div className="text-xs text-muted-foreground mt-2">
                     * Shipping will be calculated and communicated via email
