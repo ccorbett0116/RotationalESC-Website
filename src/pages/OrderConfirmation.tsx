@@ -382,7 +382,7 @@ const OrderConfirmation = () => {
                 </div>
                 <h4 className="font-semibold mb-2">Shipping</h4>
                 <p className="text-sm text-muted-foreground">
-                  You'll receive tracking information via email
+                  You'll receive an email to discuss shipping details
                 </p>
               </div>
               <div className="text-center p-4">
@@ -391,7 +391,7 @@ const OrderConfirmation = () => {
                 </div>
                 <h4 className="font-semibold mb-2">Delivery</h4>
                 <p className="text-sm text-muted-foreground">
-                  Your equipment will arrive as scheduled
+                  Your equipment will arrive promptly
                 </p>
               </div>
             </div>
