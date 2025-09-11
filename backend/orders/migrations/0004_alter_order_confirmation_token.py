@@ -7,13 +7,17 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('orders', '0003_populate_tokens'),
+        ("orders", "0003_populate_tokens"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='order',
-            name='confirmation_token',
-            field=models.UUIDField(default=uuid.uuid4, editable=False, unique=True),
+            model_name="order",
+            name="confirmation_token",
+            field=models.UUIDField(
+                default=uuid.uuid4,
+                editable=False,
+                unique=True,
+            ),
         ),
     ]
