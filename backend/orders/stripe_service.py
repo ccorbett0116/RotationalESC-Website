@@ -339,7 +339,7 @@ class StripeService:
                 payment_method_types=['card'],
                 line_items=line_items,
                 customer_email=order.customer_email,
-                automatic_tax={'enabled': True},
+                automatic_tax={'enabled': True}, #CHANGE ME TO BE CALCULATED; NOT AUTOMATIC-> *1.13 for canada, *0 for international
                 metadata={
                     'order_number': order.order_number,
                     'customer_name': f"{order.customer_first_name} {order.customer_last_name}",
