@@ -1,9 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
+import { useCanonical } from "@/hooks/useCanonical";
 import { useState, useEffect } from "react";
 import { apiService, CompanyInfo } from "@/services/api";
 
 const PrivacyPolicy = () => {
+  useCanonical('/privacy-policy');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
 

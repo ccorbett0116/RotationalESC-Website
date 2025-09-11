@@ -8,6 +8,7 @@ import { ArrowLeft, ShoppingCart, Share2, Download, FileText, Image, File } from
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCanonical } from "@/hooks/useCanonical";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
@@ -49,6 +50,7 @@ const downloadFile = (attachment: any, toast: any) => {
 
 const ProductDetail = () => {
   const { id } = useParams();
+  useCanonical(`/product/${id}`);
   const navigate = useNavigate();
   const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();

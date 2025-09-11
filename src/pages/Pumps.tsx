@@ -1,7 +1,9 @@
 import Layout from "@/components/Layout";
 import SectionsWithManufacturers from "@/components/SectionsWithManufacturers";
+import { useCanonical } from "@/hooks/useCanonical";
 
 const Pumps = () => {
+    useCanonical('/pumps');
     return (
         <Layout>
             <SectionsWithManufacturers 

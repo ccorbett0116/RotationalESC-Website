@@ -1,6 +1,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Award } from "lucide-react";
+import { useCanonical } from "@/hooks/useCanonical";
 // Define services inline
 const services = [
   {
@@ -30,6 +31,7 @@ import NewAboutUsImage from "@/assets/aboutUs.png";
 
 
 const About = () => {
+  useCanonical('/about');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

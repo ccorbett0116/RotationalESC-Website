@@ -7,11 +7,13 @@ import { Search, Filter, X } from "lucide-react";
 import { apiService, Product, Category, ProductSpecification } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCanonical } from "@/hooks/useCanonical";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import ShopImage from "@/assets/ShopImage.jpg"; 
 
 const Shop = () => {
+  useCanonical('/shop');
   const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();
   const [allProducts, setAllProducts] = useState<Product[]>([]);

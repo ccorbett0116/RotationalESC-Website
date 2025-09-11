@@ -6,8 +6,10 @@ import { AlertCircle, Phone, Mail } from "lucide-react";
 import Layout from "@/components/Layout";
 import { useState, useEffect } from "react";
 import { apiService, CompanyInfo } from "@/services/api";
+import { useCanonical } from "@/hooks/useCanonical";
 
 const RefundPolicy = () => {
+  useCanonical('/refund-policy');
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
 

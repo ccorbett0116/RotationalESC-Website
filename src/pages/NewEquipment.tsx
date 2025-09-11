@@ -1,7 +1,9 @@
 import Layout from "@/components/Layout";
 import Gallery from "@/components/Gallery";
+import { useCanonical } from "@/hooks/useCanonical";
 
 const NewEquipment = () => {
+    useCanonical('/new-equipment');
     return (
         <Layout>
             <section className="py-16 bg-gradient-to-r from-primary/10 to-accent/10">

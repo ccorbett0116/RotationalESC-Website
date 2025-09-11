@@ -7,6 +7,7 @@ import heroImage from "@/assets/hero-industrial.jpg";
 import ProductCard from "@/components/ProductCard";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useEffect, useState } from "react";
+import { useCanonical } from "@/hooks/useCanonical";
 // Define services inline
 const services = [
   {
@@ -30,6 +31,7 @@ const services = [
 ];
 
 const Home = () => {
+  useCanonical('/');
   const [products, setProducts] = useState<Product[]>([]);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);

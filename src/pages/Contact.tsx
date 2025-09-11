@@ -8,11 +8,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { apiService, ContactFormData, CompanyInfo } from "@/services/api";
+import { useCanonical } from "@/hooks/useCanonical";
 import Layout from "@/components/Layout";
 import ContactImage from "@/assets/Contact.jpg";
 
 
 const Contact = () => {
+  useCanonical('/contact');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
