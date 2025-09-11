@@ -64,7 +64,7 @@ const ShippingPolicy = () => {
               <CardHeader>
                 <CardTitle>Shipping Policy</CardTitle>
                 <p className="text-muted-foreground">
-                  Last updated: {new Date('2025-09-10').toLocaleDateString()}
+                  Last updated: {new Date('2025-09-11').toLocaleDateString()}
                 </p>
               </CardHeader>
               <CardContent className="prose prose-sm max-w-none space-y-6">
