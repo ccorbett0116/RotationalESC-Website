@@ -12,6 +12,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import CartProductCard from "@/components/CartProductCard";
 
 const Cart = () => {
   const { items: cartItems, updateQuantity: updateCartQuantity, removeItem: removeCartItem } = useCart();
@@ -409,109 +410,21 @@ const Cart = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           {/* Cart Items */}
-          <div className="lg:col-span-2 space-y-4">
-            {cartWithDetails.map((item) => (
-              <Card key={item.productId}>
-                <CardContent className="p-6">
-                  <div className="flex flex-col sm:flex-row gap-4">
-                    {/* Product Image */}
-                    <div className="w-full sm:w-24 h-24 bg-muted rounded-lg overflow-hidden flex-shrink-0">
-                      {item.product.primary_image ? (
-                        <img
-                          src={item.product.primary_image}
-                          alt={item.product.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                          <span className="text-xs text-muted-foreground">No Image</span>
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Product Details */}
-                    <div className="flex-1 min-w-0 space-y-3 sm:space-y-0">
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0 mb-2">
-                        <div>
-                          <h3 className="font-semibold text-foreground">
-                            <Link
-                              to={`/product/${item.product.id}`}
-                              className="hover:text-primary"
-                            >
-                              {item.product.name}
-                            </Link>
-                          </h3>
-                          <div className="flex gap-2 mt-1">
-                            <Badge variant="outline">
-                              {item.product.category.name}
-                            </Badge>
-                            <Badge 
-                              variant={item.product.is_available ? "default" : "secondary"}
-                              className={item.product.is_available ? "bg-green-100 text-green-800" : ""}
-                            >
-                              {item.product.is_available ? `${item.product.quantity} in stock` : "Out of Stock"}
-                            </Badge>
-                              {/* Removed Low Stock badge as requested */}
-                          </div>
-                        </div>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeItem(item.productId)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-
-                      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3 sm:gap-0">
-                        {/* Quantity Controls */}
-                        <div className="flex items-center gap-2 justify-center sm:justify-start">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.productId, item.quantity - 1)}
-                            disabled={item.quantity <= 1}
-                          >
-                            <Minus className="h-3 w-3" />
-                          </Button>
-                          <span className="w-12 text-center">{item.quantity}</span>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => updateQuantity(item.productId, item.quantity + 1)}
-                            disabled={!item.product.is_available || item.quantity >= item.product.quantity}
-                          >
-                            <Plus className="h-3 w-3" />
-                          </Button>
-                        </div>
-
-                        {/* Price */}
-                        <div className="text-center sm:text-right">
-                          <div className="text-lg font-semibold text-primary">
-                            {formatCAD(Number(item.product.price) * item.quantity)}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatCAD(Number(item.product.price))} each
-                          </div>
-                          {item.product.is_available && item.product.quantity <= 3 && (
-                            <div className="text-xs text-amber-600 mt-1">
-                              <Link to="/contact" className="hover:underline flex items-center gap-1 justify-center sm:justify-end">
-                                <MessageCircle className="h-2.5 w-2.5" />
-                                Need more?
-                              </Link>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="lg:col-span-2">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {cartWithDetails.map((item) => (
+                <CartProductCard
+                  key={item.productId}
+                  product={item.product}
+                  quantity={item.quantity}
+                  onUpdateQuantity={updateQuantity}
+                  onRemoveItem={removeItem}
+                />
+              ))}
+            </div>
 
             {/* Continue Shopping */}
-            <div className="pt-4 text-center sm:text-left">
+            <div className="pt-6 text-center sm:text-left">
               <Link to="/shop">
                 <Button variant="outline">Continue Shopping</Button>
               </Link>
