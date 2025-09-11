@@ -189,7 +189,7 @@ class GallerySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Gallery
-        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'is_featured', 'created_at', 'updated_at', 'image_url']
+        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
         if obj.image_data:
@@ -202,7 +202,7 @@ class NewGallerySerializer(serializers.ModelSerializer):
     
     class Meta:
         model = NewGallery
-        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'is_featured', 'created_at', 'updated_at', 'image_url']
+        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
         if obj.image_data:

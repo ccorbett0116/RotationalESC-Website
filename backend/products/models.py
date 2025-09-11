@@ -308,7 +308,6 @@ class Gallery(models.Model):
     content_type = models.CharField(max_length=100, default='image/jpeg')
     alt_text = models.CharField(max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Display order (lower numbers appear first)")
-    is_featured = models.BooleanField(default=False, help_text="Show on homepage or featured sections")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -342,7 +341,6 @@ class NewGallery(models.Model):
     content_type = models.CharField(max_length=100, default='image/jpeg')
     alt_text = models.CharField(max_length=200, blank=True)
     order = models.PositiveIntegerField(default=0, help_text="Display order (lower numbers appear first)")
-    is_featured = models.BooleanField(default=False, help_text="Show on homepage or featured sections")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

@@ -250,7 +250,6 @@ export interface GalleryImage {
   content_type: string;
   alt_text: string;
   order: number;
-  is_featured: boolean;
   created_at: string;
   updated_at: string;
 }

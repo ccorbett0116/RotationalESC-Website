@@ -611,7 +611,7 @@ class GalleryAdminForm(forms.ModelForm):
     
     class Meta:
         model = Gallery
-        fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured']
+        fields = ['title', 'description', 'image_file', 'alt_text', 'order']
         exclude = ['image_data', 'filename', 'content_type']
     
     def __init__(self, *args, **kwargs):
@@ -657,10 +657,10 @@ class GalleryAdminForm(forms.ModelForm):
 @admin.register(Gallery)
 class GalleryAdmin(admin.ModelAdmin):
     form = GalleryAdminForm
-    list_display = ['title', 'description_excerpt', 'is_featured', 'order', 'image_preview_small', 'created_at']
-    list_filter = ['is_featured', 'created_at']
+    list_display = ['title', 'description_excerpt', 'order', 'image_preview_small', 'created_at']
+    list_filter = ['created_at']
     search_fields = ['title', 'description', 'alt_text']
-    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured', 'image_preview']
+    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'image_preview']
     readonly_fields = ['image_preview', 'created_at', 'updated_at']
     ordering = ['order', 'created_at']
     
@@ -687,7 +687,7 @@ class NewGalleryAdminForm(forms.ModelForm):
     
     class Meta:
         model = NewGallery
-        fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured']
+        fields = ['title', 'description', 'image_file', 'alt_text', 'order']
         exclude = ['image_data', 'filename', 'content_type']
     
     def __init__(self, *args, **kwargs):
@@ -733,10 +733,10 @@ class NewGalleryAdminForm(forms.ModelForm):
 @admin.register(NewGallery)
 class NewGalleryAdmin(admin.ModelAdmin):
     form = NewGalleryAdminForm
-    list_display = ['title', 'description_excerpt', 'is_featured', 'order', 'image_preview_small', 'created_at']
-    list_filter = ['is_featured', 'created_at']
+    list_display = ['title', 'description_excerpt', 'order', 'image_preview_small', 'created_at']
+    list_filter = ['created_at']
     search_fields = ['title', 'description', 'alt_text']
-    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'is_featured', 'image_preview']
+    fields = ['title', 'description', 'image_file', 'alt_text', 'order', 'image_preview']
     readonly_fields = ['image_preview', 'created_at', 'updated_at']
     ordering = ['order', 'created_at']
     
