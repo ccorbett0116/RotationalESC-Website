@@ -279,40 +279,24 @@ class Manufacturer(models.Model):
         return None
 
     def save(self, *args, **kwargs):
-        """Process and resize image to square format if image_data is present"""
         if self.image_data and isinstance(self.image_data, bytes):
             try:
-                # Open the image
                 image = Image.open(io.BytesIO(self.image_data))
-                
-                # Convert to RGB if necessary
+
                 if image.mode in ('RGBA', 'P'):
                     image = image.convert('RGB')
-                
-                # Resize to square (300x300) maintaining aspect ratio
-                size = (300, 300)
-                
-                # Create a square image with white background
-                square_image = Image.new('RGB', size, (255, 255, 255))
-                
-                # Calculate position to center the original image
-                image.thumbnail(size, Image.Resampling.LANCZOS)
-                x = (size[0] - image.width) // 2
-                y = (size[1] - image.height) // 2
-                
-                # Paste the resized image onto the square background
-                square_image.paste(image, (x, y))
-                
-                # Save the processed image back to bytes
+
+                # Resize longest side to 300px, keep aspect ratio
+                image.thumbnail((300, 300), Image.Resampling.LANCZOS)
+
                 output = io.BytesIO()
-                square_image.save(output, format='JPEG', quality=90)
+                image.save(output, format='JPEG', quality=90)
                 self.image_data = output.getvalue()
                 self.content_type = 'image/jpeg'
-                
-            except Exception as e:
-                # If image processing fails, keep original data
+
+            except Exception:
                 pass
-        
+
         super().save(*args, **kwargs)
 
 
