@@ -37,4 +37,5 @@ urlpatterns = [
     path('api/', include('orders.urls')),
     path('api/contact/', include('contact.urls')),
     path('api/company/', include('company.urls')),
+    path('api/analytics/', include('analytics.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

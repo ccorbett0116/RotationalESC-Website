@@ -1,0 +1,107 @@
+{% extends "admin/index.html" %}
+{% load static %}
+
+{% block content %}
+{{ block.super }}
+
+<div style="margin-top: 30px;">
+    <div class="module">
+        <h2>📊 Website Analytics</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; padding: 20px;">
+            <a href="{% url 'analytics_dashboard' %}" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #417690, #5b9bd5); color: white; padding: 20px; border-radius: 8px; text-align: center; transition: transform 0.2s;" 
+                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 2em; margin-bottom: 10px;">📈</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Overview Dashboard</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Key metrics and trends</div>
+                </div>
+            </a>
+            
+            <a href="{% url 'visitor_analytics' %}" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #70ad47, #a9d18e); color: white; padding: 20px; border-radius: 8px; text-align: center; transition: transform 0.2s;" 
+                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 2em; margin-bottom: 10px;">👥</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Visitor Analytics</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Geographic & ISP data</div>
+                </div>
+            </a>
+            
+            <a href="{% url 'product_analytics' %}" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #a64d79, #d4a8c7); color: white; padding: 20px; border-radius: 8px; text-align: center; transition: transform 0.2s;" 
+                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 2em; margin-bottom: 10px;">🛍️</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Product Analytics</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Popular products & categories</div>
+                </div>
+            </a>
+            
+            <a href="{% url 'real_time_analytics' %}" style="text-decoration: none;">
+                <div style="background: linear-gradient(135deg, #c55a11, #ffc000); color: white; padding: 20px; border-radius: 8px; text-align: center; transition: transform 0.2s;" 
+                     onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                    <div style="font-size: 2em; margin-bottom: 10px;">⚡</div>
+                    <div style="font-weight: bold; font-size: 1.1em;">Real-time Data</div>
+                    <div style="font-size: 0.9em; opacity: 0.9;">Live visitor activity</div>
+                </div>
+            </a>
+        </div>
+        
+        <div style="padding: 20px; background: #f8f9fa; border-radius: 8px; margin-top: 20px;">
+            <h3 style="margin-top: 0;">📋 Quick Analytics Summary</h3>
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 20px;">
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #417690;">{{ total_visitors|default:"0" }}</div>
+                    <div style="color: #666;">Total Visitors</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #70ad47;">{{ visitors_today|default:"0" }}</div>
+                    <div style="color: #666;">Today's Visitors</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #c55a11;">{{ page_views_today|default:"0" }}</div>
+                    <div style="color: #666;">Page Views Today</div>
+                </div>
+                <div style="text-align: center;">
+                    <div style="font-size: 1.8em; font-weight: bold; color: #a64d79;">{{ active_visitors|default:"0" }}</div>
+                    <div style="color: #666;">Online Now</div>
+                </div>
+            </div>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 15px; background: #e8f4fd; border-left: 4px solid #417690; border-radius: 4px;">
+            <p style="margin: 0;"><strong>💡 Tip:</strong> The analytics system automatically tracks all visitor activity including IP addresses, location data, ISP information, page views, product interactions, and user events. Use the dashboards above to explore detailed insights about your website traffic and user behavior.</p>
+        </div>
+    </div>
+</div>
+
+<style>
+.analytics-card:hover {
+    transform: scale(1.05);
+}
+</style>
+
+<script>
+// Load quick stats via AJAX
+document.addEventListener('DOMContentLoaded', function() {
+    fetch('/api/analytics/admin-data/dashboard/?timeframe=day')
+        .then(response => response.json())
+        .then(data => {
+            if (data && data.summary) {
+                // Update the summary cards with real data
+                const elements = {
+                    'visitors_today': data.summary.unique_visitors,
+                    'page_views_today': data.summary.total_page_views,
+                };
+                
+                Object.keys(elements).forEach(id => {
+                    const element = document.querySelector(`[data-stat="${id}"]`);
+                    if (element) {
+                        element.textContent = elements[id].toLocaleString();
+                    }
+                });
+            }
+        })
+        .catch(err => console.log('Analytics data not available:', err));
+});
+</script>
+
+{% endblock %}
