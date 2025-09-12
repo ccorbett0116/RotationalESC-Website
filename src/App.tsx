@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "./contexts/CartContext";
 import { MaintenanceProvider, useMaintenanceMode } from "./contexts/MaintenanceContext";
 import ScrollToTop from "./components/ScrollToTop";
+import AnalyticsWrapper from "./components/AnalyticsWrapper";
 import Home from "./pages/Home";
 import About from "./pages/About";
 import Shop from "./pages/Shop";
@@ -79,7 +80,9 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <ScrollToTop />
-            <AppRoutes />
+            <AnalyticsWrapper>
+              <AppRoutes />
+            </AnalyticsWrapper>
           </BrowserRouter>
         </CartProvider>
       </MaintenanceProvider>

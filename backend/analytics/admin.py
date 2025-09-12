@@ -298,7 +298,7 @@ class AnalyticsDashboardAdmin(admin.ModelAdmin):
         daily_stats = []
         for i in range(29, -1, -1):
             day = now.date() - timedelta(days=i)
-            day_start = timezone.datetime.combine(day, timezone.datetime.min.time())
+            day_start = timezone.make_aware(timezone.datetime.combine(day, timezone.datetime.min.time()))
             day_end = day_start + timedelta(days=1)
             
             visitors = Visitor.objects.filter(

@@ -8,6 +8,7 @@ import { apiService, Product, Category, ProductSpecification } from "@/services/
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
+import { useSearchAnalytics } from "@/hooks/useAnalytics";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
 import ShopImage from "@/assets/ShopImage.jpg"; 
@@ -16,6 +17,7 @@ const Shop = () => {
   useCanonical('/shop');
   const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();
+  const { trackSearchQuery } = useSearchAnalytics();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -145,6 +147,17 @@ const Shop = () => {
 
     return sorted;
   }, [allProducts, selectedCategory, searchTerm, sortBy, searchProducts]);
+
+  // Track search queries
+  useEffect(() => {
+    if (searchTerm.trim() && searchTerm.length > 2) {
+      const timer = setTimeout(() => {
+        trackSearchQuery(searchTerm, filteredProducts);
+      }, 500); // Debounce search tracking
+      
+      return () => clearTimeout(timer);
+    }
+  }, [searchTerm, filteredProducts, trackSearchQuery]);
 
   const handleAddToCart = (product: Product) => {
     const currentQuantityInCart = getItemQuantity(product.id);

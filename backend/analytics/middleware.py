@@ -89,14 +89,23 @@ class AnalyticsMiddleware(MiddlewareMixin):
         """Get existing visitor or create new one with location data"""
         try:
             visitor = Visitor.objects.get(ip_address=ip_address)
-            # Update last visit and visit count
+            
+            # Only increment visit count if this is a new session
+            session_id = request.session.get('analytics_session_id')
+            if not session_id or not request.session.get('visit_counted'):
+                visitor.visit_count += 1
+                request.session['visit_counted'] = True
+            
+            # Always update last visit time
             visitor.last_visit = timezone.now()
-            visitor.visit_count += 1
             visitor.save()
             return visitor
         except Visitor.DoesNotExist:
             # Create new visitor with location data
-            return self.create_visitor_with_location(ip_address, request)
+            visitor = self.create_visitor_with_location(ip_address, request)
+            # Mark as counted for this session
+            request.session['visit_counted'] = True
+            return visitor
 
     def create_visitor_with_location(self, ip_address, request):
         """Create a new visitor with location and ISP data"""
@@ -189,6 +198,16 @@ class AnalyticsMiddleware(MiddlewareMixin):
     def track_page_view(self, request, response):
         """Track a page view"""
         try:
+            # Prevent duplicate page views within the same session for the same path
+            # within a short time window (to handle React strict mode and rapid refreshes)
+            session_key = f"pageview_{request.analytics_session_id}_{request.path}"
+            last_view_time = request.session.get(session_key)
+            current_time = timezone.now().timestamp()
+            
+            # Only track if last view was more than 5 seconds ago or doesn't exist
+            if last_view_time and (current_time - last_view_time) < 5:
+                return
+            
             page_view_data = {
                 'visitor': request.visitor,
                 'session_id': getattr(request, 'analytics_session_id', ''),
@@ -203,6 +222,9 @@ class AnalyticsMiddleware(MiddlewareMixin):
                 page_view_data['page_title'] = self.extract_page_title(response.content)
 
             PageView.objects.create(**page_view_data)
+            
+            # Update the session timestamp for this page view
+            request.session[session_key] = current_time
 
         except Exception as e:
             logger.error(f"Failed to track page view: {e}")

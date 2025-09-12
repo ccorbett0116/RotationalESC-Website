@@ -57,6 +57,26 @@ services:
     depends_on:
       - frontend
 
+  analytics-cron:
+    image: ghcr.io/ccorbett0116/rotationalesc-website/backend:latest
+    container_name: rotational-analytics-cron
+    volumes:
+      - ./database:/app/database
+      - ./backend/media:/app/media
+      - ./scripts:/app/scripts:ro
+    env_file:
+      - .env
+    environment:
+      - DEBUG=${DEBUG:-True}
+    networks:
+      - rotational-network
+    depends_on:
+      - backend
+    entrypoint: >
+      sh -c "echo '0 2 * * * cd /app && python manage.py update_analytics --days=1 >> /var/log/analytics.log 2>&1' | crontab - &&
+             echo 'Analytics cron job scheduled for 2 AM daily' &&
+             crond -f -l 2"
+
 networks:
   rotational-network:
     driver: bridge

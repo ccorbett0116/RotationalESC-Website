@@ -87,7 +87,7 @@ class AnalyticsService:
                 ).delete()
                 
                 # Calculate date range
-                start_date = timezone.datetime.combine(target_date, timezone.datetime.min.time())
+                start_date = timezone.make_aware(timezone.datetime.combine(target_date, timezone.datetime.min.time()))
                 end_date = start_date + timedelta(days=1)
                 
                 # Basic metrics

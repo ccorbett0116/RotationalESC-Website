@@ -9,6 +9,7 @@ import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
+import { useProductAnalytics } from "@/hooks/useAnalytics";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
@@ -61,6 +62,9 @@ const ProductDetail = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   
+  // Initialize analytics for this product
+  const analytics = useProductAnalytics(id || '', product?.name || '');
+  
   useEffect(() => {
     const fetchProduct = async () => {
       if (!id) return;
@@ -108,6 +112,10 @@ const ProductDetail = () => {
     }
     
     addItem(product.id, quantity);
+    
+    // Track add to cart event
+    analytics.trackAddToCart();
+    
     toast({
       title: "Added to cart",
       description: `${quantity} x ${product.name} added to your cart`,
@@ -221,7 +229,10 @@ const ProductDetail = () => {
                 {product.images.map((image, index) => (
                   <button
                     key={image.id}
-                    onClick={() => setCurrentImageIndex(index)}
+                    onClick={() => {
+                      setCurrentImageIndex(index);
+                      analytics.trackImageView(image.id.toString());
+                    }}
                     className={`flex-shrink-0 w-20 h-20 rounded-md overflow-hidden border-2 transition-all duration-200 hover:scale-105 ${
                       currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary/50'
                     }`}

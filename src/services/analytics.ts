@@ -47,6 +47,7 @@ class AnalyticsService {
   private isTracking: boolean = true;
   private pendingEvents: any[] = [];
   private flushTimer: NodeJS.Timeout | null = null;
+  private requestCache: Map<string, number> = new Map();
 
   constructor() {
     this.initializeTracking();
@@ -126,6 +127,18 @@ class AnalyticsService {
 
   private async sendRequest(endpoint: string, data: any): Promise<void> {
     if (!this.isTracking) return;
+
+    // Create a cache key to prevent duplicate requests within a short time
+    const cacheKey = `${endpoint}_${JSON.stringify(data)}`;
+    const now = Date.now();
+    const lastRequest = this.requestCache.get(cacheKey);
+    
+    // If the same request was made within the last 2 seconds, skip it
+    if (lastRequest && (now - lastRequest) < 2000) {
+      return;
+    }
+    
+    this.requestCache.set(cacheKey, now);
 
     try {
       await fetch(`${API_BASE_URL}/analytics/${endpoint}`, {
@@ -319,6 +332,7 @@ class AnalyticsService {
       this.flushTimer = null;
     }
     this.flush();
+    this.requestCache.clear();
   }
 }
 
