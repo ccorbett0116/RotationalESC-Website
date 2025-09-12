@@ -30,10 +30,12 @@ const Shop = () => {
         setLoading(true);
         const [categoriesData, productsData] = await Promise.all([
           apiService.getCategories(),
-          apiService.getProducts({ ordering: 'name' })
+          apiService.getProducts()
         ]);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        setAllProducts(Array.isArray(productsData?.results) ? productsData.results : []);
+        const products = Array.isArray(productsData?.results) ? productsData.results : [];
+        console.log('Products with order field:', products.map(p => ({ name: p.name, order: p.order })));
+        setAllProducts(products);
       } catch (error) {
         console.error('Error fetching data:', error);
         setCategories([]);
@@ -120,6 +122,7 @@ const Shop = () => {
           // Products with order values first (ascending), then products without order (null)
           const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
           const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+          console.log(`Comparing: ${a.name} (order: ${a.order}) vs ${b.name} (order: ${b.order}) => aOrder: ${aOrder}, bOrder: ${bOrder}`);
           if (aOrder !== bOrder) {
             return aOrder - bOrder;
           }
