@@ -202,7 +202,7 @@ class CategoryAdmin(admin.ModelAdmin):
 @admin.register(Product)
 class ProductAdmin(admin.ModelAdmin):
     form = ProductAdminForm
-    list_display = ['product_info', 'category_badge', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'attachments_count', 'created_date']
+    list_display = ['product_info', 'category_badge', 'order_display', 'price_display', 'quantity_display', 'active_status', 'stock_status', 'image_count', 'attachments_count', 'created_date']
     list_filter = ['category', 'active', 'created_at']
     search_fields = ['name', 'description', 'tags']
     inlines = [ProductImageInline, ProductSpecificationInline, ProductAttachmentInline]
@@ -212,7 +212,7 @@ class ProductAdmin(admin.ModelAdmin):
     date_hierarchy = 'created_at'
     fieldsets = (
         (None, {
-            'fields': ('name', 'description', 'price', 'category', 'active', 'quantity', 'tags')
+            'fields': ('name', 'description', 'price', 'category', 'active', 'quantity', 'order', 'tags')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -241,6 +241,16 @@ class ProductAdmin(admin.ModelAdmin):
         return format_html('<span style="color: #999;">No category</span>')
     category_badge.short_description = "Category"
     category_badge.admin_order_field = 'category__name'
+    
+    def order_display(self, obj):
+        if obj.order is not None:
+            return format_html(
+                '<span style="background: #8e44ad; color: white; padding: 3px 8px; border-radius: 8px; font-size: 11px; font-weight: bold;">⭐ {}</span>',
+                obj.order
+            )
+        return format_html('<span style="color: #999;">—</span>')
+    order_display.short_description = "Order"
+    order_display.admin_order_field = 'order'
     
     def price_display(self, obj):
         return format_html(
@@ -338,6 +348,9 @@ class ProductAdmin(admin.ModelAdmin):
         
         quantity_color = '#e74c3c' if obj.quantity == 0 else '#f39c12' if obj.quantity <= 5 else '#27ae60'
         
+        order_display = f'⭐ Featured (Order: {obj.order})' if obj.order is not None else 'Not featured'
+        order_color = '#8e44ad' if obj.order is not None else '#999'
+        
         summary = f'''
         <div style="background: #f8f9fa; padding: 15px; border-radius: 8px; margin: 10px 0; color: #333;">
             <h4 style="margin-top: 0; color: #2c3e50;">📋 Product Summary</h4>
@@ -346,6 +359,7 @@ class ProductAdmin(admin.ModelAdmin):
                     <p style="color: #333;"><strong style="color: #333;">Price:</strong> <span style="color: #27ae60; font-weight: bold;">${obj.price:.2f}</span></p>
                     <p style="color: #333;"><strong style="color: #333;">Active:</strong> {'✅ Yes' if obj.active else '❌ Disabled'}</p>
                     <p style="color: #333;"><strong style="color: #333;">Quantity:</strong> <span style="color: {quantity_color}; font-weight: bold;">{obj.quantity}</span></p>
+                    <p style="color: #333;"><strong style="color: #333;">Featured:</strong> <span style="color: {order_color}; font-weight: bold;">{order_display}</span></p>
                     <p style="color: #333;"><strong style="color: #333;">Stock Status:</strong> {'✅ Available' if obj.is_available else '❌ Not Available'}</p>
                     <p style="color: #333;"><strong style="color: #333;">Images:</strong> {images_count}</p>
                     <p style="color: #333;"><strong style="color: #333;">Specifications:</strong> {specs_count}</p>
