@@ -44,17 +44,66 @@ def track_product_view(request):
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Create product view record
-        product_view = ProductView.objects.create(
-            visitor=visitor,
-            product=product,
-            session_id=getattr(request, 'analytics_session_id', ''),
-            referrer=request.META.get('HTTP_REFERER', ''),
-            viewed_images=data.get('viewed_images', []),
-            viewed_attachments=data.get('viewed_attachments', []),
-            time_on_page=data.get('time_on_page'),
-            scroll_depth=data.get('scroll_depth')
-        )
+        # Get or create product view record (prevent duplicates)
+        # Use a time window approach - only one record per visitor+product per hour
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        session_id = getattr(request, 'analytics_session_id', '')
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        
+        # Try to find recent record for same visitor+product
+        try:
+            product_view = ProductView.objects.filter(
+                visitor=visitor,
+                product=product,
+                timestamp__gte=one_hour_ago
+            ).first()
+            created = False
+        except ProductView.DoesNotExist:
+            product_view = None
+            
+        if not product_view:
+            # Create new record
+            product_view = ProductView.objects.create(
+                visitor=visitor,
+                product=product,
+                session_id=session_id,
+                referrer=request.META.get('HTTP_REFERER', ''),
+                viewed_images=data.get('viewed_images', []),
+                viewed_attachments=data.get('viewed_attachments', []),
+                time_on_page=data.get('time_on_page'),
+                scroll_depth=data.get('scroll_depth')
+            )
+            created = True
+        
+        # If record exists, update it with new data
+        if not created:
+            updated = False
+            if data.get('time_on_page') is not None:
+                product_view.time_on_page = data.get('time_on_page')
+                updated = True
+            if data.get('scroll_depth') is not None:
+                product_view.scroll_depth = max(product_view.scroll_depth or 0, data.get('scroll_depth'))
+                updated = True
+            if data.get('added_to_cart') is not None:
+                product_view.added_to_cart = data.get('added_to_cart')
+                updated = True
+            if data.get('viewed_images'):
+                # Merge image lists
+                existing_images = set(product_view.viewed_images or [])
+                new_images = set(data.get('viewed_images', []))
+                product_view.viewed_images = list(existing_images.union(new_images))
+                updated = True
+            if data.get('viewed_attachments'):
+                # Merge attachment lists
+                existing_attachments = set(product_view.viewed_attachments or [])
+                new_attachments = set(data.get('viewed_attachments', []))
+                product_view.viewed_attachments = list(existing_attachments.union(new_attachments))
+                updated = True
+            
+            if updated:
+                product_view.save()
         
         # Update popular product stats asynchronously
         AnalyticsService.update_product_popularity(product)

@@ -152,12 +152,12 @@ const Shop = () => {
   useEffect(() => {
     if (searchTerm.trim() && searchTerm.length > 2) {
       const timer = setTimeout(() => {
-        trackSearchQuery(searchTerm, filteredProducts);
+        trackSearchQuery(searchTerm, filteredAndSortedProducts);
       }, 500); // Debounce search tracking
       
       return () => clearTimeout(timer);
     }
-  }, [searchTerm, filteredProducts, trackSearchQuery]);
+  }, [searchTerm, filteredAndSortedProducts, trackSearchQuery]);
 
   const handleAddToCart = (product: Product) => {
     const currentQuantityInCart = getItemQuantity(product.id);

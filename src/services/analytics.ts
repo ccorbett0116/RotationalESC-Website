@@ -63,7 +63,7 @@ class AnalyticsService {
       });
     });
 
-    // Track scroll depth
+    // Track scroll depth (for non-product pages)
     let scrollTimer: NodeJS.Timeout;
     window.addEventListener('scroll', () => {
       clearTimeout(scrollTimer);
@@ -71,22 +71,28 @@ class AnalyticsService {
         const scrollDepth = this.calculateScrollDepth();
         if (scrollDepth > this.maxScrollDepth) {
           this.maxScrollDepth = scrollDepth;
-          this.updatePageMetrics({
-            page_path: window.location.pathname,
-            scroll_depth: scrollDepth
-          });
+          // Only track page metrics for non-product pages
+          if (!window.location.pathname.includes('/product/')) {
+            this.updatePageMetrics({
+              page_path: window.location.pathname,
+              scroll_depth: scrollDepth
+            });
+          }
         }
       }, 250);
     });
 
-    // Track time on page before leaving
+    // Track time on page before leaving (for non-product pages)
     window.addEventListener('beforeunload', () => {
       const timeOnPage = Math.floor((Date.now() - this.startTime) / 1000);
-      this.updatePageMetrics({
-        page_path: window.location.pathname,
-        time_on_page: timeOnPage,
-        scroll_depth: this.maxScrollDepth
-      });
+      // Only track page metrics for non-product pages
+      if (!window.location.pathname.includes('/product/')) {
+        this.updatePageMetrics({
+          page_path: window.location.pathname,
+          time_on_page: timeOnPage,
+          scroll_depth: this.maxScrollDepth
+        });
+      }
       this.flush();
     });
 
@@ -228,6 +234,12 @@ class AnalyticsService {
     };
 
     await this.trackEvent(event);
+    
+    // Also update the ProductView record to mark as added to cart
+    await this.trackProductView({
+      product_id: productId,
+      added_to_cart: true
+    });
   }
 
   public async trackCartRemove(productId: string, productName: string): Promise<void> {

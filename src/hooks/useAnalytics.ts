@@ -108,19 +108,57 @@ export const useProductAnalytics = (productId: string, productName: string) => {
   const startTimeRef = useRef<number>(0);
   const viewedImagesRef = useRef<Set<string>>(new Set());
   const viewedAttachmentsRef = useRef<Set<string>>(new Set());
+  const maxScrollDepthRef = useRef<number>(0);
 
   useEffect(() => {
     // Track product view when component mounts
     startTimeRef.current = Date.now();
     analytics.trackProductView(productId);
 
-    // Track when leaving the product page
+    // Track scroll depth for product pages
+    const calculateScrollDepth = (): number => {
+      const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+      const docHeight = Math.max(
+        document.body.scrollHeight,
+        document.body.offsetHeight,
+        document.documentElement.clientHeight,
+        document.documentElement.scrollHeight,
+        document.documentElement.offsetHeight
+      );
+      const winHeight = window.innerHeight || document.documentElement.clientHeight;
+      const scrollPercent = (scrollTop + winHeight) / docHeight * 100;
+      return Math.min(Math.round(scrollPercent), 100);
+    };
+
+    let scrollTimer: NodeJS.Timeout;
+    const handleScroll = () => {
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        const scrollDepth = calculateScrollDepth();
+        if (scrollDepth > maxScrollDepthRef.current) {
+          maxScrollDepthRef.current = scrollDepth;
+          // Update scroll depth in real-time
+          analyticsService.trackProductView({
+            product_id: productId,
+            scroll_depth: scrollDepth
+          });
+        }
+      }, 250);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+
+    // Track when leaving the product page with updated data
     return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimer);
+      
       if (startTimeRef.current > 0) {
         const timeOnPage = Math.floor((Date.now() - startTimeRef.current) / 1000);
         analyticsService.trackProductView({
           product_id: productId,
           time_on_page: timeOnPage,
+          scroll_depth: maxScrollDepthRef.current,
           viewed_images: Array.from(viewedImagesRef.current),
           viewed_attachments: Array.from(viewedAttachmentsRef.current)
         });

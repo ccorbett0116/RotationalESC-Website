@@ -136,8 +136,8 @@ class UserEventAdmin(admin.ModelAdmin):
 @admin.register(PopularProduct)
 class PopularProductAdmin(admin.ModelAdmin):
     list_display = [
-        'product_name', 'total_views', 'unique_views', 'avg_time_viewed', 
-        'cart_additions', 'conversion_rate', 'last_viewed'
+        'product_name', 'total_views', 'unique_views', 'formatted_avg_time', 
+        'cart_additions', 'formatted_conversion_rate', 'purchases', 'formatted_purchase_rate', 'last_viewed'
     ]
     list_filter = ['last_viewed', 'updated_at']
     search_fields = ['product__name']
@@ -154,6 +154,21 @@ class PopularProductAdmin(admin.ModelAdmin):
             return format_html('<a href="{}">View Product</a>', url)
         return 'No product'
     product_link.short_description = 'Product'
+    
+    def formatted_avg_time(self, obj):
+        """Format average time viewed to remove decimals"""
+        return f"{int(obj.avg_time_viewed)}s" if obj.avg_time_viewed else "0s"
+    formatted_avg_time.short_description = 'Avg Time'
+    
+    def formatted_conversion_rate(self, obj):
+        """Format conversion rate to 1 decimal place"""
+        return f"{obj.conversion_rate:.1f}%" if obj.conversion_rate else "0.0%"
+    formatted_conversion_rate.short_description = 'Cart Rate'
+    
+    def formatted_purchase_rate(self, obj):
+        """Format purchase rate to 1 decimal place"""
+        return f"{obj.purchase_rate:.1f}%" if obj.purchase_rate else "0.0%"
+    formatted_purchase_rate.short_description = 'Purchase Rate'
     
     actions = ['recalculate_stats']
     

@@ -152,6 +152,8 @@ class PopularProduct(models.Model):
     avg_time_viewed = models.FloatField(default=0.0, help_text="Average time in seconds")
     cart_additions = models.PositiveIntegerField(default=0)
     conversion_rate = models.FloatField(default=0.0, help_text="Cart additions / unique views")
+    purchases = models.PositiveIntegerField(default=0, help_text="Actual purchases")
+    purchase_rate = models.FloatField(default=0.0, help_text="Purchases / unique views")
     last_viewed = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(auto_now=True)
     

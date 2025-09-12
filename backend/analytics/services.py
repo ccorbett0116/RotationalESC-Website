@@ -62,6 +62,16 @@ class AnalyticsService:
                 else:
                     popularity.conversion_rate = 0.0
                 
+                # Actual purchases from OrderItem
+                from orders.models import OrderItem
+                popularity.purchases = OrderItem.objects.filter(product=product).count()
+                
+                # Calculate purchase rate
+                if popularity.unique_views > 0:
+                    popularity.purchase_rate = (popularity.purchases / popularity.unique_views) * 100
+                else:
+                    popularity.purchase_rate = 0.0
+                
                 # Update last viewed
                 last_view = product_views.order_by('-timestamp').first()
                 if last_view:
