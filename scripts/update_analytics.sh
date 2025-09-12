@@ -1,9 +1,12 @@
-#!/bin/bash
+#!/bin/sh
 
 # Analytics Update Script
 # This script should be run daily via cron to update analytics summaries
 
 echo "Starting analytics update at $(date)"
+
+# Change to the project directory
+cd "/home/chance/Rotational Equipment Services" || exit 1
 
 # Check if backend container is running
 if ! docker compose ps backend | grep -q "Up"; then
