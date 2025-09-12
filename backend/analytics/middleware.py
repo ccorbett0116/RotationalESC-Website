@@ -19,18 +19,24 @@ class AnalyticsMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         """Process incoming requests for analytics tracking"""
-        # Skip analytics for admin, static files, and API health checks
-        skip_paths = ['/admin/', '/static/', '/media/', '/api/health/']
-        if any(request.path.startswith(path) for path in skip_paths):
+        # Skip analytics for admin, static files, and most API calls
+        skip_paths = ['/admin/', '/static/', '/media/']
+        api_skip_paths = ['/api/products/', '/api/categories/', '/api/company/', '/api/contact/']
+        
+        if (any(request.path.startswith(path) for path in skip_paths) or 
+            any(request.path.startswith(path) for path in api_skip_paths)):
             return None
 
+        # Only process visitor creation for actual page visits (not analytics API calls)
+        is_analytics_api = request.path.startswith('/api/analytics/')
+        
         # Get visitor IP address
         ip_address = self.get_client_ip(request)
         if not ip_address:
             return None
 
-        # Get or create visitor
-        visitor = self.get_or_create_visitor(ip_address, request)
+        # Get or create visitor (only count visits for non-API requests)
+        visitor = self.get_or_create_visitor(ip_address, request, count_visit=not is_analytics_api)
         
         # Generate session ID if not exists
         if not request.session.get('analytics_session_id'):
@@ -85,16 +91,17 @@ class AnalyticsMiddleware(MiddlewareMixin):
         except ValueError:
             return True
 
-    def get_or_create_visitor(self, ip_address, request):
+    def get_or_create_visitor(self, ip_address, request, count_visit=True):
         """Get existing visitor or create new one with location data"""
         try:
             visitor = Visitor.objects.get(ip_address=ip_address)
             
-            # Only increment visit count if this is a new session
-            session_id = request.session.get('analytics_session_id')
-            if not session_id or not request.session.get('visit_counted'):
-                visitor.visit_count += 1
-                request.session['visit_counted'] = True
+            # Only increment visit count if this is a new session AND we should count visits
+            if count_visit:
+                session_id = request.session.get('analytics_session_id')
+                if not session_id or not request.session.get('visit_counted'):
+                    visitor.visit_count += 1
+                    request.session['visit_counted'] = True
             
             # Always update last visit time
             visitor.last_visit = timezone.now()
@@ -103,8 +110,9 @@ class AnalyticsMiddleware(MiddlewareMixin):
         except Visitor.DoesNotExist:
             # Create new visitor with location data
             visitor = self.create_visitor_with_location(ip_address, request)
-            # Mark as counted for this session
-            request.session['visit_counted'] = True
+            # Mark as counted for this session (only if counting visits)
+            if count_visit:
+                request.session['visit_counted'] = True
             return visitor
 
     def create_visitor_with_location(self, ip_address, request):

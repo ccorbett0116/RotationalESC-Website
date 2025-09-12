@@ -27,6 +27,7 @@ export interface ProductViewData {
   viewed_attachments?: string[];
   time_on_page?: number;
   scroll_depth?: number;
+  added_to_cart?: boolean;
 }
 
 export interface SearchData {
