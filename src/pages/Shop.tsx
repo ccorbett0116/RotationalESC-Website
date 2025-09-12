@@ -21,7 +21,7 @@ const Shop = () => {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("all");
-  const [sortBy, setSortBy] = useState("name");
+  const [sortBy, setSortBy] = useState("featured");
 
   // Fetch data on component mount
   useEffect(() => {
@@ -116,6 +116,15 @@ const Shop = () => {
     // Apply sorting
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
+        case "featured":
+          // Products with order values first (ascending), then products without order (null)
+          const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
+          const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
+          if (aOrder !== bOrder) {
+            return aOrder - bOrder;
+          }
+          // If both have same order status (both null or both have values), sort by name
+          return a.name.localeCompare(b.name);
         case "name":
           return a.name.localeCompare(b.name);
         case "price":
@@ -156,6 +165,7 @@ const Shop = () => {
 
   // Sort options with descriptive labels
   const sortOptions = [
+    { value: "featured", label: "Sort by: Featured" },
     { value: "name", label: "Sort by: Name (A-Z)" },
     { value: "price", label: "Sort by: Price (Low to High)" },
     { value: "-price", label: "Sort by: Price (High to Low)" },

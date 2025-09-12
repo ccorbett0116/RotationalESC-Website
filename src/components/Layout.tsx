@@ -18,7 +18,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const navigation = [
     { name: 'Home', href: '/' },
-    { name: 'Shop', href: '/shop' },
     {
       name: 'Products',
       href: '#',
@@ -44,6 +43,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
         },
       ]
     },
+    { name: 'Shop', href: '/shop' },
     { name: 'About', href: '/about' },
     { name: 'Contact', href: '/contact' }
   ];

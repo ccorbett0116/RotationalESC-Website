@@ -173,6 +173,7 @@ export interface Product {
   active: boolean;
   quantity: number;
   is_available: boolean;
+  order?: number | null;
   tags_list: string[] | null;
   primary_image?: string;
   images?: ProductImage[];

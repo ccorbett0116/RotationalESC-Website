@@ -25,6 +25,7 @@ class Product(models.Model):
     category = models.ForeignKey(Category, on_delete=models.CASCADE, related_name='products')
     active = models.BooleanField(default=True, help_text="Whether this product is available for sale")
     quantity = models.PositiveIntegerField(default=0, help_text="Available quantity in stock")
+    order = models.PositiveIntegerField(null=True, blank=True, unique=True, help_text="Display order for featured products (lower numbers first, null values last)")
     tags = models.CharField(max_length=500, blank=True, null=True, help_text="Comma-separated tags")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
