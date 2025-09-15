@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { apiService, ContactFormData, CompanyInfo } from "@/services/api";
 import { useCanonical } from "@/hooks/useCanonical";
 import Layout from "@/components/Layout";
-import ContactImage from "@/assets/Contact.jpg";
+import ContactImage from "@/assets/contact-banner.jpg";
 
 
 const Contact = () => {

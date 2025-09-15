@@ -13,7 +13,6 @@ import { useProductAnalytics } from "@/hooks/useAnalytics";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
-import placeholderImage from "@/assets/centrifugal-pump.jpg";
 
 const getFileIcon = (attachment: any) => {
   if (attachment.is_image) {
@@ -211,7 +210,7 @@ const ProductDetail = () => {
                   initialIndex={currentImageIndex}
                   trigger={
                     <ImageWithHover
-                      src={product.images[currentImageIndex]?.image_url || placeholderImage}
+                      src={product.images[currentImageIndex]?.image_url}
                       alt={product.images[currentImageIndex]?.alt_text || product.name}
                     />
                   }

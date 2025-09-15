@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {CheckCircle, Settings, Users, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
-import heroImage from "@/assets/hero-industrial.jpg";
+import heroImage from "@/assets/home-banner.jpg";
 import ProductCard from "@/components/ProductCard";
 import { apiService, Product, CompanyInfo } from "@/services/api";
 import { useEffect, useState } from "react";

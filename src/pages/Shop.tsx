@@ -11,7 +11,7 @@ import { useCanonical } from "@/hooks/useCanonical";
 import { useSearchAnalytics } from "@/hooks/useAnalytics";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
-import ShopImage from "@/assets/ShopImage.jpg"; 
+import ShopImage from "@/assets/shop-banner.jpg"; 
 
 const Shop = () => {
   useCanonical('/shop');
