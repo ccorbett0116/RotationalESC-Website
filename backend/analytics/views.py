@@ -32,9 +32,9 @@ def add_no_cache_headers(response):
     return response
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
-@csrf_exempt
 @never_cache
 @rate_limit(max_requests=200, time_window=3600, key_func=tracking_rate_limit)
 def track_product_view(request):
@@ -129,9 +129,9 @@ def track_product_view(request):
         return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
-@csrf_exempt
 @never_cache
 @rate_limit(max_requests=50, time_window=3600, key_func=tracking_rate_limit)
 def track_search(request):
@@ -162,9 +162,9 @@ def track_search(request):
         return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
-@csrf_exempt
 @never_cache
 @rate_limit(max_requests=300, time_window=3600, key_func=tracking_rate_limit)
 def track_event(request):
@@ -209,9 +209,9 @@ def track_event(request):
         return Response({'error': 'Internal server error'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+@csrf_exempt
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
-@csrf_exempt
 @never_cache
 @rate_limit(max_requests=500, time_window=3600, key_func=tracking_rate_limit)
 def update_page_metrics(request):
