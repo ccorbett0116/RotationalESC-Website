@@ -219,7 +219,6 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
                             src={image.image_url}
                             alt={image.alt_text || image.title}
                             className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                            placeholder="Loading image..."
                             lazy={true}
                           />
                         </div>

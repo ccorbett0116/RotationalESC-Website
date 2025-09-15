@@ -26,10 +26,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
-  const { cachedUrl, loading, error } = useImageCache(
-    isInView ? id : '', 
-    isInView ? src : ''
-  );
+  const { cachedUrl, loading, error } = useImageCache(id, src);
 
   // Intersection Observer for lazy loading
   useEffect(() => {
@@ -69,19 +66,15 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     onError?.(error || 'Failed to load image');
   };
 
-  // Show placeholder while loading or if error
-  if (!isInView || loading || (!imageLoaded && !imageError)) {
+  // Show placeholder while not in view or loading
+  if (!isInView) {
     return (
       <div 
         ref={imgRef}
-        className={`${className} bg-muted animate-pulse flex items-center justify-center`}
+        className={`${className} bg-muted flex items-center justify-center`}
         style={{ minHeight: '200px' }}
       >
-        {placeholder ? (
-          <span className="text-muted-foreground text-sm">{placeholder}</span>
-        ) : (
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-        )}
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -98,18 +91,37 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
     );
   }
 
+  // Show loading state while image cache is loading
+  if (loading) {
+    return (
+      <div 
+        className={`${className} bg-muted flex items-center justify-center`}
+        style={{ minHeight: '200px' }}
+      >
+        <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
-    <img
-      ref={imgRef}
-      src={cachedUrl}
-      alt={alt}
-      className={`${className} transition-opacity duration-300 ${
-        imageLoaded ? 'opacity-100' : 'opacity-0'
-      }`}
-      onLoad={handleImageLoad}
-      onError={handleImageError}
-      loading="lazy"
-    />
+    <div className={`${className} relative overflow-hidden`}>
+      {!imageLoaded && (
+        <div className="absolute inset-0 bg-muted flex items-center justify-center">
+          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      )}
+      <img
+        ref={imgRef}
+        src={cachedUrl}
+        alt={alt}
+        className={`w-full h-full object-cover transition-opacity duration-500 ${
+          imageLoaded ? 'opacity-100' : 'opacity-0'
+        }`}
+        onLoad={handleImageLoad}
+        onError={handleImageError}
+        loading="lazy"
+      />
+    </div>
   );
 };
 
