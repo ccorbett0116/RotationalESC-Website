@@ -361,3 +361,99 @@ class NewGalleryListView(APIView):
         gallery_items = NewGallery.objects.all()
         serializer = NewGallerySerializer(gallery_items, many=True)
         return Response(serializer.data)
+
+
+class GalleryImageView(APIView):
+    """
+    Serve individual gallery images with caching headers
+    """
+    def get(self, request, image_id):
+        from django.http import HttpResponse
+        from django.core.cache import cache
+        from django.utils.http import http_date
+        from django.utils import timezone
+        from datetime import timedelta
+        import hashlib
+        
+        try:
+            gallery_item = Gallery.objects.get(id=image_id)
+        except Gallery.DoesNotExist:
+            return Response({'error': 'Image not found'}, status=404)
+        
+        if not gallery_item.image_data:
+            return Response({'error': 'No image data'}, status=404)
+        
+        # Generate ETag based on image data
+        etag = hashlib.md5(gallery_item.image_data).hexdigest()
+        
+        # Check if client has cached version
+        if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
+        if if_none_match == f'"{etag}"':
+            response = HttpResponse(status=304)
+            response['ETag'] = f'"{etag}"'
+            return response
+        
+        # Create response with image data
+        response = HttpResponse(
+            gallery_item.image_data,
+            content_type=gallery_item.content_type or 'image/jpeg'
+        )
+        
+        # Add caching headers
+        max_age = 86400  # 24 hours
+        expires = timezone.now() + timedelta(seconds=max_age)
+        
+        response['Cache-Control'] = f'public, max-age={max_age}, immutable'
+        response['ETag'] = f'"{etag}"'
+        response['Expires'] = http_date(expires.timestamp())
+        response['Last-Modified'] = http_date(gallery_item.updated_at.timestamp())
+        
+        return response
+
+
+class NewGalleryImageView(APIView):
+    """
+    Serve individual new gallery images with caching headers
+    """
+    def get(self, request, image_id):
+        from django.http import HttpResponse
+        from django.core.cache import cache
+        from django.utils.http import http_date
+        from django.utils import timezone
+        from datetime import timedelta
+        import hashlib
+        
+        try:
+            gallery_item = NewGallery.objects.get(id=image_id)
+        except NewGallery.DoesNotExist:
+            return Response({'error': 'Image not found'}, status=404)
+        
+        if not gallery_item.image_data:
+            return Response({'error': 'No image data'}, status=404)
+        
+        # Generate ETag based on image data
+        etag = hashlib.md5(gallery_item.image_data).hexdigest()
+        
+        # Check if client has cached version
+        if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
+        if if_none_match == f'"{etag}"':
+            response = HttpResponse(status=304)
+            response['ETag'] = f'"{etag}"'
+            return response
+        
+        # Create response with image data
+        response = HttpResponse(
+            gallery_item.image_data,
+            content_type=gallery_item.content_type or 'image/jpeg'
+        )
+        
+        # Add caching headers
+        max_age = 86400  # 24 hours
+        expires = timezone.now() + timedelta(seconds=max_age)
+        
+        response['Cache-Control'] = f'public, max-age={max_age}, immutable'
+        response['ETag'] = f'"{etag}"'
+        response['Expires'] = http_date(expires.timestamp())
+        response['Last-Modified'] = http_date(gallery_item.updated_at.timestamp())
+        
+        return response

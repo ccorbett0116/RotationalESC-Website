@@ -192,9 +192,9 @@ class GallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
+        # Return a URL endpoint instead of base64 data for better performance
         if obj.image_data:
-            base64_data = base64.b64encode(obj.image_data).decode('utf-8')
-            return f"data:{obj.content_type};base64,{base64_data}"
+            return f"/api/gallery/{obj.id}/image/"
         return None
 
 class NewGallerySerializer(serializers.ModelSerializer):
@@ -205,7 +205,7 @@ class NewGallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
+        # Return a URL endpoint instead of base64 data for better performance
         if obj.image_data:
-            base64_data = base64.b64encode(obj.image_data).decode('utf-8')
-            return f"data:{obj.content_type};base64,{base64_data}"
+            return f"/api/new-gallery/{obj.id}/image/"
         return None

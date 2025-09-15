@@ -3,6 +3,8 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiService, GalleryImage } from "@/services/api";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
+import OptimizedImage from "@/components/OptimizedImage";
+import { useImagePreloader } from "@/hooks/useImageCache";
 
 interface GalleryProps {
   title: string;
@@ -18,6 +20,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
   const [isPaused, setIsPaused] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const { preloadImages } = useImagePreloader();
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -36,6 +39,16 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
           : await apiService.getNewGalleryImages();
         setImages(data);
         setError(null);
+
+        // Preload visible images after a short delay
+        setTimeout(() => {
+          const imagesToPreload = data.slice(0, 6).map(img => ({
+            id: img.id.toString(),
+            url: img.image_url
+          }));
+          preloadImages(imagesToPreload);
+        }, 500);
+
       } catch (err) {
         setError("Failed to load gallery images");
         console.error("Gallery fetch error:", err);
@@ -45,7 +58,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
     };
 
     fetchGalleryImages();
-  }, [galleryType]);
+  }, [galleryType, preloadImages]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -201,10 +214,13 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
                         image.isCenter ? 'scale-105 shadow-lg border-primary/50' : 'scale-95 opacity-75'
                       }`}>
                         <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
-                          <ImageWithHover
+                          <OptimizedImage
+                            id={image.id.toString()}
                             src={image.image_url}
                             alt={image.alt_text || image.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
+                            placeholder="Loading image..."
+                            lazy={true}
                           />
                         </div>
                         <div className="p-4 flex-1 flex flex-col justify-between">

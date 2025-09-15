@@ -19,5 +19,7 @@ urlpatterns = [
     
     # Gallery
     path('gallery/', views.GalleryListView.as_view(), name='gallery-list'),
-    path('new-gallery/', views.NewGalleryListView.as_view(), name='new-gallery-list')
+    path('gallery/<int:image_id>/image/', views.GalleryImageView.as_view(), name='gallery-image'),
+    path('new-gallery/', views.NewGalleryListView.as_view(), name='new-gallery-list'),
+    path('new-gallery/<int:image_id>/image/', views.NewGalleryImageView.as_view(), name='new-gallery-image'),
 ]

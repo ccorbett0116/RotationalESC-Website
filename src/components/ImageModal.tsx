@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ChevronLeft, ChevronRight, X } from "lucide-react";
+import OptimizedImage from "@/components/OptimizedImage";
 
 interface ImageData {
   id: string | number;
