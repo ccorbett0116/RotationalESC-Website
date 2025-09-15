@@ -36,7 +36,6 @@ const Shop = () => {
         ]);
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
         const products = Array.isArray(productsData?.results) ? productsData.results : [];
-        console.log('Products with order field:', products.map(p => ({ name: p.name, order: p.order })));
         setAllProducts(products);
       } catch (error) {
         console.error('Error fetching data:', error);
@@ -121,15 +120,20 @@ const Shop = () => {
     const sorted = [...filtered].sort((a, b) => {
       switch (sortBy) {
         case "featured":
-          // Products with order values first (ascending), then products without order (null)
-          const aOrder = a.order ?? Number.MAX_SAFE_INTEGER;
-          const bOrder = b.order ?? Number.MAX_SAFE_INTEGER;
-          console.log(`Comparing: ${a.name} (order: ${a.order}) vs ${b.name} (order: ${b.order}) => aOrder: ${aOrder}, bOrder: ${bOrder}`);
-          if (aOrder !== bOrder) {
-            return aOrder - bOrder;
+          // Products with order values first (ascending), then products without order (null) sorted by name
+          if (a.order !== null && b.order !== null) {
+            // Both have order values - sort by order
+            return a.order - b.order;
+          } else if (a.order !== null && b.order === null) {
+            // a has order, b doesn't - a comes first
+            return -1;
+          } else if (a.order === null && b.order !== null) {
+            // b has order, a doesn't - b comes first
+            return 1;
+          } else {
+            // Both have null order - sort by name
+            return a.name.localeCompare(b.name);
           }
-          // If both have same order status (both null or both have values), sort by name
-          return a.name.localeCompare(b.name);
         case "name":
           return a.name.localeCompare(b.name);
         case "price":
