@@ -233,16 +233,21 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                   /* Improved Grid Layout */
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 lg:gap-8">
                     {section.manufacturers.map((manufacturer) => (
-                      <Card 
+                      <Card
                         key={manufacturer.id}
-                        className="group relative hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer bg-card border-2 border-transparent hover:border-primary/20 overflow-hidden"
-                        onClick={() => handleManufacturerClick(manufacturer.url)}
+                        className={`group relative hover:shadow-xl transition-all duration-300 bg-card border-2 border-transparent 
+                          ${manufacturer.url ? "hover:-translate-y-1 hover:border-primary/20 cursor-pointer" : ""}`}
+                        onClick={() => {
+                          if (manufacturer.url) {
+                            handleManufacturerClick(manufacturer.url);
+                          }
+                        }}
                       >
                         <CardContent className="p-0">
-                          {/* Image Container with Dynamic Aspect Ratio */}
+                          {/* Image */}
                           <div className="relative bg-gradient-to-br from-muted/50 to-muted/30">
                             {manufacturer.image_url ? (
-                              <ManufacturerImage 
+                              <ManufacturerImage
                                 src={manufacturer.image_url}
                                 alt={manufacturer.label}
                               />
@@ -258,29 +263,23 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                                 </div>
                               </div>
                             )}
-                            
-                            {/* Subtle gradient overlay for better text contrast */}
-                            <div className="absolute inset-0 bg-gradient-to-t from-black/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
-                            
-                            {/* External link indicator */}
-                            <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                              <div className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
-                                <ExternalLink className="h-3 w-3 text-primary" />
+
+                            {/* External link icon only if url exists */}
+                            {manufacturer.url && (
+                              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                                <div className="bg-background/90 backdrop-blur-sm p-1.5 rounded-full shadow-sm">
+                                  <ExternalLink className="h-3 w-3 text-primary" />
+                                </div>
                               </div>
-                            </div>
-                          </div>
-                          
-                          {/* Manufacturer Name - Fixed Height Section */}
-                          <div className="p-4 bg-card border-t border-border">
-                            <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors duration-300 text-center leading-tight min-h-[2.5rem] flex items-center justify-center">
-                              <span className="line-clamp-2">
-                                {manufacturer.label}
-                              </span>
-                            </h3>
+                            )}
                           </div>
 
-                          {/* Hover overlay */}
-                          <div className="absolute inset-0 bg-primary/3 opacity-0 group-hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
+                          {/* Name */}
+                          <div className="p-4 bg-card border-t border-border">
+                            <h3 className="text-sm font-semibold text-card-foreground group-hover:text-primary transition-colors duration-300 text-center leading-tight min-h-[2.5rem] flex items-center justify-center">
+                              <span className="line-clamp-2">{manufacturer.label}</span>
+                            </h3>
+                          </div>
                         </CardContent>
                       </Card>
                     ))}
