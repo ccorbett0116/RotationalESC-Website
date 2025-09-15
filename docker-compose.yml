@@ -35,9 +35,7 @@ services:
     entrypoint: ["/nginx-entrypoint.sh"]
 
   certbot:
-    build:
-      context: .
-      dockerfile: ./certbot/Dockerfile
+    image: ghcr.io/ccorbett0116/rotationales-certbot:latest
     container_name: rotational-certbot
     volumes:
       - ./certbot/certs:/etc/letsencrypt
@@ -58,9 +56,7 @@ services:
       - frontend
 
   analytics-cron:
-    build:
-      context: ./scripts
-      dockerfile: Dockerfile
+    image: ghcr.io/ccorbett0116/rotationales-analytics:latest
     container_name: rotational-analytics-cron
     volumes:
       - ./database:/app/database

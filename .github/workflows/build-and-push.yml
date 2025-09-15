@@ -51,6 +51,26 @@ jobs:
           type=ref,event=pr
           type=raw,value=latest,enable={{is_default_branch}}
 
+    - name: Extract metadata for analytics
+      id: meta-analytics
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/ccorbett0116/rotationales-analytics
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=raw,value=latest,enable={{is_default_branch}}
+
+    - name: Extract metadata for certbot
+      id: meta-certbot
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/ccorbett0116/rotationales-certbot
+        tags: |
+          type=ref,event=branch
+          type=ref,event=pr
+          type=raw,value=latest,enable={{is_default_branch}}
+
     - name: Build and push backend image
       uses: docker/build-push-action@v5
       with:
@@ -70,5 +90,27 @@ jobs:
         push: ${{ github.event_name != 'pull_request' }}
         tags: ${{ steps.meta-frontend.outputs.tags }}
         labels: ${{ steps.meta-frontend.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push analytics image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./scripts
+        file: ./scripts/Dockerfile
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta-analytics.outputs.tags }}
+        labels: ${{ steps.meta-analytics.outputs.labels }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+    - name: Build and push certbot image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./certbot/Dockerfile
+        push: ${{ github.event_name != 'pull_request' }}
+        tags: ${{ steps.meta-certbot.outputs.tags }}
+        labels: ${{ steps.meta-certbot.outputs.labels }}
         cache-from: type=gha
         cache-to: type=gha,mode=max
