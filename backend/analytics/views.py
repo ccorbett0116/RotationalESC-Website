@@ -2,6 +2,8 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny, IsAuthenticated, IsAdminUser
 from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.cache import never_cache
+from django.views.decorators.csrf import csrf_exempt
 from .permissions import IsAnalyticsAdmin, IsTrackingAllowed
 from .rate_limiting import rate_limit, tracking_rate_limit
 from rest_framework.response import Response
@@ -21,8 +23,18 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def add_no_cache_headers(response):
+    """Add cache-busting headers to prevent analytics requests from being cached"""
+    response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
+    response['Pragma'] = 'no-cache'
+    response['Expires'] = '0'
+    response['Last-Modified'] = timezone.now().strftime('%a, %d %b %Y %H:%M:%S GMT')
+    return response
+
+
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
+@never_cache
 @rate_limit(max_requests=200, time_window=3600, key_func=tracking_rate_limit)
 def track_product_view(request):
     """Track when a user views a product"""
@@ -108,7 +120,8 @@ def track_product_view(request):
         # Update popular product stats asynchronously
         AnalyticsService.update_product_popularity(product)
         
-        return Response({'success': True, 'view_id': product_view.id})
+        response = Response({'success': True, 'view_id': product_view.id})
+        return add_no_cache_headers(response)
         
     except Exception as e:
         logger.error(f"Error tracking product view: {e}")
@@ -117,6 +130,7 @@ def track_product_view(request):
 
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
+@never_cache
 @rate_limit(max_requests=50, time_window=3600, key_func=tracking_rate_limit)
 def track_search(request):
     """Track search queries"""
@@ -138,7 +152,8 @@ def track_search(request):
             results_count=data.get('results_count', 0)
         )
         
-        return Response({'success': True, 'search_id': search_record.id})
+        response = Response({'success': True, 'search_id': search_record.id})
+        return add_no_cache_headers(response)
         
     except Exception as e:
         logger.error(f"Error tracking search: {e}")
@@ -147,6 +162,7 @@ def track_search(request):
 
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
+@never_cache
 @rate_limit(max_requests=300, time_window=3600, key_func=tracking_rate_limit)
 def track_event(request):
     """Track custom user events"""
@@ -182,7 +198,8 @@ def track_event(request):
             metadata=data.get('metadata', {})
         )
         
-        return Response({'success': True, 'event_id': event.id})
+        response = Response({'success': True, 'event_id': event.id})
+        return add_no_cache_headers(response)
         
     except Exception as e:
         logger.error(f"Error tracking event: {e}")
@@ -191,6 +208,7 @@ def track_event(request):
 
 @api_view(['POST'])
 @permission_classes([IsTrackingAllowed])
+@never_cache
 @rate_limit(max_requests=500, time_window=3600, key_func=tracking_rate_limit)
 def update_page_metrics(request):
     """Update page metrics like scroll depth and time on page"""
@@ -205,11 +223,17 @@ def update_page_metrics(request):
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
-        # Find the most recent page view for this visitor and path
+        session_id = getattr(request, 'analytics_session_id', '')
+        
+        # Find the most recent page view for this visitor and path within the last hour
+        from datetime import timedelta
+        one_hour_ago = timezone.now() - timedelta(hours=1)
+        
         page_view = PageView.objects.filter(
             visitor=visitor,
             path=page_path,
-            session_id=getattr(request, 'analytics_session_id', '')
+            session_id=session_id,
+            timestamp__gte=one_hour_ago
         ).order_by('-timestamp').first()
         
         if page_view:
@@ -223,9 +247,24 @@ def update_page_metrics(request):
             
             page_view.save()
             
-            return Response({'success': True})
+            response = Response({'success': True, 'updated_existing': True})
+            return add_no_cache_headers(response)
         else:
-            return Response({'error': 'Page view not found'}, status=status.HTTP_404_NOT_FOUND)
+            # Create a new page view record since none exists (handles cached page views)
+            page_view = PageView.objects.create(
+                visitor=visitor,
+                session_id=session_id,
+                path=page_path,
+                full_url=request.build_absolute_uri(page_path),
+                referrer=request.META.get('HTTP_REFERER', ''),
+                page_title=f"Cached Page: {page_path}",
+                scroll_depth=data.get('scroll_depth', 0),
+                time_on_page=data.get('time_on_page'),
+                load_time=data.get('load_time')
+            )
+            
+            response = Response({'success': True, 'created_new': True, 'view_id': page_view.id})
+            return add_no_cache_headers(response)
         
     except Exception as e:
         logger.error(f"Error updating page metrics: {e}")

@@ -136,12 +136,13 @@ class AnalyticsService {
     if (!this.isTracking) return;
 
     // Create a cache key to prevent duplicate requests within a short time
-    const cacheKey = `${endpoint}_${JSON.stringify(data)}`;
+    // Use more specific cache keys to avoid over-aggressive deduplication
+    const cacheKey = `${endpoint}_${JSON.stringify(data)}_${Date.now() % 10000}`;
     const now = Date.now();
     const lastRequest = this.requestCache.get(cacheKey);
     
-    // If the same request was made within the last 2 seconds, skip it
-    if (lastRequest && (now - lastRequest) < 2000) {
+    // Reduce duplicate prevention time to 500ms (instead of 2 seconds) for better tracking
+    if (lastRequest && (now - lastRequest) < 500) {
       return;
     }
     
@@ -152,9 +153,12 @@ class AnalyticsService {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache'
         },
         body: JSON.stringify(data),
-        credentials: 'include'
+        credentials: 'include',
+        cache: 'no-store'
       });
     } catch (error) {
       console.warn('Analytics tracking failed:', error);

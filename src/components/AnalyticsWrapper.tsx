@@ -16,10 +16,16 @@ const AnalyticsWrapper: React.FC<AnalyticsWrapperProps> = ({ children }) => {
 
   useEffect(() => {
     // Track page view whenever the route changes
-    // Note: The backend middleware already tracks page views, 
-    // but this provides additional client-side tracking
+    // This ensures analytics work even when pages are served from cache
     console.log(`Analytics: Page view tracked for ${location.pathname}`);
-  }, [location.pathname]);
+    
+    // Force a client-side page view tracking to ensure it's captured
+    // even when the page is served from browser cache
+    analytics.updatePageMetrics({
+      page_path: location.pathname,
+      load_time: Date.now() - performance.timing.navigationStart
+    });
+  }, [location.pathname, analytics]);
 
   // Add click tracking to all links and buttons
   useEffect(() => {
