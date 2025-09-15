@@ -5,8 +5,9 @@
 
 echo "Starting analytics update at $(date)"
 
-# Change to the project directory
-cd "/home/chance/Rotational Equipment Services" || exit 1
+# Use the project directory from environment or default to /app
+PROJECT_DIR="${PROJECT_DIR:-/srv/app}"
+cd "$PROJECT_DIR" || exit 1
 
 # Check if backend container is running
 if ! docker compose ps backend | grep -q "Up"; then

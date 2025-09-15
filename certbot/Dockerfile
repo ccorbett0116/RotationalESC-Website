@@ -6,8 +6,9 @@ RUN apk add --no-cache docker-cli
 # Set the working directory
 WORKDIR /opt/certbot
 
-# Copy any custom scripts if needed
-# COPY scripts/ /opt/certbot/scripts/
+# Copy the certbot entrypoint script
+COPY certbot-entrypoint.sh /custom-entrypoint.sh
+RUN chmod +x /custom-entrypoint.sh
 
 # Keep the original entrypoint
 ENTRYPOINT [""]

@@ -202,7 +202,8 @@ class AnalyticsService:
                     duration = (session_times[-1] - session_times[0]).total_seconds() / 60
                     durations.append(duration)
             
-            return sum(durations) / len(durations) if durations else 0.0
+            avg_duration = sum(durations) / len(durations) if durations else 0.0
+            return round(avg_duration, 2)
             
         except Exception as e:
             logger.error(f"Error calculating session duration: {e}")
@@ -224,7 +225,8 @@ class AnalyticsService:
             single_page_sessions = session_counts.filter(page_count=1).count()
             
             if total_sessions > 0:
-                return (single_page_sessions / total_sessions) * 100
+                bounce_rate = (single_page_sessions / total_sessions) * 100
+                return round(bounce_rate, 2)
             else:
                 return 0.0
                 
