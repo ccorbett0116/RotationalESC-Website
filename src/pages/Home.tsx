@@ -44,13 +44,12 @@ const Home = () => {
         
         // Fetch products and company info in parallel
         const [productsResponse, companyResponse] = await Promise.all([
-          apiService.getProducts({ page: 1 }),
+          apiService.getProducts({ page: 1, ordering: 'order' }),
           apiService.getCompanyInfo()
         ]);
         
-        // Randomly shuffle products and take first 3 for featured section
-        const shuffledProducts = [...productsResponse.results].sort(() => Math.random() - 0.5);
-        setProducts(shuffledProducts);
+        // Use products ordered by 'order' field (lowest numbers first, null values last)
+        setProducts(productsResponse.results);
         setCompanyInfo(companyResponse);
       } catch (err) {
         console.error('Error fetching data:', err);

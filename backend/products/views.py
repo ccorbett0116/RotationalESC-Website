@@ -33,7 +33,7 @@ class ProductListView(generics.ListAPIView):
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category']  # Removed 'page' to avoid conflict with pagination
     search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
-    ordering_fields = ['name', 'price', 'created_at']
+    ordering_fields = ['name', 'price', 'created_at', 'order']
     ordering = ['name']
 
     def get_queryset(self):
@@ -56,12 +56,46 @@ class ProductListView(generics.ListAPIView):
             queryset = queryset.filter(price__gte=min_price)
         if max_price:
             queryset = queryset.filter(price__lte=max_price)
+        
+        # Handle ordering by 'order' field with null values last
+        ordering = self.request.query_params.get('ordering', None)
+        if ordering == 'order':
+            from django.db.models import F
+            queryset = queryset.order_by(F('order').asc(nulls_last=True))
+        elif ordering == '-order':
+            from django.db.models import F
+            queryset = queryset.order_by(F('order').desc(nulls_last=True))
             
         return queryset
 
 class ProductDetailView(generics.RetrieveAPIView):
     queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications', 'attachments')
     serializer_class = ProductDetailSerializer
+
+@api_view(['GET'])
+def related_products(request, product_id):
+    """
+    Get related products from the same category as the specified product
+    """
+    try:
+        product = Product.objects.filter(active=True).get(id=product_id)
+    except Product.DoesNotExist:
+        return Response(
+            {'error': 'Product not found'}, 
+            status=status.HTTP_404_NOT_FOUND
+        )
+    
+    # Get products from the same category, excluding the current product
+    related = Product.objects.filter(
+        active=True,
+        category=product.category
+    ).exclude(id=product_id).select_related('category').prefetch_related('images')
+    
+    # Randomly order the results and limit to 3
+    related = related.order_by('?')[:3]
+    
+    serializer = ProductListSerializer(related, many=True, context={'request': request})
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def product_search(request):

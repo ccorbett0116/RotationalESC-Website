@@ -13,6 +13,7 @@ import { useProductAnalytics } from "@/hooks/useAnalytics";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
+import ProductCard from "@/components/ProductCard";
 
 const getFileIcon = (attachment: any) => {
   if (attachment.is_image) {
@@ -73,14 +74,9 @@ const ProductDetail = () => {
         const productData = await apiService.getProduct(id);
         setProduct(productData);
         
-        // Fetch related products from the same category
-        const productsData = await apiService.getProducts({ 
-          category_name: productData.category.name 
-        });
-        const related = productsData.results
-          .filter(p => p.id !== productData.id)
-          .slice(0, 3);
-        setRelatedProducts(related);
+        // Fetch related products using the dedicated endpoint
+        const relatedProductsData = await apiService.getRelatedProducts(productData.id);
+        setRelatedProducts(relatedProductsData);
         
         // Fetch company info for share functionality
         const companyData = await apiService.getCompanyInfo();
@@ -463,44 +459,30 @@ const ProductDetail = () => {
             <h2 className="text-2xl font-bold text-foreground mb-8">Related Products</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <Card key={relatedProduct.id} className="overflow-hidden hover:shadow-lg transition-shadow duration-200">
-                  <div className="aspect-square bg-muted relative group">
-                    {relatedProduct.primary_image ? (
-                      <ImageModal
-                        images={[{
-                          id: relatedProduct.id,
-                          url: relatedProduct.primary_image,
-                          alt: relatedProduct.name,
-                          title: relatedProduct.name,
-                        }]}
-                        initialIndex={0}
-                        trigger={
-                          <ImageWithHover
-                            src={relatedProduct.primary_image}
-                            alt={relatedProduct.name}
-                          />
-                        }
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
-                        <span className="text-muted-foreground">No Image</span>
-                      </div>
-                    )}
-                  </div>
-                  <CardHeader>
-                    <CardTitle className="text-lg">{relatedProduct.name}</CardTitle>
-                    <div className="text-xl font-bold text-primary">
-                      {formatCAD(Number(relatedProduct.price))}
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <Link to={`/product/${relatedProduct.id}`}>
-                      <Button variant="outline" className="w-full">
-                        View Details
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
+                <ProductCard 
+                  key={relatedProduct.id}
+                  product={relatedProduct}
+                  showAddToCart={true}
+                  showAvailabilityBadge={true}
+                  onAddToCart={(product) => {
+                    const currentQuantityInCart = getItemQuantity(product.id);
+                    
+                    if (currentQuantityInCart + 1 > product.quantity) {
+                      toast({
+                        title: "Cannot add item",
+                        description: `Only ${product.quantity} units of ${product.name} are available. You already have ${currentQuantityInCart} in your cart.`,
+                        variant: "destructive",
+                      });
+                      return;
+                    }
+                    
+                    addItem(product.id, 1);
+                    toast({
+                      title: "Added to cart",
+                      description: `${product.name} added to your cart`,
+                    });
+                  }}
+                />
               ))}
             </div>
           </section>

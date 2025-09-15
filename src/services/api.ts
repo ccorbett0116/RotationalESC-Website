@@ -296,6 +296,11 @@ export const apiService = {
     return response.data;
   },
 
+  getRelatedProducts: async (productId: string): Promise<Product[]> => {
+    const response = await api.get(`/products/${productId}/related/`);
+    return response.data;
+  },
+
   searchProducts: async (query: string, category?: string): Promise<Product[]> => {
     const response = await api.get('/products/search/', {
       params: { q: query, category }
