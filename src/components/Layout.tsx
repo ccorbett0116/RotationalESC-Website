@@ -3,17 +3,17 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, User, Menu, X, ChevronDown } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { apiService, CompanyInfo } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
   const { getTotalItems } = useCart();
+  const { data: companyInfo } = useCompanyInfo();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const navigation = [
@@ -56,19 +56,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
     return location.pathname === path;
   };
 
-  // Fetch company info on component mount
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const data = await apiService.getCompanyInfo();
-        setCompanyInfo(data);
-      } catch (error) {
-        console.error('Failed to fetch company info:', error);
-      }
-    };
-
-    fetchCompanyInfo();
-  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

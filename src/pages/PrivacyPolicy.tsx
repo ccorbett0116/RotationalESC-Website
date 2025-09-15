@@ -1,28 +1,11 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import Layout from "@/components/Layout";
 import { useCanonical } from "@/hooks/useCanonical";
-import { useState, useEffect } from "react";
-import { apiService, CompanyInfo } from "@/services/api";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 const PrivacyPolicy = () => {
   useCanonical('/privacy-policy');
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const data = await apiService.getCompanyInfo();
-        setCompanyInfo(data);
-      } catch (error) {
-        console.error('Error fetching company info:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompanyInfo();
-  }, []);
+  const { data: companyInfo, isLoading: loading } = useCompanyInfo();
 
   if (loading) {
     return (

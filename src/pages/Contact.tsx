@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -7,8 +7,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { apiService, ContactFormData, CompanyInfo } from "@/services/api";
+import { apiService, ContactFormData } from "@/services/api";
 import { useCanonical } from "@/hooks/useCanonical";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import Layout from "@/components/Layout";
 import ContactImage from "@/assets/contact-banner.jpg";
 
@@ -17,7 +18,7 @@ const Contact = () => {
   useCanonical('/contact');
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const { data: companyInfo, isLoading: isLoadingCompanyInfo } = useCompanyInfo();
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -26,20 +27,6 @@ const Contact = () => {
     subject: "",
     message: ""
   });
-
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const data = await apiService.getCompanyInfo();
-        setCompanyInfo(data);
-      } catch (error) {
-        console.error('Failed to fetch company info:', error);
-        // Don't set fallback data - let it remain null to show loading/empty state
-      }
-    };
-
-    fetchCompanyInfo();
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,7 +129,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.address || ""}
+                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.address || "")}
                 </p>
               </CardContent>
             </Card>
@@ -156,7 +143,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.phone || ""}
+                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.phone || "")}
                 </p>
               </CardContent>
             </Card>
@@ -170,7 +157,7 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.email || ""}
+                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.email || "")}
                 </p>
               </CardContent>
             </Card>
@@ -184,10 +171,10 @@ const Contact = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-muted-foreground">
-                  {companyInfo?.hours || ""}
+                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.hours || "")}
                 </p>
                 <p className="text-muted-foreground">
-                  {companyInfo?.days || ""}
+                  {isLoadingCompanyInfo ? "" : (companyInfo?.days || "")}
                 </p>
               </CardContent>
             </Card>

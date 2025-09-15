@@ -5,9 +5,10 @@ import {CheckCircle, Settings, Users, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
 import heroImage from "@/assets/home-banner.jpg";
 import ProductCard from "@/components/ProductCard";
-import { apiService, Product, CompanyInfo } from "@/services/api";
+import { apiService, Product } from "@/services/api";
 import { useEffect, useState } from "react";
 import { useCanonical } from "@/hooks/useCanonical";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 // Define services inline
 const services = [
   {
@@ -33,24 +34,20 @@ const services = [
 const Home = () => {
   useCanonical('/');
   const [products, setProducts] = useState<Product[]>([]);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { data: companyInfo } = useCompanyInfo();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         
-        // Fetch products and company info in parallel
-        const [productsResponse, companyResponse] = await Promise.all([
-          apiService.getProducts({ page: 1, ordering: 'order' }),
-          apiService.getCompanyInfo()
-        ]);
+        // Fetch products only - company info handled by hook
+        const productsResponse = await apiService.getProducts({ page: 1, ordering: 'order' });
         
         // Use products ordered by 'order' field (lowest numbers first, null values last)
         setProducts(productsResponse.results);
-        setCompanyInfo(companyResponse);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data');

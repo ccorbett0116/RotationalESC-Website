@@ -23,34 +23,15 @@ const services = [
     features: ["Technical expertise", "Cost analysis", "Performance optimization"]
   }
 ];
-import { apiService, CompanyInfo } from "@/services/api";
-import { useState, useEffect } from "react";
 import Layout from "@/components/Layout";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import AboutUsImage from "@/assets/about-banner.jpg";
 import NewAboutUsImage from "@/assets/about-hero.png";
 
 
 const About = () => {
   useCanonical('/about');
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const data = await apiService.getCompanyInfo();
-        setCompanyInfo(data);
-      } catch (err) {
-        console.error('Error fetching company info:', err);
-        setError('Failed to load company information');
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompanyInfo();
-  }, []);
+  const { data: companyInfo, isLoading: loading, error } = useCompanyInfo();
 
   if (loading) {
     return (

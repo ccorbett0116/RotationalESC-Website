@@ -4,29 +4,12 @@ import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { AlertCircle, Phone, Mail } from "lucide-react";
 import Layout from "@/components/Layout";
-import { useState, useEffect } from "react";
-import { apiService, CompanyInfo } from "@/services/api";
 import { useCanonical } from "@/hooks/useCanonical";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 
 const RefundPolicy = () => {
   useCanonical('/refund-policy');
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchCompanyInfo = async () => {
-      try {
-        const data = await apiService.getCompanyInfo();
-        setCompanyInfo(data);
-      } catch (error) {
-        console.error('Error fetching company info:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchCompanyInfo();
-  }, []);
+  const { data: companyInfo, isLoading: loading } = useCompanyInfo();
 
   if (loading) {
     return (

@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CheckCircle, Package, Truck, CreditCard, ArrowLeft, Download, Mail, Phone } from "lucide-react";
-import { apiService, Order, CompanyInfo } from "@/services/api";
+import { apiService, Order } from "@/services/api";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 
@@ -15,7 +16,7 @@ const OrderConfirmation = () => {
   const [order, setOrder] = useState<Order | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
+  const { data: companyInfo } = useCompanyInfo();
 
   useEffect(() => {
     const fetchOrder = async () => {
@@ -26,9 +27,7 @@ const OrderConfirmation = () => {
         setError(null);
         
         const orderData = await apiService.getOrderByToken(token);
-        const companyData = await apiService.getCompanyInfo();
         setOrder(orderData);
-        setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching order:', error);
         setError(error instanceof Error ? error.message : 'Failed to load order');

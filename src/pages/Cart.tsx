@@ -7,9 +7,10 @@ import { Separator } from "@/components/ui/separator";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Trash2, Plus, Minus, ShoppingBag, AlertTriangle, CheckCircle, XCircle, RefreshCw, Phone, Mail, MessageCircle } from "lucide-react";
-import { apiService, Product, CompanyInfo } from "@/services/api";
+import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import CartProductCard from "@/components/CartProductCard";
@@ -18,6 +19,7 @@ const Cart = () => {
   const { items: cartItems, updateQuantity: updateCartQuantity, removeItem: removeCartItem } = useCart();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { data: companyInfo } = useCompanyInfo();
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [removedItems, setRemovedItems] = useState<string[]>([]);
@@ -46,18 +48,13 @@ const Cart = () => {
   } | null>(null);
   const [showValidationDialog, setShowValidationDialog] = useState(false);
   const [hasValidated, setHasValidated] = useState(false);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
 
-  // Separate effect for fetching products and company info
+  // Separate effect for fetching products
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [response, companyData] = await Promise.all([
-          apiService.getProducts(),
-          apiService.getCompanyInfo()
-        ]);
+        const response = await apiService.getProducts();
         setProducts(response.results);
-        setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching data:', error);
       }

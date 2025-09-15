@@ -5,11 +5,12 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, ShoppingCart, Share2, Download, FileText, Image, File } from "lucide-react";
-import { apiService, Product, CompanyInfo } from "@/services/api";
+import { apiService, Product } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { useCanonical } from "@/hooks/useCanonical";
 import { useProductAnalytics } from "@/hooks/useAnalytics";
+import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
@@ -55,12 +56,12 @@ const ProductDetail = () => {
   const navigate = useNavigate();
   const { addItem, getItemQuantity } = useCart();
   const { toast } = useToast();
+  const { data: companyInfo } = useCompanyInfo();
   const [quantity, setQuantity] = useState(1);
   const [product, setProduct] = useState<Product | null>(null);
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
-  const [companyInfo, setCompanyInfo] = useState<CompanyInfo | null>(null);
   
   // Initialize analytics for this product
   const analytics = useProductAnalytics(id || '', product?.name || '');
@@ -77,10 +78,6 @@ const ProductDetail = () => {
         // Fetch related products using the dedicated endpoint
         const relatedProductsData = await apiService.getRelatedProducts(productData.id);
         setRelatedProducts(relatedProductsData);
-        
-        // Fetch company info for share functionality
-        const companyData = await apiService.getCompanyInfo();
-        setCompanyInfo(companyData);
       } catch (error) {
         console.error('Error fetching product:', error);
       } finally {
