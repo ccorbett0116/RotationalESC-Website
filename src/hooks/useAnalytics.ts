@@ -86,6 +86,11 @@ export const useAnalytics = () => {
     analyticsService.trackImageView(imageId, productId);
   }, []);
 
+  // Track page metrics
+  const updatePageMetrics = useCallback((metrics: any) => {
+    analyticsService.updatePageMetrics(metrics);
+  }, []);
+
   return {
     trackProductView,
     trackProductViewEnd,
@@ -99,6 +104,7 @@ export const useAnalytics = () => {
     trackEmailClick,
     trackExternalLink,
     trackImageView,
+    updatePageMetrics,
   };
 };
 
