@@ -1,7 +1,5 @@
 from django.urls import path, include
-from django.contrib.admin.views.decorators import staff_member_required
 from . import views
-from .admin import dashboard_admin
 
 # Public tracking endpoints (no authentication required)
 tracking_patterns = [
@@ -17,22 +15,10 @@ admin_data_patterns = [
     path('dashboard/', views.get_analytics_dashboard, name='get_analytics_dashboard'),
 ]
 
-# Admin dashboard routes (require staff authentication)
-admin_dashboard_patterns = [
-    path('dashboard/', staff_member_required(dashboard_admin.analytics_dashboard), name='analytics_dashboard'),
-    path('visitor-analytics/', staff_member_required(dashboard_admin.visitor_analytics), name='visitor_analytics'),
-    path('product-analytics/', staff_member_required(dashboard_admin.product_analytics), name='product_analytics'),
-    path('real-time/', staff_member_required(dashboard_admin.real_time_analytics), name='real_time_analytics'),
-    path('dashboard-data/', staff_member_required(dashboard_admin.dashboard_data_api), name='dashboard_data_api'),
-]
-
 urlpatterns = [
     # Public tracking endpoints - no authentication required
     *tracking_patterns,
     
     # Admin data endpoints - admin authentication required  
     path('admin-data/', include(admin_data_patterns)),
-    
-    # Admin dashboard routes - staff authentication required
-    path('admin/', include(admin_dashboard_patterns)),
 ]

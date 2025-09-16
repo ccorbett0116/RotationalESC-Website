@@ -19,15 +19,16 @@ class AnalyticsMiddleware(MiddlewareMixin):
 
     def process_request(self, request):
         """Process incoming requests for analytics tracking"""
-        # Skip analytics for admin, static files, and most API calls
+        # Skip analytics for admin, static files, and non-analytics API calls
         skip_paths = ['/admin/', '/static/', '/media/']
         api_skip_paths = ['/api/products/', '/api/categories/', '/api/company/', '/api/contact/']
         
+        # Skip non-analytics API calls but allow analytics tracking endpoints
         if (any(request.path.startswith(path) for path in skip_paths) or 
             any(request.path.startswith(path) for path in api_skip_paths)):
             return None
 
-        # Only process visitor creation for actual page visits (not analytics API calls)
+        # Analytics API calls need visitor tracking for the endpoints to work
         is_analytics_api = request.path.startswith('/api/analytics/')
         
         # Get visitor IP address
@@ -35,7 +36,7 @@ class AnalyticsMiddleware(MiddlewareMixin):
         if not ip_address:
             return None
 
-        # Get or create visitor (only count visits for non-API requests)
+        # Get or create visitor (don't count visits for analytics API calls)
         visitor = self.get_or_create_visitor(ip_address, request, count_visit=not is_analytics_api)
         
         # Generate session ID if not exists
