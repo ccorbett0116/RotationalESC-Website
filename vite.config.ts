@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import { createHtmlPlugin } from "vite-plugin-html"; // 👈 add this
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -43,6 +44,24 @@ export default defineConfig({
       }
     }
   },
-  plugins: [react()],
+  plugins: [
+    react(),
+    createHtmlPlugin({
+      inject: {
+        tags: [
+          {
+            tag: "link",
+            attrs: {
+              rel: "preload",
+              as: "image",
+              href: "/src/assets/home-banner.webp", // source path, Vite rewrites to hashed filename
+              fetchpriority: "high",
+            },
+            injectTo: "head",
+          },
+        ],
+      },
+    }),
+  ],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
 });
