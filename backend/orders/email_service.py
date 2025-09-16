@@ -12,6 +12,12 @@ class OrderEmailService:
     """Service to handle order-related email notifications"""
     
     @staticmethod
+    def _get_admin_order_url(order):
+        """Generate admin URL for the order"""
+        base_url = getattr(settings, 'BASE_URL', 'https://rotationales.com')
+        return f"{base_url}/admin/orders/order/{order.pk}/change/"
+    
+    @staticmethod
     def send_payment_success_notification(order):
         """
         Send email notification to owner when payment is successful
@@ -48,7 +54,8 @@ class OrderEmailService:
             items_total = sum(item['total'] for item in items_data)
             
             # Prepare email content
-            subject = f"🎉 New Order Received - Order #{order.order_number}"
+            subject = f"New Order Received - Order #{order.order_number}"
+            admin_url = OrderEmailService._get_admin_order_url(order)
             
             # Create detailed email body
             email_body = f"""
@@ -61,6 +68,7 @@ Order Number: {order.order_number}
 Order Date: {order.created_at.strftime('%B %d, %Y at %I:%M %p')}
 Payment Status: {order.payment_status.title()}
 Order Status: {order.status.title()}
+Admin Link: {admin_url}
 
 Customer Information:
 --------------------
@@ -126,7 +134,11 @@ NEXT STEPS:
 Customer Contact: {order.customer_email}
 Customer Phone: {order.customer_phone or 'Not provided'}
 
-You can view the full order details in the admin panel.
+ADMIN PANEL ACCESS:
+==================
+View Order: {admin_url}
+
+You can click the link above to view and manage the full order details in the admin panel.
             """
             
             # Send email to owner
@@ -162,15 +174,13 @@ You can view the full order details in the admin panel.
             # Determine notification type based on reason
             if 'cancel' in reason.lower():
                 action_type = "CANCELLED"
-                emoji = "🚫"
             elif 'expired' in reason.lower():
                 action_type = "EXPIRED"
-                emoji = "⏰"
             else:
                 action_type = "FAILED"
-                emoji = "❌"
             
-            subject = f"{emoji} Order Payment {action_type} - Order #{order.order_number}"
+            subject = f"Order Payment {action_type} - Order #{order.order_number}"
+            admin_url = OrderEmailService._get_admin_order_url(order)
             
             email_body = f"""
 ORDER PAYMENT {action_type} NOTIFICATION
@@ -182,6 +192,7 @@ Order Number: {order.order_number}
 Order Date: {order.created_at.strftime('%B %d, %Y at %I:%M %p')}
 Payment Status: {order.payment_status.title()}
 Failure Reason: {reason}
+Admin Link: {admin_url}
 
 Customer Information:
 --------------------
@@ -220,7 +231,11 @@ NEXT STEPS:
 Customer Contact: {order.customer_email}
 Customer Phone: {order.customer_phone or 'Not provided'}
 
-You can view the order details in the admin panel.
+ADMIN PANEL ACCESS:
+==================
+View Order: {admin_url}
+
+You can click the link above to view the order details in the admin panel.
             """
             
             # Send email to owner
