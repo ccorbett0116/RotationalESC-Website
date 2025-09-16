@@ -21,7 +21,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       const preloadLink = document.createElement("link");
       preloadLink.rel = "preload";
       preloadLink.as = "image";
-      preloadLink.href = "/assets/home-banner.jpg";
+      preloadLink.href = "/assets/home-banner.webp";
       preloadLink.setAttribute("fetchpriority", "high");
 
       document.head.appendChild(preloadLink);

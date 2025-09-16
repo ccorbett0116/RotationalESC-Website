@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {CheckCircle, Settings, Users, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
-import heroImage from "@assets/home-banner.webp";
+import heroImage from "@/assets/home-banner.webp";
 import ProductCard from "@/components/ProductCard";
 import { apiService, Product } from "@/services/api";
 import { useEffect, useState } from "react";
