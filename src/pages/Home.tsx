@@ -9,6 +9,7 @@ import { apiService, Product } from "@/services/api";
 import { useEffect, useState } from "react";
 import { useCanonical } from "@/hooks/useCanonical";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
+import { Helmet } from "react-helmet";
 // Define services inline
 const services = [
   {
@@ -101,19 +102,21 @@ const Home = () => {
   }
   return (
     <Layout>
+      <Helmet>
+        <link rel="preload" as="image" href={heroImage} fetchPriority="high" />
+      </Helmet>
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 z-0">
-  <img
-    src={heroImage}
-    alt="Industrial equipment banner"
-    className="w-full h-full object-cover"
-    fetchpriority="high"
-  />
-  <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]" />
-</div>
-
+          <img
+            src={heroImage}
+            alt="Industrial equipment banner"
+            className="w-full h-full object-cover"
+            fetchPriority="high"
+          />
+          <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]" />
+        </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             <div className="text-center lg:text-left order-2 lg:order-1">
