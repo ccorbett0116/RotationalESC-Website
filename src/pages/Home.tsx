@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {CheckCircle, Settings, Users, BookOpenCheck} from "lucide-react";
 import Layout from "@/components/Layout";
-import heroImage from "@/assets/home-banner.jpg";
+import heroImage from "@assets/home-banner.webp";
 import ProductCard from "@/components/ProductCard";
 import { apiService, Product } from "@/services/api";
 import { useEffect, useState } from "react";
@@ -104,18 +104,15 @@ const Home = () => {
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
         {/* Background Image */}
-        <div 
-          className="absolute inset-0 z-0"
-          style={{
-            backgroundImage: `url(${heroImage})`,
-            backgroundSize: 'cover',
-            backgroundPosition: 'center',
-            backgroundRepeat: 'no-repeat',
-          }}
-        >
-          {/* Overlay - Changed from bg-black/50 to a fixed color value */}
-          <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]"></div>
-        </div>
+        <div className="absolute inset-0 z-0">
+  <img
+    src={heroImage}
+    alt="Industrial equipment banner"
+    className="w-full h-full object-cover"
+    fetchpriority="high"
+  />
+  <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]" />
+</div>
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 z-10">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">

@@ -16,6 +16,21 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
   const dropdownRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (location.pathname === "/") {
+      const preloadLink = document.createElement("link");
+      preloadLink.rel = "preload";
+      preloadLink.as = "image";
+      preloadLink.href = "/assets/home-banner.jpg";
+      preloadLink.setAttribute("fetchpriority", "high");
+
+      document.head.appendChild(preloadLink);
+      return () => {
+        document.head.removeChild(preloadLink);
+      };
+    }
+  }, [location.pathname]);
+
   const navigation = [
     { name: 'Home', href: '/' },
     {
