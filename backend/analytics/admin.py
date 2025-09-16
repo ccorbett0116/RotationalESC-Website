@@ -4,7 +4,6 @@ from django.utils.html import format_html
 from django.urls import reverse, path
 from django.utils.safestring import mark_safe
 from django.http import JsonResponse
-from django.template.response import TemplateResponse
 from django.utils import timezone
 from datetime import timedelta, date
 from collections import defaultdict
@@ -18,11 +17,98 @@ from .services import AnalyticsService
 
 @admin.register(Visitor)
 class VisitorAdmin(admin.ModelAdmin):
-    list_display = ['ip_address', 'country', 'region', 'city', 'isp', 'visit_count', 'first_visit', 'last_visit']
+    list_display = ['ip_address_link', 'location_summary', 'isp_link', 'visit_count', 'first_visit', 'last_visit']
     list_filter = ['country', 'region', 'isp', 'first_visit', 'last_visit']
     search_fields = ['ip_address', 'country', 'region', 'city', 'isp', 'organization']
-    readonly_fields = ['id', 'first_visit', 'last_visit']
+    readonly_fields = ['id', 'first_visit', 'last_visit', 'analytics_summary', 'page_views_link', 'product_views_link', 'search_queries_link', 'events_link']
     ordering = ['-last_visit']
+    
+    def ip_address_link(self, obj):
+        # Create a link that shows all analytics for this IP
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_pageview_changelist')
+        query = urlencode({'visitor__ip_address__exact': obj.ip_address})
+        url = f"{base_url}?{query}"
+        return format_html('<a href="{}" style="color: #007cba; font-weight: bold;">{}</a>', url, obj.ip_address)
+    ip_address_link.short_description = 'IP Address'
+    ip_address_link.admin_order_field = 'ip_address'
+    
+    def location_summary(self, obj):
+        location_parts = [part for part in [obj.city, obj.region, obj.country] if part]
+        location = ', '.join(location_parts) if location_parts else 'Unknown'
+        
+        # Create filtered links for each location component
+        if obj.country:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_visitor_changelist')
+            query = urlencode({'country__exact': obj.country})
+            url = f"{base_url}?{query}"
+            return format_html('<a href="{}" style="color: #007cba;">{}</a>', url, location)
+        return location
+    location_summary.short_description = 'Location'
+    
+    def isp_link(self, obj):
+        if obj.isp:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_visitor_changelist')
+            query = urlencode({'isp__exact': obj.isp})
+            url = f"{base_url}?{query}"
+            return format_html('<a href="{}" style="color: #007cba;">{}</a>', url, obj.isp)
+        return 'Unknown'
+    isp_link.short_description = 'ISP'
+    isp_link.admin_order_field = 'isp'
+    
+    def analytics_summary(self, obj):
+        page_views = obj.page_views.count()
+        product_views = obj.product_views.count()
+        searches = obj.searches.count()
+        events = obj.events.count()
+        
+        return format_html(
+            '<strong>Activity Summary:</strong><br/>'
+            '• {} page views<br/>'
+            '• {} product views<br/>'
+            '• {} searches<br/>'
+            '• {} events',
+            page_views, product_views, searches, events
+        )
+    analytics_summary.short_description = 'Analytics Summary'
+    
+    def page_views_link(self, obj):
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_pageview_changelist')
+        query = urlencode({'visitor__id__exact': obj.id})
+        url = f"{base_url}?{query}"
+        count = obj.page_views.count()
+        return format_html('<a href="{}">View {} page views</a>', url, count)
+    page_views_link.short_description = 'Page Views'
+    
+    def product_views_link(self, obj):
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_productview_changelist')
+        query = urlencode({'visitor__id__exact': obj.id})
+        url = f"{base_url}?{query}"
+        count = obj.product_views.count()
+        return format_html('<a href="{}">View {} product views</a>', url, count)
+    product_views_link.short_description = 'Product Views'
+    
+    def search_queries_link(self, obj):
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_searchquery_changelist')
+        query = urlencode({'visitor__id__exact': obj.id})
+        url = f"{base_url}?{query}"
+        count = obj.searches.count()
+        return format_html('<a href="{}">View {} searches</a>', url, count)
+    search_queries_link.short_description = 'Search Queries'
+    
+    def events_link(self, obj):
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_userevent_changelist')
+        query = urlencode({'visitor__id__exact': obj.id})
+        url = f"{base_url}?{query}"
+        count = obj.events.count()
+        return format_html('<a href="{}">View {} events</a>', url, count)
+    events_link.short_description = 'User Events'
     
     fieldsets = (
         ('Basic Info', {
@@ -36,28 +122,74 @@ class VisitorAdmin(admin.ModelAdmin):
         }),
         ('Browser', {
             'fields': ('user_agent',)
+        }),
+        ('Analytics Overview', {
+            'fields': ('analytics_summary',)
+        }),
+        ('Related Data', {
+            'fields': ('page_views_link', 'product_views_link', 'search_queries_link', 'events_link')
         })
     )
 
 
 @admin.register(PageView)
 class PageViewAdmin(admin.ModelAdmin):
-    list_display = ['visitor_ip', 'path', 'page_title', 'time_on_page', 'scroll_depth', 'timestamp']
+    list_display = ['visitor_ip_link', 'path_link', 'page_title', 'time_on_page', 'scroll_depth', 'referrer_domain', 'timestamp']
     list_filter = ['timestamp', 'path']
     search_fields = ['visitor__ip_address', 'path', 'page_title', 'full_url']
-    readonly_fields = ['id', 'timestamp', 'visitor_link']
+    readonly_fields = ['id', 'timestamp', 'visitor_link', 'related_page_views']
     ordering = ['-timestamp']
     
-    def visitor_ip(self, obj):
-        return obj.visitor.ip_address
-    visitor_ip.short_description = 'Visitor IP'
+    def visitor_ip_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_ip_link.short_description = 'Visitor IP'
+    visitor_ip_link.admin_order_field = 'visitor__ip_address'
+    
+    def path_link(self, obj):
+        # Create a filtered link to show all page views for this path
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_pageview_changelist')
+        query = urlencode({'path__exact': obj.path})
+        url = f"{base_url}?{query}"
+        return format_html('<a href="{}" style="color: #007cba;">{}</a>', url, obj.path)
+    path_link.short_description = 'Page Path'
+    path_link.admin_order_field = 'path'
+    
+    def referrer_domain(self, obj):
+        if obj.referrer:
+            from urllib.parse import urlparse
+            domain = urlparse(obj.referrer).netloc
+            if domain:
+                # Create a filtered link to show all page views from this referrer domain
+                from django.utils.http import urlencode
+                base_url = reverse('admin:analytics_pageview_changelist')
+                query = urlencode({'referrer__icontains': domain})
+                url = f"{base_url}?{query}"
+                return format_html('<a href="{}" style="color: #007cba;">{}</a>', url, domain)
+            return obj.referrer[:30]
+        return 'Direct'
+    referrer_domain.short_description = 'Referrer'
     
     def visitor_link(self, obj):
         if obj.visitor:
             url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
-            return format_html('<a href="{}">View Visitor Details</a>', url)
+            return format_html('<a href="{}">View Visitor Details ({})</a>', url, obj.visitor.ip_address)
         return 'No visitor'
     visitor_link.short_description = 'Visitor'
+    
+    def related_page_views(self, obj):
+        if obj.visitor:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_pageview_changelist')
+            query = urlencode({'visitor__id__exact': obj.visitor.id})
+            url = f"{base_url}?{query}"
+            count = obj.visitor.page_views.count()
+            return format_html('<a href="{}">View all {} page views by this visitor</a>', url, count)
+        return 'No related data'
+    related_page_views.short_description = 'Related Page Views'
     
     fieldsets = (
         ('Basic Info', {
@@ -68,92 +200,273 @@ class PageViewAdmin(admin.ModelAdmin):
         }),
         ('Engagement', {
             'fields': ('time_on_page', 'scroll_depth', 'load_time')
+        }),
+        ('Related Data', {
+            'fields': ('related_page_views',)
         })
     )
 
 
 @admin.register(ProductView)
 class ProductViewAdmin(admin.ModelAdmin):
-    list_display = ['visitor_ip', 'product_name', 'time_on_page', 'scroll_depth', 'added_to_cart', 'timestamp']
+    list_display = ['visitor_ip_link', 'product_name_link', 'time_on_page', 'scroll_depth', 'added_to_cart', 'timestamp']
     list_filter = ['timestamp', 'product__category', 'added_to_cart']
     search_fields = ['visitor__ip_address', 'product__name']
-    readonly_fields = ['id', 'timestamp', 'visitor_link', 'product_link']
+    readonly_fields = ['id', 'timestamp', 'visitor_link', 'product_link', 'related_product_views', 'visitor_other_views']
     ordering = ['-timestamp']
     
-    def visitor_ip(self, obj):
-        return obj.visitor.ip_address
-    visitor_ip.short_description = 'Visitor IP'
+    def visitor_ip_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_ip_link.short_description = 'Visitor IP'
+    visitor_ip_link.admin_order_field = 'visitor__ip_address'
     
-    def product_name(self, obj):
-        return obj.product.name
-    product_name.short_description = 'Product'
+    def product_name_link(self, obj):
+        if obj.product:
+            url = reverse('admin:products_product_change', args=[obj.product.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.product.name)
+        return 'No product'
+    product_name_link.short_description = 'Product'
+    product_name_link.admin_order_field = 'product__name'
     
     def visitor_link(self, obj):
         if obj.visitor:
             url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
-            return format_html('<a href="{}">View Visitor</a>', url)
+            return format_html('<a href="{}">View Visitor Details ({})</a>', url, obj.visitor.ip_address)
         return 'No visitor'
     visitor_link.short_description = 'Visitor'
     
     def product_link(self, obj):
         if obj.product:
             url = reverse('admin:products_product_change', args=[obj.product.id])
-            return format_html('<a href="{}">View Product</a>', url)
+            return format_html('<a href="{}">View Product Details</a>', url)
         return 'No product'
     product_link.short_description = 'Product'
+    
+    def related_product_views(self, obj):
+        if obj.product:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_productview_changelist')
+            query = urlencode({'product__id__exact': obj.product.id})
+            url = f"{base_url}?{query}"
+            count = obj.product.analytics_views.count()
+            return format_html('<a href="{}">View all {} views of this product</a>', url, count)
+        return 'No related data'
+    related_product_views.short_description = 'Related Product Views'
+    
+    def visitor_other_views(self, obj):
+        if obj.visitor:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_productview_changelist')
+            query = urlencode({'visitor__id__exact': obj.visitor.id})
+            url = f"{base_url}?{query}"
+            count = obj.visitor.product_views.count()
+            return format_html('<a href="{}">View all {} products viewed by this visitor</a>', url, count)
+        return 'No related data'
+    visitor_other_views.short_description = 'Visitor Other Product Views'
+    
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('id', 'timestamp', 'session_id')
+        }),
+        ('Relationships', {
+            'fields': ('visitor_link', 'product_link')
+        }),
+        ('Engagement Data', {
+            'fields': ('time_on_page', 'scroll_depth', 'added_to_cart', 'referrer')
+        }),
+        ('Detailed Views', {
+            'fields': ('viewed_images', 'viewed_attachments')
+        }),
+        ('Related Analytics', {
+            'fields': ('related_product_views', 'visitor_other_views')
+        })
+    )
 
 
 @admin.register(SearchQuery)
 class SearchQueryAdmin(admin.ModelAdmin):
-    list_display = ['query', 'results_count', 'visitor_ip', 'timestamp']
+    list_display = ['query', 'results_count', 'visitor_ip_link', 'clicked_products_links', 'timestamp']
     list_filter = ['timestamp', 'results_count']
     search_fields = ['query', 'visitor__ip_address']
-    readonly_fields = ['id', 'timestamp']
+    readonly_fields = ['id', 'timestamp', 'visitor_link', 'clicked_products_display']
     ordering = ['-timestamp']
     
-    def visitor_ip(self, obj):
-        return obj.visitor.ip_address
-    visitor_ip.short_description = 'Visitor IP'
+    def visitor_ip_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_ip_link.short_description = 'Visitor IP'
+    visitor_ip_link.admin_order_field = 'visitor__ip_address'
+    
+    def visitor_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}">View Visitor Details ({})</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_link.short_description = 'Visitor'
+    
+    def clicked_products_links(self, obj):
+        if not obj.clicked_results:
+            return 'No clicks'
+        
+        from products.models import Product
+        links = []
+        for product_id in obj.clicked_results[:5]:  # Show max 5 products
+            try:
+                product = Product.objects.get(id=product_id)
+                url = reverse('admin:products_product_change', args=[product.id])
+                links.append(format_html('<a href="{}" style="color: #007cba; margin-right: 5px;">{}</a>', url, product.name[:20]))
+            except Product.DoesNotExist:
+                continue
+        
+        result = mark_safe(', '.join(links))
+        if len(obj.clicked_results) > 5:
+            result += f' ... (+{len(obj.clicked_results) - 5} more)'
+        return result or 'No valid products'
+    clicked_products_links.short_description = 'Clicked Products'
+    
+    def clicked_products_display(self, obj):
+        return self.clicked_products_links(obj)
+    clicked_products_display.short_description = 'Clicked Products'
+    
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('id', 'query', 'results_count', 'timestamp')
+        }),
+        ('Visitor Info', {
+            'fields': ('visitor_link', 'session_id')
+        }),
+        ('Results', {
+            'fields': ('clicked_products_display',)
+        })
+    )
 
 
 @admin.register(UserEvent)
 class UserEventAdmin(admin.ModelAdmin):
-    list_display = ['event_type', 'visitor_ip', 'page_path', 'element_text', 'product_name', 'timestamp']
+    list_display = ['event_type', 'visitor_ip_link', 'page_path_link', 'element_text', 'product_name_link', 'timestamp']
     list_filter = ['event_type', 'timestamp', 'page_path']
     search_fields = ['visitor__ip_address', 'element_text', 'page_path']
-    readonly_fields = ['id', 'timestamp']
+    readonly_fields = ['id', 'timestamp', 'visitor_link', 'product_link', 'related_events']
     ordering = ['-timestamp']
     
-    def visitor_ip(self, obj):
-        return obj.visitor.ip_address
-    visitor_ip.short_description = 'Visitor IP'
+    def visitor_ip_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_ip_link.short_description = 'Visitor IP'
+    visitor_ip_link.admin_order_field = 'visitor__ip_address'
     
-    def product_name(self, obj):
-        return obj.product.name if obj.product else 'None'
-    product_name.short_description = 'Product'
+    def page_path_link(self, obj):
+        # Create a filtered link to show all events on this page
+        from django.utils.http import urlencode
+        base_url = reverse('admin:analytics_userevent_changelist')
+        query = urlencode({'page_path__exact': obj.page_path})
+        url = f"{base_url}?{query}"
+        return format_html('<a href="{}" style="color: #007cba;">{}</a>', url, obj.page_path)
+    page_path_link.short_description = 'Page Path'
+    page_path_link.admin_order_field = 'page_path'
+    
+    def product_name_link(self, obj):
+        if obj.product:
+            url = reverse('admin:products_product_change', args=[obj.product.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none;">{}</a>', url, obj.product.name)
+        return 'None'
+    product_name_link.short_description = 'Product'
+    product_name_link.admin_order_field = 'product__name'
+    
+    def visitor_link(self, obj):
+        if obj.visitor:
+            url = reverse('admin:analytics_visitor_change', args=[obj.visitor.id])
+            return format_html('<a href="{}">View Visitor Details ({})</a>', url, obj.visitor.ip_address)
+        return 'No visitor'
+    visitor_link.short_description = 'Visitor'
+    
+    def product_link(self, obj):
+        if obj.product:
+            url = reverse('admin:products_product_change', args=[obj.product.id])
+            return format_html('<a href="{}">View Product Details</a>', url)
+        return 'No product'
+    product_link.short_description = 'Product'
+    
+    def related_events(self, obj):
+        if obj.visitor:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_userevent_changelist')
+            query = urlencode({'visitor__id__exact': obj.visitor.id})
+            url = f"{base_url}?{query}"
+            count = obj.visitor.events.count()
+            return format_html('<a href="{}">View all {} events by this visitor</a>', url, count)
+        return 'No related data'
+    related_events.short_description = 'Related Events'
+    
+    fieldsets = (
+        ('Basic Info', {
+            'fields': ('id', 'event_type', 'timestamp', 'session_id')
+        }),
+        ('Visitor & Location', {
+            'fields': ('visitor_link', 'page_path')
+        }),
+        ('Event Details', {
+            'fields': ('element_id', 'element_class', 'element_text', 'product_link', 'metadata')
+        }),
+        ('Related Data', {
+            'fields': ('related_events',)
+        })
+    )
 
 
 @admin.register(PopularProduct)
 class PopularProductAdmin(admin.ModelAdmin):
     list_display = [
-        'product_name', 'total_views', 'unique_views', 'formatted_avg_time', 
+        'product_name_link', 'total_views', 'unique_views', 'formatted_avg_time', 
         'cart_additions', 'formatted_conversion_rate', 'purchases', 'formatted_purchase_rate', 'last_viewed'
     ]
     list_filter = ['last_viewed', 'updated_at']
     search_fields = ['product__name']
-    readonly_fields = ['updated_at', 'product_link']
+    readonly_fields = ['updated_at', 'product_link', 'view_analytics_link', 'product_events_link']
     ordering = ['-total_views']
     
-    def product_name(self, obj):
-        return obj.product.name
-    product_name.short_description = 'Product'
+    def product_name_link(self, obj):
+        if obj.product:
+            url = reverse('admin:products_product_change', args=[obj.product.id])
+            return format_html('<a href="{}" style="color: #007cba; text-decoration: none; font-weight: bold;">{}</a>', url, obj.product.name)
+        return 'No product'
+    product_name_link.short_description = 'Product'
+    product_name_link.admin_order_field = 'product__name'
     
     def product_link(self, obj):
         if obj.product:
             url = reverse('admin:products_product_change', args=[obj.product.id])
-            return format_html('<a href="{}">View Product</a>', url)
+            return format_html('<a href="{}">View Product Details</a>', url)
         return 'No product'
-    product_link.short_description = 'Product'
+    product_link.short_description = 'Product Details'
+    
+    def view_analytics_link(self, obj):
+        if obj.product:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_productview_changelist')
+            query = urlencode({'product__id__exact': obj.product.id})
+            url = f"{base_url}?{query}"
+            return format_html('<a href="{}">View all {} analytics views</a>', url, obj.total_views)
+        return 'No analytics'
+    view_analytics_link.short_description = 'Analytics Views'
+    
+    def product_events_link(self, obj):
+        if obj.product:
+            from django.utils.http import urlencode
+            base_url = reverse('admin:analytics_userevent_changelist')
+            query = urlencode({'product__id__exact': obj.product.id})
+            url = f"{base_url}?{query}"
+            count = obj.product.events.count()
+            return format_html('<a href="{}">View {} product events</a>', url, count)
+        return 'No events'
+    product_events_link.short_description = 'Product Events'
     
     def formatted_avg_time(self, obj):
         """Format average time viewed to remove decimals"""
@@ -180,6 +493,21 @@ class PopularProductAdmin(admin.ModelAdmin):
             count += 1
         self.message_user(request, f'Recalculated stats for {count} products.')
     recalculate_stats.short_description = "Recalculate popularity statistics"
+    
+    fieldsets = (
+        ('Product Info', {
+            'fields': ('product_link', 'last_viewed', 'updated_at')
+        }),
+        ('View Statistics', {
+            'fields': ('total_views', 'unique_views', 'total_time_viewed', 'avg_time_viewed')
+        }),
+        ('Conversion Metrics', {
+            'fields': ('cart_additions', 'conversion_rate', 'purchases', 'purchase_rate')
+        }),
+        ('Related Analytics', {
+            'fields': ('view_analytics_link', 'product_events_link')
+        })
+    )
 
 
 @admin.register(AnalyticsSummary)
@@ -221,276 +549,6 @@ class AnalyticsSummaryAdmin(admin.ModelAdmin):
     regenerate_summary.short_description = "Regenerate selected summaries"
 
 
-# Custom Analytics Dashboard Views
-class AnalyticsDashboardAdmin(admin.ModelAdmin):
-    """Custom admin class to add analytics dashboard pages"""
-    
-    def get_urls(self):
-        urls = super().get_urls()
-        custom_urls = [
-            path('dashboard/', self.admin_site.admin_view(self.analytics_dashboard), name='analytics_dashboard'),
-            path('visitor-analytics/', self.admin_site.admin_view(self.visitor_analytics), name='visitor_analytics'),
-            path('product-analytics/', self.admin_site.admin_view(self.product_analytics), name='product_analytics'),
-            path('real-time/', self.admin_site.admin_view(self.real_time_analytics), name='real_time_analytics'),
-            path('dashboard-data/', self.admin_site.admin_view(self.dashboard_data_api), name='dashboard_data_api'),
-        ]
-        return custom_urls + urls
-    
-    def analytics_dashboard(self, request):
-        """Main analytics dashboard with overview statistics"""
-        context = self.get_dashboard_context(request)
-        return TemplateResponse(request, 'admin/analytics/dashboard.html', context)
-    
-    def visitor_analytics(self, request):
-        """Detailed visitor analytics page"""
-        context = self.get_visitor_context(request)
-        return TemplateResponse(request, 'admin/analytics/visitor_analytics.html', context)
-    
-    def product_analytics(self, request):
-        """Product analytics page"""
-        context = self.get_product_context(request)
-        return TemplateResponse(request, 'admin/analytics/product_analytics.html', context)
-    
-    def real_time_analytics(self, request):
-        """Real-time analytics page"""
-        context = self.get_real_time_context(request)
-        return TemplateResponse(request, 'admin/analytics/real_time.html', context)
-    
-    def dashboard_data_api(self, request):
-        """API endpoint for dashboard data (for AJAX updates)"""
-        timeframe = request.GET.get('timeframe', 'week')
-        data = self.get_analytics_data(timeframe)
-        return JsonResponse(data)
-    
-    def get_dashboard_context(self, request):
-        """Get context data for main dashboard"""
-        timeframe = request.GET.get('timeframe', 'week')
-        
-        # Date range calculation
-        now = timezone.now()
-        if timeframe == 'day':
-            start_date = now - timedelta(days=1)
-        elif timeframe == 'month':
-            start_date = now - timedelta(days=30)
-        else:  # week
-            start_date = now - timedelta(days=7)
-        
-        # Basic metrics
-        total_visitors = Visitor.objects.count()
-        visitors_period = Visitor.objects.filter(last_visit__gte=start_date).count()
-        page_views_period = PageView.objects.filter(timestamp__gte=start_date).count()
-        product_views_period = ProductView.objects.filter(timestamp__gte=start_date).count()
-        
-        # Top pages
-        top_pages = list(PageView.objects.filter(
-            timestamp__gte=start_date
-        ).values('path').annotate(
-            views=Count('id')
-        ).order_by('-views')[:10])
-        
-        # Top countries
-        top_countries = list(Visitor.objects.filter(
-            last_visit__gte=start_date
-        ).exclude(country='').values('country').annotate(
-            visitors=Count('id')
-        ).order_by('-visitors')[:10])
-        
-        # Top ISPs
-        top_isps = list(Visitor.objects.filter(
-            last_visit__gte=start_date
-        ).exclude(isp='').values('isp').annotate(
-            visitors=Count('id')
-        ).order_by('-visitors')[:10])
-        
-        # Popular products
-        popular_products = PopularProduct.objects.select_related('product').order_by('-total_views')[:10]
-        
-        # Recent activity
-        recent_visitors = Visitor.objects.order_by('-last_visit')[:20]
-        recent_page_views = PageView.objects.select_related('visitor').order_by('-timestamp')[:20]
-        
-        # Daily visitor trend (last 30 days)
-        daily_stats = []
-        for i in range(29, -1, -1):
-            day = now.date() - timedelta(days=i)
-            day_start = timezone.make_aware(timezone.datetime.combine(day, timezone.datetime.min.time()))
-            day_end = day_start + timedelta(days=1)
-            
-            visitors = Visitor.objects.filter(
-                last_visit__gte=day_start, 
-                last_visit__lt=day_end
-            ).count()
-            
-            page_views = PageView.objects.filter(
-                timestamp__gte=day_start,
-                timestamp__lt=day_end
-            ).count()
-            
-            daily_stats.append({
-                'date': day.strftime('%m/%d'),
-                'visitors': visitors,
-                'page_views': page_views
-            })
-        
-        return {
-            'title': 'Analytics Dashboard',
-            'timeframe': timeframe,
-            'total_visitors': total_visitors,
-            'visitors_period': visitors_period,
-            'page_views_period': page_views_period,
-            'product_views_period': product_views_period,
-            'top_pages': top_pages,
-            'top_countries': top_countries,
-            'top_isps': top_isps,
-            'popular_products': popular_products,
-            'recent_visitors': recent_visitors,
-            'recent_page_views': recent_page_views,
-            'daily_stats': json.dumps(daily_stats),
-        }
-    
-    def get_visitor_context(self, request):
-        """Get context data for visitor analytics"""
-        timeframe = request.GET.get('timeframe', 'week')
-        
-        now = timezone.now()
-        if timeframe == 'day':
-            start_date = now - timedelta(days=1)
-        elif timeframe == 'month':
-            start_date = now - timedelta(days=30)
-        else:
-            start_date = now - timedelta(days=7)
-        
-        # Visitor location data
-        country_data = list(Visitor.objects.filter(
-            last_visit__gte=start_date
-        ).exclude(country='').values('country', 'region', 'city').annotate(
-            count=Count('id')
-        ).order_by('-count')[:50])
-        
-        # ISP analysis
-        isp_data = list(Visitor.objects.filter(
-            last_visit__gte=start_date
-        ).exclude(isp='').values('isp').annotate(
-            count=Count('id')
-        ).order_by('-count')[:20])
-        
-        # Browser/User Agent analysis
-        user_agents = Visitor.objects.filter(
-            last_visit__gte=start_date
-        ).exclude(user_agent='').values_list('user_agent', flat=True)[:100]
-        
-        # Session analysis
-        session_stats = PageView.objects.filter(
-            timestamp__gte=start_date
-        ).values('session_id').annotate(
-            page_count=Count('id')
-        )
-        
-        single_page_sessions = session_stats.filter(page_count=1).count()
-        total_sessions = session_stats.count()
-        bounce_rate = (single_page_sessions / total_sessions * 100) if total_sessions > 0 else 0
-        
-        return {
-            'title': 'Visitor Analytics',
-            'timeframe': timeframe,
-            'country_data': country_data,
-            'isp_data': isp_data,
-            'user_agents': list(user_agents),
-            'bounce_rate': round(bounce_rate, 2),
-            'total_sessions': total_sessions,
-        }
-    
-    def get_product_context(self, request):
-        """Get context data for product analytics"""
-        # Most popular products
-        popular_products = PopularProduct.objects.select_related('product').order_by('-total_views')[:20]
-        
-        # Product categories performance
-        from products.models import Category
-        category_stats = []
-        for category in Category.objects.all():
-            stats = PopularProduct.objects.filter(product__category=category).aggregate(
-                total_views=Sum('total_views'),
-                total_unique=Sum('unique_views'),
-                total_cart_adds=Sum('cart_additions')
-            )
-            if stats['total_views']:
-                category_stats.append({
-                    'name': category.name,
-                    'total_views': stats['total_views'] or 0,
-                    'unique_views': stats['total_unique'] or 0,
-                    'cart_additions': stats['total_cart_adds'] or 0,
-                })
-        
-        category_stats.sort(key=lambda x: x['total_views'], reverse=True)
-        
-        # Recent product views
-        recent_product_views = ProductView.objects.select_related(
-            'visitor', 'product'
-        ).order_by('-timestamp')[:50]
-        
-        return {
-            'title': 'Product Analytics',
-            'popular_products': popular_products,
-            'category_stats': category_stats,
-            'recent_product_views': recent_product_views,
-        }
-    
-    def get_real_time_context(self, request):
-        """Get context for real-time analytics"""
-        real_time_data = AnalyticsService.get_real_time_stats()
-        
-        # Recent events (last hour)
-        recent_events = UserEvent.objects.select_related(
-            'visitor', 'product'
-        ).filter(
-            timestamp__gte=timezone.now() - timedelta(hours=1)
-        ).order_by('-timestamp')[:100]
-        
-        # Active visitors (last 5 minutes)
-        active_visitors = Visitor.objects.filter(
-            last_visit__gte=timezone.now() - timedelta(minutes=5)
-        ).order_by('-last_visit')[:50]
-        
-        # Current popular pages (last hour)
-        current_popular = PageView.objects.filter(
-            timestamp__gte=timezone.now() - timedelta(hours=1)
-        ).values('path').annotate(
-            views=Count('id')
-        ).order_by('-views')[:10]
-        
-        return {
-            'title': 'Real-Time Analytics',
-            'real_time_stats': real_time_data,
-            'recent_events': recent_events,
-            'active_visitors': active_visitors,
-            'current_popular': current_popular,
-        }
-    
-    def get_analytics_data(self, timeframe):
-        """Get analytics data for API responses"""
-        now = timezone.now()
-        if timeframe == 'day':
-            start_date = now - timedelta(days=1)
-        elif timeframe == 'month':
-            start_date = now - timedelta(days=30)
-        else:
-            start_date = now - timedelta(days=7)
-        
-        return {
-            'visitors': Visitor.objects.filter(last_visit__gte=start_date).count(),
-            'page_views': PageView.objects.filter(timestamp__gte=start_date).count(),
-            'product_views': ProductView.objects.filter(timestamp__gte=start_date).count(),
-            'events': UserEvent.objects.filter(timestamp__gte=start_date).count(),
-        }
-
-# Register a dummy model to create the dashboard URLs
-class AnalyticsDashboard(admin.ModelAdmin):
-    def has_module_permission(self, request):
-        return request.user.is_staff
-
-# Create admin instance for dashboard
-dashboard_admin = AnalyticsDashboardAdmin(AnalyticsSummary, admin.site)
 
 # Custom admin site customizations
 admin.site.site_header = "Rotational Equipment Analytics"
