@@ -24,6 +24,9 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     env_file:
       - .env.frontend
+    environment:
+      - DOMAIN=rotationales.com
+      - EMAIL=colecorbett2004@gmail.com
     entrypoint: ""
     command: ["/bin/sh", "/custom-entrypoint.sh"]
     restart: unless-stopped
