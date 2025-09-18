@@ -60,10 +60,13 @@ export const ImageWithHover = ({
 }) => {
   return (
     <div className={`relative cursor-pointer group ${className}`} onClick={onClick}>
-      <img
+      <OptimizedImage
+        id={`main-${src}`}
         src={src}
         alt={alt}
-        className="w-full h-full object-contain hover:scale-105 transition-transform duration-200"
+        className="w-full h-96 flex items-center justify-center"
+        imgClassName="w-full h-auto object-contain max-h-96 hover:scale-105 transition-transform duration-200"
+        lazy={false}
       />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
         <ZoomIn className="h-8 w-8 text-white opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
@@ -185,10 +188,13 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
             )}
 
             <div className="flex flex-col items-center">
-              <img
+              <OptimizedImage
+                id={`modal-${currentImage.id}`}
                 src={currentImage.url}
                 alt={currentImage.alt || currentImage.title || `Image ${currentIndex + 1}`}
-                className="max-w-full max-h-[80vh] object-contain"
+                className="max-w-full max-h-[80vh] flex items-center justify-center"
+                imgClassName="max-w-full max-h-[80vh] object-contain"
+                lazy={false}
               />
               {(currentImage.title || currentImage.description || images.length > 1) && (
                 <div className="text-center mt-4 px-4">

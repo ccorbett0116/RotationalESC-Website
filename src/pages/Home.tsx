@@ -103,7 +103,14 @@ const Home = () => {
   return (
     <Layout>
       <Helmet>
-        <link rel="preload" as="image" href={heroImage} fetchPriority="high" />
+        <link rel="preload" as="image" href={heroImage} fetchpriority="high" crossorigin="anonymous" />
+        <meta name="format-detection" content="telephone=no" />
+        <style>{`
+          .hero-image { 
+            will-change: auto;
+            transform: translateZ(0);
+          }
+        `}</style>
       </Helmet>
       {/* Hero Section */}
       <section className="relative py-20 overflow-hidden">
@@ -112,8 +119,10 @@ const Home = () => {
           <img
             src={heroImage}
             alt="Industrial equipment banner"
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover hero-image"
             fetchPriority="high"
+            loading="eager"
+            decoding="sync"
           />
           <div className="absolute inset-0 bg-[rgba(0,0,0,0.6)] backdrop-blur-[2px]" />
         </div>

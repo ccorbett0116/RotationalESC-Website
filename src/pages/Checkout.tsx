@@ -78,13 +78,13 @@ const Checkout = () => {
 
       try {
         setFetchingProducts(true);
-        console.log('Fetching products for cart items:', cartItems);
+        // Fetching products for cart items
         
         const products = await Promise.all(
           cartItems.map(async (item) => {
             try {
               const product = await apiService.getProduct(item.productId);
-              console.log(`Fetched product ${item.productId}:`, product);
+              // Product fetched successfully
               return product;
             } catch (error) {
               console.error(`Error fetching product ${item.productId}:`, error);
@@ -100,14 +100,14 @@ const Checkout = () => {
           quantity: item.quantity
         }));
         
-        console.log('Calculating order total with:', { items: orderItems, billing_country: formData.billing_country });
+        // Calculating order total
         
         try {
           const totalData = await apiService.calculateOrderTotal({
             items: orderItems,
             billing_country: formData.billing_country
           });
-          console.log('Order total calculated successfully:', totalData);
+          // Order total calculated successfully
           setOrderTotals(totalData);
         } catch (totalError: any) {
           console.error('Error calculating order total:', totalError);

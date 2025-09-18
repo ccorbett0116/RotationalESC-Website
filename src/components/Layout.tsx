@@ -16,20 +16,7 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (location.pathname === "/") {
-      const preloadLink = document.createElement("link");
-      preloadLink.rel = "preload";
-      preloadLink.as = "image";
-      preloadLink.href = "/assets/home-banner.webp";
-      preloadLink.setAttribute("fetchpriority", "high");
-
-      document.head.appendChild(preloadLink);
-      return () => {
-        document.head.removeChild(preloadLink);
-      };
-    }
-  }, [location.pathname]);
+  // Home page preload is handled by Home component via Helmet
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -212,7 +199,6 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                               to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
                               className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
                               onClick={() => {
-                                console.log('Navigating to', category.title);
                                 setIsMobileProductsOpen(false);
                                 setIsMobileMenuOpen(false);
                               }}

@@ -13,7 +13,7 @@ declare global {
 const getConfig = () => {
   // If window.ENV is not available yet, wait a bit and try again
   if (!window.ENV && typeof window !== 'undefined') {
-    console.log('window.ENV not available yet, using fallback');
+    // window.ENV not available yet, using fallback
   }
   
   return {

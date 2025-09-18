@@ -6,6 +6,7 @@ interface OptimizedImageProps {
   src: string;
   alt: string;
   className?: string;
+  imgClassName?: string;
   placeholder?: string;
   lazy?: boolean;
   onLoad?: () => void;
@@ -17,6 +18,7 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
   src,
   alt,
   className = '',
+  imgClassName = '',
   placeholder,
   lazy = true,
   onLoad,
@@ -114,12 +116,12 @@ const OptimizedImage: React.FC<OptimizedImageProps> = ({
         ref={imgRef}
         src={cachedUrl}
         alt={alt}
-        className={`w-full h-full object-cover transition-opacity duration-500 ${
+        className={`transition-opacity duration-500 ${
           imageLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
+        } ${imgClassName || 'w-full h-full object-cover'}`}
         onLoad={handleImageLoad}
         onError={handleImageError}
-        loading="lazy"
+        loading={lazy ? "lazy" : "eager"}
       />
     </div>
   );

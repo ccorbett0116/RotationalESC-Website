@@ -15,6 +15,7 @@ import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
 import { ImageModal, ImageWithHover } from "@/components/ImageModal";
 import ProductCard from "@/components/ProductCard";
+import OptimizedImage from "@/components/OptimizedImage";
 
 const getFileIcon = (attachment: any) => {
   if (attachment.is_image) {
@@ -229,10 +230,13 @@ const ProductDetail = () => {
                       currentImageIndex === index ? 'border-primary' : 'border-transparent hover:border-primary/50'
                     }`}
                   >
-                    <img
+                    <OptimizedImage
+                      id={`thumb-${image.id}`}
                       src={image.image_url}
                       alt={image.alt_text || `${product.name} ${index + 1}`}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full"
+                      imgClassName="w-full h-full object-cover"
+                      lazy={true}
                     />
                   </button>
                 ))}

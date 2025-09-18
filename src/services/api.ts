@@ -56,7 +56,7 @@ const getCsrfToken = async (): Promise<string> => {
 // Add request interceptor for debugging and CSRF token
 api.interceptors.request.use(
   async (config) => {
-    console.log('API Request:', config.method?.toUpperCase(), config.baseURL + config.url);
+    // API request interceptor
     
     // Add CSRF token for POST, PUT, PATCH, DELETE requests
     if (config.method && ['post', 'put', 'patch', 'delete'].includes(config.method.toLowerCase())) {
@@ -79,7 +79,7 @@ api.interceptors.request.use(
 // Add response interceptor for error handling
 api.interceptors.response.use(
   (response) => {
-    console.log('API Response:', response.status, response.config.url);
+    // API response received
     return response;
   },
   (error) => {

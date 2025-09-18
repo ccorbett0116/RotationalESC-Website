@@ -17,7 +17,7 @@ const AnalyticsWrapper: React.FC<AnalyticsWrapperProps> = ({ children }) => {
   useEffect(() => {
     // Track page view whenever the route changes
     // This ensures analytics work even when pages are served from cache
-    console.log(`Analytics: Page view tracked for ${location.pathname}`);
+    // Page view tracked for analytics
     
     // Force a client-side page view tracking to ensure it's captured
     // even when the page is served from browser cache
