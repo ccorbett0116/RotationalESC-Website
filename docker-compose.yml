@@ -55,18 +55,6 @@ services:
     depends_on:
       - frontend
 
-  analytics-cron:
-    image: ghcr.io/ccorbett0116/rotationales-analytics:latest
-    container_name: rotational-analytics-cron
-    volumes:
-      - ./database:/app/database
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    environment:
-      - COMPOSE_PROJECT_NAME=rotational-equipment-services
-    networks:
-      - rotational-network
-    depends_on:
-      - backend
 
 networks:
   rotational-network:
