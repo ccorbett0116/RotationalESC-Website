@@ -2,27 +2,17 @@
 # This runs only the Django backend on private network
 services:
   backend:
-    build: 
-      context: ./backend
-      dockerfile: Dockerfile
+    image: ghcr.io/ccorbett0116/rotationalesc-website/backend:latest
     container_name: rotational-backend
     # Only expose to private network - no public ports
     expose:
       - "8000"
-    ports:
-      - "0.0.0.0:8000:8000"
     volumes:
       - ./database:/app/database
       - ./backend/media:/app/media
       - ./backend/staticfiles:/app/staticfiles
     env_file:
       - .env.backend
-    environment:
-      - DEBUG=${DEBUG:-False}
-      # Only allow connections from frontend host and internal network
-      - ALLOWED_HOSTS=${FRONTEND_HOST:-frontend},${PRODUCTION_DOMAIN},www.${PRODUCTION_DOMAIN}
-      # Database settings for production
-      - DATABASE_URL=${DATABASE_URL:-sqlite:///app/database/db.sqlite3}
     restart: unless-stopped
     # Run database migrations on startup
     command: ["/app/entrypoint.sh"]
