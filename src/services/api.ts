@@ -2,19 +2,9 @@ import axios from 'axios';
 import { config } from '@/lib/config';
 
 // Create axios instance with base URL
-// In production, use the production domain API endpoint via nginx proxy
-// In development, fall back to localhost or testing IP
+// Always use nginx proxy for API calls - frontend proxies to backend
 const getBaseURL = () => {
-  if (config.apiUrl) {
-    return config.apiUrl;
-  }
-  
-  // Development fallbacks
-  if (import.meta.env.DEV) {
-    return 'http://localhost:8000/api';
-  }
-  
-  // Production fallback - use nginx proxy
+  // Always use relative URL - nginx will proxy to backend
   return '/api';
 };
 

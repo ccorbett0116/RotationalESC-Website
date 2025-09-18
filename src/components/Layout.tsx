@@ -6,6 +6,8 @@ import { useState, useRef, useEffect } from "react";
 import { useCart } from "@/contexts/CartContext";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { Helmet } from "react-helmet";
+import heroImage from "@/assets/home-banner.webp";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -72,6 +74,12 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Preload home banner image only on home page */}
+      {location.pathname === '/' && (
+        <Helmet>
+          <link rel="preload" as="image" href={heroImage} fetchpriority="high" crossOrigin="anonymous" />
+        </Helmet>
+      )}
       {/* Header */}
       <header className="border-b border-border bg-card relative z-40">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

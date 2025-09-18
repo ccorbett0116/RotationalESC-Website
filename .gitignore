@@ -25,7 +25,8 @@ dist-ssr
 
 # Environment files (do not commit secrets)
 .env
-
+.env.backend
+.env.frontend
 # Build tools & caches
 .cache
 .vite

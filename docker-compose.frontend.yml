@@ -1,0 +1,48 @@
+# Frontend-only configuration for deployment on public-facing machine
+# This runs only the nginx frontend that proxies API calls to backend
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
+    container_name: rotational-frontend
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./certbot/certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot:ro
+    env_file:
+      - .env.frontend
+    environment:
+      # Backend hostname for nginx proxy - should be private IP or hostname
+      - BACKEND_HOST=${BACKEND_HOST:-backend}
+      - PRODUCTION_DOMAIN=${PRODUCTION_DOMAIN}
+    restart: unless-stopped
+
+  certbot:
+    build:
+      context: ./certbot
+      dockerfile: Dockerfile
+    container_name: rotational-certbot
+    volumes:
+      - ./certbot/certs:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+      - ./certbot/logs:/var/log/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    env_file:
+      - .env.frontend
+    environment:
+      - EMAIL=${OWNER_EMAIL}
+      - DOMAIN=${PRODUCTION_DOMAIN}
+    entrypoint: ""
+    command: ["/bin/sh", "/custom-entrypoint.sh"]
+    restart: unless-stopped
+    depends_on:
+      - frontend
+
+networks:
+  default:
+    driver: bridge

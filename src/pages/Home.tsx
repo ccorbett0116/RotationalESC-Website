@@ -103,7 +103,6 @@ const Home = () => {
   return (
     <Layout>
       <Helmet>
-        <link rel="preload" as="image" href={heroImage} fetchpriority="high" crossorigin="anonymous" />
         <meta name="format-detection" content="telephone=no" />
         <style>{`
           .hero-image { 

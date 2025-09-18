@@ -4,8 +4,9 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: rotational-backend-dev
-    ports:
-      - "8000:8000"
+    # Remove public port exposure - backend only accessible within private network
+    expose:
+      - "8000"
     volumes:
       - ./database:/app/database
       - ./backend/media:/app/media
@@ -13,7 +14,7 @@ services:
       - .env
     environment:
       - DEBUG=${DEBUG:-True}
-      - ALLOWED_HOSTS=localhost,127.0.0.1,backend,${PRODUCTION_DOMAIN},www.${PRODUCTION_DOMAIN}
+      - ALLOWED_HOSTS=backend,localhost,${PRODUCTION_DOMAIN},www.${PRODUCTION_DOMAIN}
     networks:
       - rotational-network
 
@@ -23,7 +24,6 @@ services:
       dockerfile: Dockerfile
       args:
         - VITE_STRIPE_PUBLISHABLE_KEY=${VITE_STRIPE_PUBLISHABLE_KEY}
-        - VITE_API_URL=${VITE_API_URL}
     container_name: rotational-frontend-dev
     ports:
       - "80:80"
