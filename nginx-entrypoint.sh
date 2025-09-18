@@ -17,7 +17,7 @@ window.ENV = {
 EOF
 
 # Substitute environment variables in nginx config template
-envsubst '${PRODUCTION_DOMAIN}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
+envsubst '${PRODUCTION_DOMAIN} ${BACKEND_HOST}' < /etc/nginx/conf.d/default.conf.template > /etc/nginx/conf.d/default.conf
 
 # Check if SSL certificate exists and create dummy if needed
 if [ ! -f "/etc/letsencrypt/live/${PRODUCTION_DOMAIN}/fullchain.pem" ]; then

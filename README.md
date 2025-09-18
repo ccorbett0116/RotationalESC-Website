@@ -8,7 +8,7 @@ Industrial equipment maintenance, repair & optimization platform. Powers the mar
 
 ![Stack](https://img.shields.io/badge/Frontend-React%20%2B%20Vite-blue?logo=react)
 ![API](https://img.shields.io/badge/Backend-Django%20REST-green?logo=django)
-![DB](https://img.shields.io/badge/Database-PostgreSQL-blue?logo=postgresql)
+![DB](https://img.shields.io/badge/Database-SQLite-blue?logo=sqlite)
 ![CI](https://img.shields.io/badge/Infra-Docker%20%7C%20Nginx%20%7C%20Certbot-lightgrey)
 
 </div>
@@ -46,33 +46,65 @@ The platform combines a marketing presence with a secure customer portal for ass
 ## 2. Tech Stack
 Frontend: React (Vite + SWC), TypeScript, Tailwind CSS, shadcn/ui, Radix Primitives, React Router, React Hook Form + Zod, TanStack Query, Recharts
 
-Backend: Django / Django REST Framework, PostgreSQL (assumed), Stripe (in `orders/stripe_service.py`), Pillow (likely for media), Gunicorn (production)
+Backend: Django / Django REST Framework, SQLite, Stripe (in `orders/stripe_service.py`), Pillow (for media), Gunicorn (production)
 
 Tooling & Infra: Docker + Compose, Nginx (reverse proxy + static), Certbot (Let's Encrypt), Systemd timers (auto-update), Poetry (backend dependency management), Node + Bun lockfile for frontend deps.
 
 ## 3. Architecture
-High-level flow:
-Browser → Nginx → (Static frontend + reverse proxy) → Django app (Gunicorn) → PostgreSQL
-						 │
-						 └─> Media (volume) & Certbot for TLS
 
-Key Components:
-- `frontend` (Vite) served as built static bundle via Nginx
-- `backend` Django REST API powering data and auth
-- Auto-update script optionally pulling latest images & restarting containers
-- Certbot container renewing TLS & sharing certs volume with Nginx
-
-## 4. Directory Structure (Prod Host)
+### Private Backend Architecture
 ```
-/srv/RotationalESC-Website/
-├── docker-compose.yml          # Orchestration of services
-├── .env                        # Environment variables (NOT committed)
+Internet → Frontend Machine (Public) → Backend Machine (Private)
+           nginx proxy              Django API
+           ports 80/443             port 8000 (private)
+```
+
+**Frontend Machine (Public):**
+- Nginx serving React app + proxying API calls
+- SSL termination with Certbot
+- No backend secrets or database access
+
+**Backend Machine (Private):**
+- Django REST API server
+- SQLite database
+- Media file storage
+- Only accessible from frontend machine
+
+Key Benefits:
+- Enhanced security (backend isolated from internet)
+- Scalable deployment (separate machines)
+- Clear separation of concerns
+
+## 4. Directory Structure
+
+### Development
+```
+RotationalESC-Website/
+├── docker-compose.dev.yml      # Development (both services)
+├── .env                        # Development environment
+├── .env.frontend.example       # Frontend environment template
+├── .env.backend.example        # Backend environment template
 ├── backend/                    # Django project + apps
-├── certbot/                    # Certbot config & renewal logs
-├── database/                   # Mounted DB volume (Postgres data)
-├── nginx.conf                  # Nginx reverse proxy + static rules
-├── nginx-entrypoint.sh         # Nginx container init
-└── certbot-entrypoint.sh       # Certbot container init
+├── src/                        # React frontend source
+├── nginx.conf                  # Production nginx config
+├── nginx.dev.conf              # Development nginx config
+└── .github/workflows/          # CI/CD (builds images)
+```
+
+### Production Deployment
+**Frontend Machine:**
+```
+├── docker-compose.frontend.yml
+├── .env.frontend
+└── certbot/ (volumes)
+```
+
+**Backend Machine:**
+```
+├── docker-compose.backend.yml
+├── .env.backend
+├── database/ (SQLite volume)
+└── media/ (file uploads)
 ```
 
 Auto-Update System (created outside repo):
@@ -116,19 +148,36 @@ make down
 ```
 
 ## 6. Environment Variables
-Common (illustrative — confirm actual names):
+
+### Development (.env)
+```bash
+DEBUG=True
+SECRET_KEY=your-dev-secret-key
+STRIPE_SECRET_KEY=sk_test_...
+VITE_STRIPE_PUBLISHABLE_KEY=pk_test_...
+PRODUCTION_DOMAIN=localhost:3000
+OWNER_EMAIL=your-email@example.com
 ```
-POSTGRES_DB=
-POSTGRES_USER=
-POSTGRES_PASSWORD=
-POSTGRES_HOST=database
-DJANGO_SECRET_KEY=
-DJANGO_DEBUG=1
-ALLOWED_HOSTS=localhost,127.0.0.1
-STRIPE_SECRET_KEY=
-STRIPE_WEBHOOK_SECRET=
+
+### Production Frontend (.env.frontend)
+```bash
+VITE_STRIPE_PUBLISHABLE_KEY=pk_live_...
+PRODUCTION_DOMAIN=yourdomain.com
+BACKEND_HOST=backend.internal
+OWNER_EMAIL=admin@yourdomain.com
 ```
-Frontend (Vite) variables must be prefixed with `VITE_` (e.g. `VITE_API_BASE_URL`).
+
+### Production Backend (.env.backend)
+```bash
+DEBUG=False
+SECRET_KEY=your-production-secret-key
+STRIPE_SECRET_KEY=sk_live_...
+DATABASE_URL=sqlite:///app/database/db.sqlite3
+FRONTEND_HOST=frontend.internal
+PRODUCTION_DOMAIN=yourdomain.com
+```
+
+Frontend (Vite) variables must be prefixed with `VITE_`.
 
 ## 7. Backend Notes
 - Apps: `company`, `contact`, `orders`, `products` (domain-specific models & serializers)
@@ -170,19 +219,49 @@ Disable Temporarily:
 sudo systemctl stop docker-auto-update.timer
 ```
 
-## 10. Deployment (Production)
-Typical Steps:
-1. Provision host (Ubuntu LTS) + Docker + Docker Compose plugin
-2. Create `/srv/RotationalESC-Website` & pull repo
-3. Populate `.env` (secure secrets!)
-4. `docker compose up -d --build`
-5. Confirm TLS via Certbot container (auto-renew)
-6. Enable auto-update timer (optional)
+## 10. Production Deployment
 
-### Zero-Downtime Tips
-- Use `docker compose pull && docker compose up -d` (already in script)
-- Add healthchecks to backend & Nginx services
-- Keep backup of last working image digests
+### Prerequisites
+- 2 machines with Docker and Docker Compose
+- Private network between machines
+- Domain name pointed to frontend machine
+
+### Frontend Machine (Public)
+1. **Setup environment:**
+   ```bash
+   cp .env.frontend.example .env.frontend
+   # Edit: BACKEND_HOST=backend.internal, PRODUCTION_DOMAIN=yourdomain.com
+   ```
+
+2. **Deploy:**
+   ```bash
+   docker-compose -f docker-compose.frontend.yml pull
+   docker-compose -f docker-compose.frontend.yml up -d
+   ```
+
+### Backend Machine (Private)
+1. **Setup environment:**
+   ```bash
+   cp .env.backend.example .env.backend
+   # Edit: FRONTEND_HOST=frontend.internal, SECRET_KEY, STRIPE_SECRET_KEY
+   ```
+
+2. **Deploy:**
+   ```bash
+   docker-compose -f docker-compose.backend.yml pull
+   docker-compose -f docker-compose.backend.yml up -d
+   ```
+
+### Network Configuration
+- **Frontend**: Allow HTTP/HTTPS from internet, outbound to backend
+- **Backend**: Allow port 8000 only from frontend machine IP
+- **DNS**: Set up internal DNS or /etc/hosts for machine communication
+
+### Security Considerations
+- Backend has no public internet access
+- Frontend never stores backend secrets
+- SSL termination only on frontend machine
+- Database files isolated on backend machine
 
 ## 11. Testing
 Backend:
