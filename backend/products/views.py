@@ -4,6 +4,10 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Q, Prefetch
+import logging
+import gc
+
+logger = logging.getLogger(__name__)
 from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
 from .serializers import (
     CategorySerializer, 
@@ -28,13 +32,20 @@ class CategoryListView(APIView):
         return Response(serializer.data)
 
 class ProductListView(generics.ListAPIView):
-    queryset = Product.objects.filter(active=True).select_related('category').prefetch_related('images', 'specifications', 'attachments')
+    queryset = Product.objects.filter(active=True).select_related('category')
     serializer_class = ProductListSerializer
     filter_backends = [DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
     filterset_fields = ['category']  # Removed 'page' to avoid conflict with pagination
-    search_fields = ['name', 'description', 'tags', 'specifications__key', 'specifications__value']
+    search_fields = ['name', 'description', 'tags']
     ordering_fields = ['name', 'price', 'created_at', 'order']
     ordering = ['name']
+
+    def list(self, request, *args, **kwargs):
+        logger.info(f"ProductListView called. Memory before: {gc.get_stats()}")
+        response = super().list(request, *args, **kwargs)
+        logger.info(f"ProductListView finished. Memory after: {gc.get_stats()}")
+        gc.collect()  # Force garbage collection
+        return response
 
     def get_queryset(self):
         queryset = super().get_queryset()
@@ -383,7 +394,11 @@ class GalleryListView(APIView):
     List all gallery images without pagination
     """
     def get(self, request):
-        gallery_items = Gallery.objects.all()
+        # Get only metadata fields, completely avoid image_data
+        gallery_items = Gallery.objects.only(
+            'id', 'title', 'description', 'filename', 'content_type', 
+            'alt_text', 'order', 'created_at', 'updated_at'
+        )
         serializer = GallerySerializer(gallery_items, many=True)
         return Response(serializer.data)
 
@@ -392,7 +407,11 @@ class NewGalleryListView(APIView):
     List all gallery images without pagination
     """
     def get(self, request):
-        gallery_items = NewGallery.objects.all()
+        # Get only metadata fields, completely avoid image_data
+        gallery_items = NewGallery.objects.only(
+            'id', 'title', 'description', 'filename', 'content_type', 
+            'alt_text', 'order', 'created_at', 'updated_at'
+        )
         serializer = NewGallerySerializer(gallery_items, many=True)
         return Response(serializer.data)
 
@@ -417,8 +436,9 @@ class GalleryImageView(APIView):
         if not gallery_item.image_data:
             return Response({'error': 'No image data'}, status=404)
         
-        # Generate ETag based on image data
-        etag = hashlib.md5(gallery_item.image_data).hexdigest()
+        # Generate ETag based on metadata only (never touch image_data)
+        etag_data = f"{gallery_item.id}-{gallery_item.updated_at.isoformat()}"
+        etag = hashlib.md5(etag_data.encode()).hexdigest()
         
         # Check if client has cached version
         if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
@@ -445,6 +465,57 @@ class GalleryImageView(APIView):
         return response
 
 
+class ProductImageView(APIView):
+    """
+    Serve individual product images with caching headers
+    """
+    def get(self, request, product_id, image_id):
+        from django.http import HttpResponse
+        from django.utils.http import http_date
+        from django.utils import timezone
+        from datetime import timedelta
+        import hashlib
+        
+        try:
+            product_image = ProductImage.objects.get(
+                id=image_id,
+                product_id=product_id
+            )
+        except ProductImage.DoesNotExist:
+            return Response({'error': 'Image not found'}, status=404)
+        
+        if not product_image.image_data:
+            return Response({'error': 'No image data'}, status=404)
+        
+        # Generate ETag based on metadata only (never touch image_data)
+        etag_data = f"{product_image.id}-{product_image.created_at.isoformat()}"
+        etag = hashlib.md5(etag_data.encode()).hexdigest()
+        
+        # Check if client has cached version
+        if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
+        if if_none_match == f'"{etag}"':
+            response = HttpResponse(status=304)
+            response['ETag'] = f'"{etag}"'
+            return response
+        
+        # Create response with image data
+        response = HttpResponse(
+            product_image.image_data,
+            content_type=product_image.content_type or 'image/jpeg'
+        )
+        
+        # Add caching headers
+        max_age = 86400  # 24 hours
+        expires = timezone.now() + timedelta(seconds=max_age)
+        
+        response['Cache-Control'] = f'public, max-age={max_age}, immutable'
+        response['ETag'] = f'"{etag}"'
+        response['Expires'] = http_date(expires.timestamp())
+        response['Last-Modified'] = http_date(product_image.created_at.timestamp())
+        
+        return response
+
+
 class NewGalleryImageView(APIView):
     """
     Serve individual new gallery images with caching headers
@@ -465,8 +536,9 @@ class NewGalleryImageView(APIView):
         if not gallery_item.image_data:
             return Response({'error': 'No image data'}, status=404)
         
-        # Generate ETag based on image data
-        etag = hashlib.md5(gallery_item.image_data).hexdigest()
+        # Generate ETag based on metadata only (never touch image_data)
+        etag_data = f"{gallery_item.id}-{gallery_item.updated_at.isoformat()}"
+        etag = hashlib.md5(etag_data.encode()).hexdigest()
         
         # Check if client has cached version
         if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
@@ -489,5 +561,56 @@ class NewGalleryImageView(APIView):
         response['ETag'] = f'"{etag}"'
         response['Expires'] = http_date(expires.timestamp())
         response['Last-Modified'] = http_date(gallery_item.updated_at.timestamp())
+        
+        return response
+
+
+class ProductImageView(APIView):
+    """
+    Serve individual product images with caching headers
+    """
+    def get(self, request, product_id, image_id):
+        from django.http import HttpResponse
+        from django.utils.http import http_date
+        from django.utils import timezone
+        from datetime import timedelta
+        import hashlib
+        
+        try:
+            product_image = ProductImage.objects.get(
+                id=image_id,
+                product_id=product_id
+            )
+        except ProductImage.DoesNotExist:
+            return Response({'error': 'Image not found'}, status=404)
+        
+        if not product_image.image_data:
+            return Response({'error': 'No image data'}, status=404)
+        
+        # Generate ETag based on metadata only (never touch image_data)
+        etag_data = f"{product_image.id}-{product_image.created_at.isoformat()}"
+        etag = hashlib.md5(etag_data.encode()).hexdigest()
+        
+        # Check if client has cached version
+        if_none_match = request.META.get('HTTP_IF_NONE_MATCH')
+        if if_none_match == f'"{etag}"':
+            response = HttpResponse(status=304)
+            response['ETag'] = f'"{etag}"'
+            return response
+        
+        # Create response with image data
+        response = HttpResponse(
+            product_image.image_data,
+            content_type=product_image.content_type or 'image/jpeg'
+        )
+        
+        # Add caching headers
+        max_age = 86400  # 24 hours
+        expires = timezone.now() + timedelta(seconds=max_age)
+        
+        response['Cache-Control'] = f'public, max-age={max_age}, immutable'
+        response['ETag'] = f'"{etag}"'
+        response['Expires'] = http_date(expires.timestamp())
+        response['Last-Modified'] = http_date(product_image.created_at.timestamp())
         
         return response

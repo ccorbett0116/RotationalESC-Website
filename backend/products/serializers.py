@@ -75,24 +75,22 @@ class ProductAttachmentSerializer(serializers.ModelSerializer):
 
 class ProductListSerializer(serializers.ModelSerializer):
     category = CategorySerializer(read_only=True)
-    primary_image = serializers.SerializerMethodField()
     tags_list = serializers.ReadOnlyField()
-    specifications = ProductSpecificationSerializer(many=True, read_only=True)
-    attachments = ProductAttachmentSerializer(many=True, read_only=True)
     is_available = serializers.ReadOnlyField()
+    primary_image = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'price', 'category',
-            'active', 'quantity', 'order', 'is_available', 'tags_list', 'primary_image', 
-            'specifications', 'attachments'
+            'active', 'quantity', 'order', 'is_available', 'tags_list', 'primary_image'
         ]
-
+    
     def get_primary_image(self, obj):
+        # Get primary image (order=0) and return URL endpoint instead of data URL
         primary_image = obj.images.filter(order=0).first()
         if primary_image:
-            return primary_image.data_url
+            return f"/api/products/{obj.id}/image/{primary_image.id}/"
         return None
 
 class ProductDetailSerializer(serializers.ModelSerializer):
@@ -192,10 +190,8 @@ class GallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
-        # Return a URL endpoint instead of base64 data for better performance
-        if obj.image_data:
-            return f"/api/gallery/{obj.id}/image/"
-        return None
+        # Always return URL endpoint - let the image view handle 404 if no data
+        return f"/api/gallery/{obj.id}/image/"
 
 class NewGallerySerializer(serializers.ModelSerializer):
     image_url = serializers.SerializerMethodField()
@@ -205,7 +201,5 @@ class NewGallerySerializer(serializers.ModelSerializer):
         fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
     
     def get_image_url(self, obj):
-        # Return a URL endpoint instead of base64 data for better performance
-        if obj.image_data:
-            return f"/api/new-gallery/{obj.id}/image/"
-        return None
+        # Always return URL endpoint - let the image view handle 404 if no data  
+        return f"/api/new-gallery/{obj.id}/image/"

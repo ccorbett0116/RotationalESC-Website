@@ -1,10 +1,9 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { apiService, GalleryImage } from "@/services/api";
-import { ImageModal, ImageWithHover } from "@/components/ImageModal";
-import OptimizedImage from "@/components/OptimizedImage";
-import { useImagePreloader } from "@/hooks/useImageCache";
+import { apiService, GalleryImage as GalleryImageType } from "@/services/api";
+import { ImageModal } from "@/components/ImageModal";
+import TestImage from "@/components/TestImage";
 
 interface GalleryProps {
   title: string;
@@ -13,14 +12,14 @@ interface GalleryProps {
 }
 
 const Gallery = ({ title, description, galleryType }: GalleryProps) => {
-  const [images, setImages] = useState<GalleryImage[]>([]);
+  const [images, setImages] = useState<GalleryImageType[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const { preloadImages } = useImagePreloader();
 
   const nextSlide = useCallback(() => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -40,15 +39,6 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
         setImages(data);
         setError(null);
 
-        // Preload visible images after a short delay
-        setTimeout(() => {
-          const imagesToPreload = data.slice(0, 6).map(img => ({
-            id: img.id.toString(),
-            url: img.image_url
-          }));
-          preloadImages(imagesToPreload);
-        }, 500);
-
       } catch (err) {
         setError("Failed to load gallery images");
         console.error("Gallery fetch error:", err);
@@ -58,7 +48,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
     };
 
     fetchGalleryImages();
-  }, [galleryType, preloadImages]);
+  }, [galleryType]);
 
   // Auto-scroll functionality
   useEffect(() => {
@@ -89,6 +79,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
     };
   }, [isPaused, isModalOpen, images.length, nextSlide]);
 
+
   const handleMouseEnter = () => {
     setIsPaused(true);
   };
@@ -97,7 +88,8 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
     setIsPaused(false);
   };
 
-  const handleModalOpen = () => {
+  const handleImageClick = (index: number) => {
+    setSelectedImageIndex(index);
     setIsModalOpen(true);
   };
 
@@ -197,40 +189,28 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
                 galleryType === 'new-equipment' ? 'stagger-children' : ''
               }`}>
                 {displayImages.map((image) => (
-                  <ImageModal
+                  <div 
                     key={image.id}
-                    images={images.map(img => ({
-                      id: img.id,
-                      url: img.image_url,
-                      alt: img.alt_text || img.title,
-                      title: img.title,
-                      description: img.description
-                    }))}
-                    initialIndex={image.displayIndex}
-                    onModalOpen={handleModalOpen}
-                    onModalClose={handleModalClose}
-                    trigger={
-                      <div className={`group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer h-full flex flex-col ${
-                        image.isCenter ? 'scale-105 shadow-lg border-primary/50' : 'scale-95 opacity-75'
-                      }`}>
-                        <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
-                          <OptimizedImage
-                            id={image.id.toString()}
-                            src={image.image_url}
-                            alt={image.alt_text || image.title}
-                            className="w-full h-full object-cover hover:scale-105 transition-transform duration-300"
-                            lazy={true}
-                          />
-                        </div>
-                        <div className="p-4 flex-1 flex flex-col justify-between">
-                          <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
-                          {image.description && (
-                            <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
-                          )}
-                        </div>
-                      </div>
-                    }
-                  />
+                    className={`group overflow-hidden rounded-lg border border-border bg-card shadow-sm hover:shadow-md transition-all duration-500 cursor-pointer h-full flex flex-col ${
+                      image.isCenter ? 'scale-105 shadow-lg border-primary/50' : 'scale-95 opacity-75'
+                    }`}
+                    onClick={() => handleImageClick(image.displayIndex)}
+                  >
+                    <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
+                      <TestImage
+                        src={image.image_url}
+                        alt={image.alt_text || image.title}
+                        className="w-full h-full"
+                        lazy={true}
+                      />
+                    </div>
+                    <div className="p-4 flex-1 flex flex-col justify-between">
+                      <h3 className="font-semibold text-foreground mb-2">{image.title}</h3>
+                      {image.description && (
+                        <p className="text-sm text-muted-foreground line-clamp-2">{image.description}</p>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
             </div>
@@ -271,6 +251,22 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
           </div>
         </div>
       </section>
+
+      {/* Only create modal when actually opened to prevent loading all images */}
+      {isModalOpen && (
+        <ImageModal
+          images={images.map(img => ({
+            id: img.id,
+            src: img.image_url,
+            alt: img.alt_text || img.title,
+            title: img.title,
+            description: img.description
+          }))}
+          initialIndex={selectedImageIndex}
+          onClose={handleModalClose}
+          isOpen={true}
+        />
+      )}
     </>
   );
 };

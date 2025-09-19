@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Trash2, Plus, Minus, MessageCircle } from "lucide-react";
 import { Product } from "@/services/api";
 import { formatCAD } from "@/lib/currency";
+import Image from "@/components/Image";
 
 interface CartProductCardProps {
   product: Product;
@@ -36,10 +37,18 @@ const CartProductCard: React.FC<CartProductCardProps> = ({
 
       <div className="bg-muted rounded-t-lg overflow-hidden p-4">
         {product.primary_image ? (
-          <img
+          <Image
             src={product.primary_image}
             alt={product.name}
-            className="w-full h-auto object-contain max-h-32"
+            className="w-full h-32"
+            objectFit="contain"
+            lazy={true}
+            placeholder="skeleton"
+            errorFallback={
+              <div className="w-full h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <span className="text-muted-foreground text-sm">No Image</span>
+              </div>
+            }
           />
         ) : (
           <div className="w-full h-32 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">

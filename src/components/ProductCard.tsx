@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { ShoppingCart, X } from "lucide-react";
 import { Product, ProductSpecification } from "@/services/api";
 import { formatCAD } from "@/lib/currency";
-import OptimizedImage from "@/components/OptimizedImage";
+import Image from "@/components/Image";
 
 interface ProductCardProps {
   product: Product;
@@ -97,13 +97,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
     <Card className={`h-full flex flex-col ${className}`}>
       <div className="bg-muted rounded-t-lg overflow-hidden p-4">
         {product.primary_image ? (
-          <OptimizedImage
-            id={`product-${product.id}`}
+          <Image
             src={product.primary_image}
             alt={product.name}
-            className="w-full h-48 flex items-center justify-center"
-            imgClassName="w-full h-auto object-contain max-h-48"
+            className="w-full h-48"
+            objectFit="contain"
             lazy={true}
+            placeholder="skeleton"
+            errorFallback={
+              <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
+                <span className="text-muted-foreground">No Image</span>
+              </div>
+            }
           />
         ) : (
           <div className="w-full h-48 bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">

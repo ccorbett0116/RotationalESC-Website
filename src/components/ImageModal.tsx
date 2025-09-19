@@ -1,12 +1,11 @@
 import { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { ZoomIn, ChevronLeft, ChevronRight, X } from "lucide-react";
-import OptimizedImage from "@/components/OptimizedImage";
+import Image from "./Image";
 
 interface ImageData {
   id: string | number;
-  url: string;
+  src: string;
   alt?: string;
   title?: string;
   description?: string;
@@ -15,10 +14,10 @@ interface ImageData {
 interface ImageModalProps {
   images: ImageData[];
   initialIndex?: number;
-  trigger: React.ReactNode;
+  isOpen?: boolean;
+  onClose?: () => void;
+  trigger?: React.ReactNode;
   className?: string;
-  onModalOpen?: () => void;
-  onModalClose?: () => void;
 }
 
 interface ImageZoomProps {
@@ -29,21 +28,23 @@ interface ImageZoomProps {
 }
 
 export const ImageZoom = ({ src, alt, className = "", trigger }: ImageZoomProps) => {
+  const [isOpen, setIsOpen] = useState(false);
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
+    <>
+      <div onClick={() => setIsOpen(true)} className={className}>
         {trigger}
-      </DialogTrigger>
-      <DialogContent className="max-w-4xl max-h-[90vh] p-0 bg-gray-900 border-0">
-        <div className="relative">
-          <img
-            src={src}
-            alt={alt}
-            className="w-full h-auto max-h-[85vh] object-contain"
-          />
-        </div>
-      </DialogContent>
-    </Dialog>
+      </div>
+
+      {isOpen && (
+        <ImageModal
+          images={[{ id: 'zoom', src, alt }]}
+          initialIndex={0}
+          isOpen={isOpen}
+          onClose={() => setIsOpen(false)}
+        />
+      )}
+    </>
   );
 };
 
@@ -51,21 +52,24 @@ export const ImageWithHover = ({
   src, 
   alt, 
   onClick, 
-  className = "" 
+  className = "",
+  aspectRatio = "4/3"
 }: { 
   src: string; 
   alt: string; 
   onClick?: () => void;
   className?: string;
+  aspectRatio?: string;
 }) => {
   return (
     <div className={`relative cursor-pointer group ${className}`} onClick={onClick}>
-      <OptimizedImage
-        id={`main-${src}`}
+      <Image
         src={src}
         alt={alt}
-        className="w-full h-96 flex items-center justify-center"
-        imgClassName="w-full h-auto object-contain max-h-96 hover:scale-105 transition-transform duration-200"
+        className="w-full"
+        imgClassName="hover:scale-105 transition-transform duration-200"
+        aspectRatio={aspectRatio}
+        objectFit="contain"
         lazy={false}
       />
       <div className="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors duration-200 flex items-center justify-center">
@@ -75,9 +79,19 @@ export const ImageWithHover = ({
   );
 };
 
-export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", onModalOpen, onModalClose }: ImageModalProps) => {
-  const [isOpen, setIsOpen] = useState(false);
+export const ImageModal = ({ 
+  images, 
+  initialIndex = 0, 
+  isOpen = false,
+  onClose,
+  trigger,
+  className = "" 
+}: ImageModalProps) => {
   const [currentIndex, setCurrentIndex] = useState(initialIndex);
+  const [internalIsOpen, setInternalIsOpen] = useState(false);
+  
+  // Use external isOpen if provided, otherwise use internal state
+  const actualIsOpen = isOpen || internalIsOpen;
 
   useEffect(() => {
     setCurrentIndex(initialIndex);
@@ -85,10 +99,9 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (isOpen) {
+      if (actualIsOpen) {
         if (e.key === "Escape") {
-          setIsOpen(false);
-          onModalClose?.();
+          handleClose();
         }
         if (e.key === "ArrowLeft") prevImage();
         if (e.key === "ArrowRight") nextImage();
@@ -97,22 +110,19 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isOpen, currentIndex, images.length]);
+  }, [actualIsOpen, currentIndex, images.length]);
 
   useEffect(() => {
-    if (isOpen) {
-      // Prevent background scrolling
+    if (actualIsOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      // Restore scrolling
       document.body.style.overflow = 'unset';
     }
 
-    // Cleanup on unmount
     return () => {
       document.body.style.overflow = 'unset';
     };
-  }, [isOpen]);
+  }, [actualIsOpen]);
 
   const nextImage = () => {
     setCurrentIndex((prev) => (prev + 1) % images.length);
@@ -122,18 +132,26 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
     setCurrentIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
+  const handleClose = () => {
+    setInternalIsOpen(false);
+    onClose?.();
+  };
+
+  const handleOpen = () => {
+    setInternalIsOpen(true);
+  };
+
   const currentImage = images[currentIndex];
 
   return (
     <>
-      <div onClick={() => {
-        setIsOpen(true);
-        onModalOpen?.();
-      }} className={className}>
-        {trigger}
-      </div>
+      {trigger && (
+        <div onClick={handleOpen} className={className}>
+          {trigger}
+        </div>
+      )}
 
-      {isOpen && (
+      {actualIsOpen && (
         <div 
           className="fixed inset-0 z-50 bg-gray-900 flex items-center justify-center p-4"
           style={{ 
@@ -145,10 +163,8 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
             zIndex: 9999
           }}
           onClick={(e) => {
-            // Only close if clicking on the backdrop, not the image content
             if (e.target === e.currentTarget) {
-              setIsOpen(false);
-              onModalClose?.();
+              handleClose();
             }
           }}
         >
@@ -156,10 +172,7 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => {
-                setIsOpen(false);
-                onModalClose?.();
-              }}
+              onClick={handleClose}
               className="absolute top-4 right-4 z-10 h-10 w-10 rounded-full bg-black/50 text-white hover:bg-black/70"
             >
               <X className="h-4 w-4" />
@@ -188,13 +201,14 @@ export const ImageModal = ({ images, initialIndex = 0, trigger, className = "", 
             )}
 
             <div className="flex flex-col items-center">
-              <OptimizedImage
-                id={`modal-${currentImage.id}`}
-                src={currentImage.url}
+              <Image
+                src={currentImage.src}
                 alt={currentImage.alt || currentImage.title || `Image ${currentIndex + 1}`}
-                className="max-w-full max-h-[80vh] flex items-center justify-center"
-                imgClassName="max-w-full max-h-[80vh] object-contain"
+                className="max-w-full max-h-[80vh]"
+                imgClassName="max-w-full max-h-[80vh]"
+                objectFit="contain"
                 lazy={false}
+                priority={true}
               />
               {(currentImage.title || currentImage.description || images.length > 1) && (
                 <div className="text-center mt-4 px-4">
