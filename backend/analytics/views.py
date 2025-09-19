@@ -23,6 +23,52 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def get_or_create_visitor(request):
+    """Get visitor from request or create one if middleware didn't run"""
+    visitor = getattr(request, 'visitor', None)
+    
+    if not visitor:
+        logger.info("Visitor not found in request, creating directly")
+        # Try to create visitor directly if middleware didn't run
+        from .middleware import AnalyticsMiddleware
+        middleware = AnalyticsMiddleware()
+        
+        # Get IP address
+        ip_address = middleware.get_client_ip(request)
+        logger.info(f"Client IP: {ip_address}")
+        
+        if ip_address:
+            try:
+                # Initialize session if needed
+                if not hasattr(request, 'session'):
+                    logger.warning("Request has no session attribute")
+                elif not request.session.session_key:
+                    request.session.create()
+                    logger.info("Created new session")
+                
+                visitor = middleware.get_or_create_visitor(ip_address, request, count_visit=False)
+                request.visitor = visitor
+                
+                # Generate session ID if not exists
+                if not hasattr(request, 'analytics_session_id'):
+                    import uuid
+                    request.analytics_session_id = str(uuid.uuid4())
+                    logger.info("Generated analytics session ID")
+                
+                logger.info(f"Successfully created/retrieved visitor: {visitor.id}")
+                return visitor
+            except Exception as e:
+                logger.error(f"Failed to create visitor: {e}", exc_info=True)
+                return None
+        else:
+            logger.error("Cannot determine client IP address")
+            return None
+    else:
+        logger.debug(f"Using existing visitor: {visitor.id}")
+    
+    return visitor
+
+
 def add_no_cache_headers(response):
     """Add cache-busting headers to prevent analytics requests from being cached"""
     response['Cache-Control'] = 'no-cache, no-store, must-revalidate, max-age=0'
@@ -34,7 +80,7 @@ def add_no_cache_headers(response):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsTrackingAllowed])
+@permission_classes([AllowAny])
 @never_cache
 @rate_limit(max_requests=200, time_window=3600, key_func=tracking_rate_limit)
 def track_product_view(request):
@@ -53,7 +99,7 @@ def track_product_view(request):
             return Response({'error': 'Product not found'}, status=status.HTTP_404_NOT_FOUND)
         
         # Get visitor from middleware
-        visitor = getattr(request, 'visitor', None)
+        visitor = get_or_create_visitor(request)
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -131,7 +177,7 @@ def track_product_view(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsTrackingAllowed])
+@permission_classes([AllowAny])
 @never_cache
 @rate_limit(max_requests=50, time_window=3600, key_func=tracking_rate_limit)
 def track_search(request):
@@ -143,7 +189,7 @@ def track_search(request):
         if not query:
             return Response({'error': 'query is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        visitor = getattr(request, 'visitor', None)
+        visitor = get_or_create_visitor(request)
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -164,7 +210,7 @@ def track_search(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsTrackingAllowed])
+@permission_classes([AllowAny])
 @never_cache
 @rate_limit(max_requests=300, time_window=3600, key_func=tracking_rate_limit)
 def track_event(request):
@@ -176,7 +222,7 @@ def track_event(request):
         if not event_type:
             return Response({'error': 'event_type is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        visitor = getattr(request, 'visitor', None)
+        visitor = get_or_create_visitor(request)
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
@@ -211,7 +257,7 @@ def track_event(request):
 
 @csrf_exempt
 @api_view(['POST'])
-@permission_classes([IsTrackingAllowed])
+@permission_classes([AllowAny])
 @never_cache
 @rate_limit(max_requests=500, time_window=3600, key_func=tracking_rate_limit)
 def update_page_metrics(request):
@@ -223,7 +269,7 @@ def update_page_metrics(request):
         if not page_path:
             return Response({'error': 'page_path is required'}, status=status.HTTP_400_BAD_REQUEST)
         
-        visitor = getattr(request, 'visitor', None)
+        visitor = get_or_create_visitor(request)
         if not visitor:
             return Response({'error': 'Visitor tracking not available'}, status=status.HTTP_400_BAD_REQUEST)
         
