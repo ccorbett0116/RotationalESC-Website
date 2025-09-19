@@ -43,7 +43,7 @@ python manage.py ensure_superuser
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Database setup complete. Starting Django server..."
+echo "Database setup complete. Starting Gunicorn server..."
 
-# Start the Django development server
-exec python manage.py runserver 0.0.0.0:8000
+# Start Gunicorn WSGI server
+exec gunicorn --bind 0.0.0.0:8000 --workers 3 --timeout 120 rotational_equipment.wsgi:application
