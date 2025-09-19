@@ -3,7 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { apiService, GalleryImage as GalleryImageType } from "@/services/api";
 import { ImageModal } from "@/components/ImageModal";
-import TestImage from "@/components/TestImage";
+import GalleryImage from "@/components/GalleryImage";
 
 interface GalleryProps {
   title: string;
@@ -197,11 +197,16 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
                     onClick={() => handleImageClick(image.displayIndex)}
                   >
                     <div className="aspect-[4/3] overflow-hidden relative group flex-shrink-0">
-                      <TestImage
-                        src={image.image_url}
+                      <GalleryImage
+                        imageId={image.id}
+                        type={galleryType}
                         alt={image.alt_text || image.title}
                         className="w-full h-full"
+                        imgClassName="hover:scale-105 transition-transform duration-300"
+                        aspectRatio="4/3"
+                        objectFit="cover"
                         lazy={true}
+                        placeholder="skeleton"
                       />
                     </div>
                     <div className="p-4 flex-1 flex flex-col justify-between">

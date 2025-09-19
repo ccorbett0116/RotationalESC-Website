@@ -10,6 +10,7 @@ import { apiService, Order } from "@/services/api";
 import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import Image from "@/components/Image";
 
 const OrderConfirmation = () => {
   const { token } = useParams();
@@ -255,10 +256,14 @@ const OrderConfirmation = () => {
                     <div className="flex gap-3">
                       <div className="w-16 h-16 bg-muted rounded overflow-hidden">
                         {item.product.primary_image ? (
-                          <img
+                          <Image
                             src={item.product.primary_image}
                             alt={item.product.name}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full"
+                            aspectRatio="1/1"
+                            objectFit="cover"
+                            lazy={true}
+                            placeholder="skeleton"
                           />
                         ) : (
                           <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20" />

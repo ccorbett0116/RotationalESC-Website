@@ -13,6 +13,7 @@ import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
 import { formatCAD } from "@/lib/currency";
 import Layout from "@/components/Layout";
+import Image from "@/components/Image";
 // import StripePaymentWrapper from "@/components/StripePayment"; // Replaced by Stripe Checkout redirect
 
 const Checkout = () => {
@@ -740,10 +741,14 @@ const Checkout = () => {
                         <div className="flex gap-3">
                           <div className="w-12 h-12 bg-muted rounded overflow-hidden">
                             {imageUrl ? (
-                              <img
+                              <Image
                                 src={imageUrl}
                                 alt={item.product.name}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full"
+                                aspectRatio="1/1"
+                                objectFit="cover"
+                                lazy={true}
+                                placeholder="skeleton"
                               />
                             ) : (
                               <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">

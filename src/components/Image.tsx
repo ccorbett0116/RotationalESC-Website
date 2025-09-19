@@ -99,21 +99,24 @@ const Image: React.FC<ImageProps> = ({
       style={containerStyles}
       onClick={onClick}
     >
-      {/* Placeholder */}
-      {showPlaceholder && !showError && (
+      {/* Show placeholder when not in view */}
+      {!isInView && (
+        <Placeholder />
+      )}
+
+      {/* Show error state */}
+      {isInView && showError && (
+        <ErrorFallback />
+      )}
+
+      {/* Show loading state while image loads */}
+      {isInView && !showError && !imageLoaded && (
         <div className="absolute inset-0">
           <Placeholder />
         </div>
       )}
 
-      {/* Error State */}
-      {showError && (
-        <div className="absolute inset-0">
-          <ErrorFallback />
-        </div>
-      )}
-
-      {/* Actual Image */}
+      {/* Actual Image - only create when in view */}
       {isInView && !showError && (
         <img
           ref={imgRef}
@@ -132,7 +135,7 @@ const Image: React.FC<ImageProps> = ({
           `}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          loading={priority ? "eager" : "eager"}
+          loading="eager"
           decoding="async"
         />
       )}

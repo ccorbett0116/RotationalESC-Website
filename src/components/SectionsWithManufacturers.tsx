@@ -3,6 +3,7 @@ import apiService, { SectionWithManufacturers } from '@/services/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ExternalLink, Image as ImageIcon } from 'lucide-react';
+import Image from '@/components/Image';
 
 interface SectionsWithManufacturersProps {
   title: string;
@@ -10,72 +11,56 @@ interface SectionsWithManufacturersProps {
   page?: string; // Filter sections by page
 }
 
-// Enhanced Image Component with loading states
+// Enhanced Image Component with dynamic height using unified Image component
 const ManufacturerImage: React.FC<{
   src: string;
   alt: string;
   className?: string;
 }> = ({ src, alt, className = "" }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
   const [imageHeight, setImageHeight] = useState("h-48");
 
-  const handleImageLoad = (e: React.SyntheticEvent<HTMLImageElement>) => {
-    const img = e.target as HTMLImageElement;
-    const aspectRatio = img.naturalWidth / img.naturalHeight;
-    
-    // Dynamically adjust height based on aspect ratio
-    if (aspectRatio > 3) {
-      // Very wide banner images
-      setImageHeight("h-32");
-    } else if (aspectRatio > 2.5) {
-      // Wide banner images  
-      setImageHeight("h-36");
-    } else if (aspectRatio < 0.6) {
-      // Very tall images
-      setImageHeight("h-56");
-    } else if (aspectRatio < 0.8) {
-      // Tall images
-      setImageHeight("h-52");
-    } else {
-      // Square-ish images
-      setImageHeight("h-48");
-    }
-    
-    setIsLoading(false);
+  const handleImageLoad = () => {
+    // Create a temporary image to get natural dimensions
+    const tempImg = new window.Image();
+    tempImg.onload = () => {
+      const aspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
+      
+      // Dynamically adjust height based on aspect ratio
+      if (aspectRatio > 3) {
+        setImageHeight("h-32");
+      } else if (aspectRatio > 2.5) {
+        setImageHeight("h-36");
+      } else if (aspectRatio < 0.6) {
+        setImageHeight("h-56");
+      } else if (aspectRatio < 0.8) {
+        setImageHeight("h-52");
+      } else {
+        setImageHeight("h-48");
+      }
+    };
+    tempImg.src = src;
   };
 
-  const handleImageError = () => {
-    setHasError(true);
-    setIsLoading(false);
-  };
-
-  if (hasError) {
-    return (
-      <div className={`${imageHeight} bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center ${className}`}>
-        <div className="text-center">
-          <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
-          <span className="text-xs text-muted-foreground">Image not available</span>
-        </div>
+  const errorFallback = (
+    <div className="bg-gradient-to-br from-muted/30 to-muted/10 flex items-center justify-center">
+      <div className="text-center">
+        <ImageIcon className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+        <span className="text-xs text-muted-foreground">Image not available</span>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <div className={`relative ${className}`}>
-      {isLoading && (
-        <div className={`${imageHeight} bg-gradient-to-br from-muted/50 to-muted/30 flex items-center justify-center`}>
-          <Skeleton className="w-16 h-16 rounded-lg" />
-        </div>
-      )}
-      <img
-        src={src}
-        alt={alt}
-        className={`w-full ${imageHeight} object-contain p-4 group-hover:scale-105 transition-all duration-300 ${isLoading ? 'opacity-0' : 'opacity-100'}`}
-        onLoad={handleImageLoad}
-        onError={handleImageError}
-      />
-    </div>
+    <Image
+      src={src}
+      alt={alt}
+      className={`${imageHeight} ${className}`}
+      imgClassName="object-contain p-4 group-hover:scale-105 transition-all duration-300"
+      lazy={true}
+      placeholder="skeleton"
+      onLoad={handleImageLoad}
+      errorFallback={errorFallback}
+    />
   );
 };
 

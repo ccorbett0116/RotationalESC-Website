@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Users, Award } from "lucide-react";
 import { useCanonical } from "@/hooks/useCanonical";
+import Image from "@/components/Image";
 // Define services inline
 const services = [
   {
@@ -133,10 +134,14 @@ const About = () => {
               </div>
             </div>
             <div className="aspect-video bg-muted rounded-lg overflow-hidden">
-              <img
+              <Image
                 src={NewAboutUsImage}
                 alt="Industry professionals talking"
-                className="w-full h-full object-cover"
+                className="w-full h-full"
+                aspectRatio="16/9"
+                objectFit="cover"
+                lazy={true}
+                placeholder="skeleton"
               />
             </div>
           </div>
