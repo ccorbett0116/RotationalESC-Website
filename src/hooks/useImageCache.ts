@@ -127,13 +127,13 @@ class ImageCacheManager {
 
 const imageCacheManager = new ImageCacheManager();
 
-export const useImageCache = (imageId: string, originalUrl: string) => {
+export const useImageCache = (imageId: string, originalUrl: string, shouldLoad: boolean = true) => {
   const [cachedUrl, setCachedUrl] = useState<string>(originalUrl);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const loadImage = useCallback(async () => {
-    if (!originalUrl || !imageId) {
+    if (!originalUrl || !imageId || !shouldLoad) {
       setLoading(false);
       return;
     }
@@ -149,11 +149,13 @@ export const useImageCache = (imageId: string, originalUrl: string) => {
     } finally {
       setLoading(false);
     }
-  }, [imageId, originalUrl]);
+  }, [imageId, originalUrl, shouldLoad]);
 
   useEffect(() => {
-    loadImage();
-  }, [loadImage]);
+    if (shouldLoad) {
+      loadImage();
+    }
+  }, [loadImage, shouldLoad]);
 
   return { cachedUrl, loading, error };
 };
