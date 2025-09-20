@@ -8,7 +8,7 @@ import logging
 import gc
 
 logger = logging.getLogger(__name__)
-from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
+from .models import Category, Product, ProductImage, Section, Manufacturer, Gallery, NewGallery, ProductAttachment, EquipmentCategory
 from .serializers import (
     CategorySerializer, 
     ProductListSerializer, 
@@ -220,22 +220,75 @@ def upload_manufacturer(request):
 def sections_with_manufacturers(request):
     """
     Get all sections with their associated manufacturers
-    Optionally filter by page parameter
+    Optionally filter by equipment category slug
     """
     sections = Section.objects.prefetch_related(
         Prefetch(
             'manufacturers',
             queryset=Manufacturer.objects.order_by('order')
         )
-    ).all()
+    ).select_related('equipment_category').all()
     
-    # Filter by page if provided
-    page = request.GET.get('page')
-    if page:
-        sections = sections.filter(page=page)
+    # Filter by equipment category slug if provided
+    category_slug = request.GET.get('category_slug') or request.GET.get('page')  # Support legacy 'page' param
+    if category_slug:
+        sections = sections.filter(equipment_category__slug=category_slug)
     
     serializer = SectionWithManufacturersSerializer(sections, many=True)
     return Response(serializer.data)
+
+@api_view(['GET'])
+def equipment_categories(request):
+    """
+    Get all active equipment categories
+    """
+    categories = EquipmentCategory.objects.filter(active=True).order_by('order', 'name')
+    
+    # Simple serializer inline since we just need basic data
+    data = []
+    for category in categories:
+        data.append({
+            'id': category.id,
+            'name': category.name,
+            'slug': category.slug,
+            'description': category.description,
+            'meta_title': category.meta_title,
+            'meta_description': category.meta_description,
+            'order': category.order,
+        })
+    
+    return Response(data)
+
+@api_view(['GET'])
+def equipment_category_detail(request, slug):
+    """
+    Get a specific equipment category by slug with its sections and manufacturers
+    """
+    try:
+        category = EquipmentCategory.objects.get(slug=slug, active=True)
+    except EquipmentCategory.DoesNotExist:
+        return Response({'error': 'Equipment category not found'}, status=404)
+    
+    # Get sections for this category with their manufacturers
+    sections = Section.objects.filter(equipment_category=category).prefetch_related(
+        Prefetch(
+            'manufacturers',
+            queryset=Manufacturer.objects.order_by('order')
+        )
+    )
+    
+    # Build response data
+    category_data = {
+        'id': category.id,
+        'name': category.name,
+        'slug': category.slug,
+        'description': category.description,
+        'meta_title': category.meta_title,
+        'meta_description': category.meta_description,
+        'sections': SectionWithManufacturersSerializer(sections, many=True).data
+    }
+    
+    return Response(category_data)
 
 
 @api_view(['POST'])

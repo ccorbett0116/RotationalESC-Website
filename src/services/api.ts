@@ -149,9 +149,24 @@ export interface SectionWithManufacturers {
   id: number;
   label: string;
   page: string;
+  description?: string;
   manufacturers: Manufacturer[];
   created_at: string;
   updated_at: string;
+}
+
+export interface EquipmentCategory {
+  id: number;
+  name: string;
+  slug: string;
+  description: string;
+  meta_title?: string;
+  meta_description?: string;
+  order: number;
+}
+
+export interface EquipmentCategoryDetail extends EquipmentCategory {
+  sections: SectionWithManufacturers[];
 }
 
 export interface Product {
@@ -394,9 +409,20 @@ export const apiService = {
     return response.data;
   },
 
-  getSectionsWithManufacturers: async (page?: string): Promise<SectionWithManufacturers[]> => {
-    const params = page ? { page } : {};
+  getSectionsWithManufacturers: async (categorySlug?: string): Promise<SectionWithManufacturers[]> => {
+    const params = categorySlug ? { category_slug: categorySlug } : {};
     const response = await api.get('/sections-with-manufacturers/', { params });
+    return response.data;
+  },
+
+  // Equipment Categories
+  getEquipmentCategories: async (): Promise<EquipmentCategory[]> => {
+    const response = await api.get('/equipment-categories/');
+    return response.data;
+  },
+
+  getEquipmentCategoryBySlug: async (slug: string): Promise<EquipmentCategoryDetail> => {
+    const response = await api.get(`/equipment-categories/${slug}/`);
     return response.data;
   },
 

@@ -3,7 +3,7 @@ from django import forms
 from django.utils.safestring import mark_safe
 from django.utils.html import format_html
 from django.urls import reverse
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
+from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, NewGallery, ProductAttachment, EquipmentCategory
 
 class ProductImageAdminForm(forms.ModelForm):
     image_file = forms.ImageField(required=False, help_text="Upload an image file")
@@ -590,13 +590,30 @@ class ManufacturerAdminForm(forms.ModelForm):
         return instance
 
 
+@admin.register(EquipmentCategory)
+class EquipmentCategoryAdmin(admin.ModelAdmin):
+    list_display = ['name', 'slug', 'active', 'order', 'sections_count', 'created_at']
+    list_filter = ['active', 'created_at']
+    search_fields = ['name', 'slug', 'description']
+    readonly_fields = ['created_at', 'updated_at']
+    prepopulated_fields = {'slug': ('name',)}
+    ordering = ['order', 'name']
+    
+    def sections_count(self, obj):
+        count = obj.sections.count()
+        return format_html(
+            '<span style="background: #17a2b8; color: white; padding: 2px 6px; border-radius: 10px; font-size: 11px;">{} sections</span>',
+            count
+        )
+    sections_count.short_description = "Sections"
+
 @admin.register(Section)
 class SectionAdmin(admin.ModelAdmin):
-    list_display = ['label', 'description', 'page', 'created_at', 'updated_at']
-    list_filter = ['page', 'created_at']
-    search_fields = ['label']
+    list_display = ['label', 'description', 'equipment_category', 'created_at', 'updated_at']
+    list_filter = ['equipment_category', 'created_at']
+    search_fields = ['label', 'equipment_category__name']
     readonly_fields = ['created_at', 'updated_at']
-    fields = ['label', 'description', 'page', 'created_at', 'updated_at']
+    fields = ['label', 'description', 'equipment_category', 'created_at', 'updated_at']
 
 
 @admin.register(Manufacturer)

@@ -221,27 +221,42 @@ class ProductSpecification(models.Model):
         return f"{self.product.name} - {self.key}: {self.value}"
 
 
-class Section(models.Model):
+class EquipmentCategory(models.Model):
     """
-    Sections for organizing manufacturers (e.g., Centrifugal, Diaphragm, PD for pumps)
+    Equipment categories for dynamic page generation (e.g., Pumps, Mechanical Seals, Packing, Generators)
     """
-    PAGE_CHOICES = [
-        ('seals', 'Seals'),
-        ('packing', 'Packing'),
-        ('pumps', 'Pumps'),
-    ]
-    
-    label = models.CharField(max_length=100, unique=True)
-    description = models.CharField(max_length=800, blank=True, null=True, help_text="Optional description for the section")
-    page = models.CharField(max_length=20, choices=PAGE_CHOICES, default='pumps', help_text="Which page should this section appear on")
+    name = models.CharField(max_length=100, unique=True, help_text="Display name (e.g., 'Pumps', 'Mechanical Seals')")
+    slug = models.SlugField(max_length=100, unique=True, help_text="URL slug (e.g., 'pumps', 'mechanical-seals')")
+    description = models.TextField(help_text="Page description text")
+    meta_title = models.CharField(max_length=200, blank=True, help_text="SEO meta title (optional)")
+    meta_description = models.CharField(max_length=300, blank=True, help_text="SEO meta description (optional)")
+    active = models.BooleanField(default=True, help_text="Whether this category is active and accessible")
+    order = models.PositiveIntegerField(unique=True, help_text="Display order in navigation (must be unique)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     class Meta:
-        ordering = ['page', 'label']
+        ordering = ['order', 'name']
+        verbose_name_plural = "Equipment Categories"
 
     def __str__(self):
-        return f"{self.label} ({self.get_page_display()})"
+        return self.name
+
+class Section(models.Model):
+    """
+    Sections for organizing manufacturers (e.g., Centrifugal, Diaphragm, PD for pumps)
+    """
+    label = models.CharField(max_length=100, unique=True)
+    description = models.CharField(max_length=800, blank=True, null=True, help_text="Optional description for the section")
+    equipment_category = models.ForeignKey(EquipmentCategory, on_delete=models.CASCADE, related_name='sections', help_text="Which equipment category this section belongs to", null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['equipment_category__order', 'label']
+
+    def __str__(self):
+        return f"{self.label} ({self.equipment_category.name})"
 
 
 class Manufacturer(models.Model):

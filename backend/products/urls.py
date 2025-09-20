@@ -11,6 +11,10 @@ urlpatterns = [
     path('products/<uuid:product_id>/upload-image/', views.upload_product_image, name='upload-product-image'),
     path('products/import-csv/', views.import_products_csv, name='import-products-csv'),
     
+    # Equipment Categories (new dynamic system)
+    path('equipment-categories/', views.equipment_categories, name='equipment-categories'),
+    path('equipment-categories/<slug:slug>/', views.equipment_category_detail, name='equipment-category-detail'),
+    
     # Sections and Manufacturers
     path('sections/', views.SectionListView.as_view(), name='section-list'),
     path('sections/<int:pk>/', views.SectionDetailView.as_view(), name='section-detail'),

@@ -19,10 +19,8 @@ import OrderSuccess from "./pages/OrderSuccess";
 import PaymentFailed from "./pages/PaymentFailed";
 import NotFound from "./pages/NotFound";
 import Maintenance from "./pages/Maintenance";
-import Pumps from "@/pages/Pumps.tsx";
+import EquipmentCategory from "@/pages/EquipmentCategory.tsx";
 import Service from "@/pages/Service.tsx";
-import Seals from "@/pages/Seals.tsx";
-import Packing from "@/pages/Packing.tsx";
 import PrivacyPolicy from "@/pages/PrivacyPolicy";
 import RefundPolicy from "@/pages/RefundPolicy";
 import ShippingPolicy from "@/pages/ShippingPolicy";
@@ -58,14 +56,17 @@ const AppRoutes = () => {
       <Route path="/order-success" element={<OrderSuccess />} />
       <Route path="/payment-failed" element={<PaymentFailed />} />
       <Route path="/order-confirmation/token/:token" element={<OrderConfirmation />} />
-      <Route path="/pumps" element={<Pumps />} />
-      <Route path="/mechanical-seals" element={<Seals />} />
-      <Route path="/packing" element={<Packing />} />
+      {/* Dynamic equipment category routes */}
+      <Route path="/pumps" element={<EquipmentCategory />} />
+      <Route path="/mechanical-seals" element={<EquipmentCategory />} />
+      <Route path="/packing" element={<EquipmentCategory />} />
       <Route path="/service-repair" element={<Service />} />
       <Route path="/privacy-policy" element={<PrivacyPolicy />} />
       <Route path="/refund-policy" element={<RefundPolicy />} />
       <Route path="/shipping-policy" element={<ShippingPolicy />} />
       <Route path="/new-equipment" element={<NewEquipment />} />
+      {/* Catch-all route for any equipment category - must come after specific routes */}
+      <Route path="/:slug" element={<EquipmentCategory />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

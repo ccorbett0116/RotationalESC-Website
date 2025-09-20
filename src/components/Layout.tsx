@@ -8,6 +8,7 @@ import { useCompanyInfo } from "@/hooks/useCompanyInfo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { Helmet } from "react-helmet";
 import heroImage from "@/assets/home-banner.webp";
+import apiService, { EquipmentCategory } from "@/services/api";
 
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const location = useLocation();
@@ -15,10 +16,28 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const { data: companyInfo } = useCompanyInfo();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isProductsOpen, setIsProductsOpen] = useState(false);
-  const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false); // Add separate state
+  const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
+  const [equipmentCategories, setEquipmentCategories] = useState<EquipmentCategory[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Home page preload is handled by Home component via Helmet
+  // Load equipment categories
+  useEffect(() => {
+    const loadCategories = async () => {
+      try {
+        const categories = await apiService.getEquipmentCategories();
+        setEquipmentCategories(categories);
+      } catch (error) {
+        console.error('Failed to load equipment categories:', error);
+        // Fallback to hardcoded categories if API fails
+        setEquipmentCategories([
+          { id: 1, name: 'Pumps', slug: 'pumps', description: '', order: 1 },
+          { id: 2, name: 'Mechanical Seals', slug: 'mechanical-seals', description: '', order: 2 },
+          { id: 3, name: 'Packing', slug: 'packing', description: '', order: 3 }
+        ]);
+      }
+    };
+    loadCategories();
+  }, []);
 
   const navigation = [
     { name: 'Home', href: '/' },
@@ -27,23 +46,17 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       href: '#',
       isDropdown: true,
       categories: [
-        {
-          title: 'Pumps',
-         
-        },
-        {
-          title: 'Mechanical Seals',
-        
-        },
-        {
-          title: 'Packing',
-       
-        },
+        ...equipmentCategories.map(category => ({
+          title: category.name,
+          href: `/${category.slug}`,
+        })),
         {
           title: 'Service & Repair',
+          href: '/service-repair',
         },
         {
           title: 'New Equipment',
+          href: '/new-equipment',
         },
       ]
     },
@@ -54,8 +67,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const isActive = (path: string, isDropdown?: boolean) => {
     if (isDropdown) {
-      // For Products dropdown, check if we're on specific product category pages
-      return ['/pumps', '/mechanical-seals', '/packing', '/service-repair', '/new-equipment'].includes(location.pathname);
+      // For Products dropdown, check if we're on any equipment category or service pages
+      const equipmentPaths = equipmentCategories.map(cat => `/${cat.slug}`);
+      const allProductPaths = [...equipmentPaths, '/service-repair', '/new-equipment'];
+      return allProductPaths.includes(location.pathname);
     }
     return location.pathname === path;
   };
