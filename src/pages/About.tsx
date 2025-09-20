@@ -1,27 +1,29 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Calendar, Users, Award } from "lucide-react";
+import { Calendar, Users, Award, Wrench, ShoppingCart, MessageSquare } from "lucide-react";
 import { useCanonical } from "@/hooks/useCanonical";
 import Image from "@/components/Image";
+import ServiceCard from "@/components/ServiceCard";
 // Define services inline
 const services = [
   {
     id: 1,
     title: "Equipment Repair",
     description: "Professional repair services for industrial equipment",
-    features: ["Expert diagnostics", "Quality parts", "Fast turnaround"]
+    features: ["Expert diagnostics", "Quality parts", "Fast turnaround"],
+    icon: Wrench
   },
   {
     id: 2,
     title: "Equipment Sales",
     description: "A dedicated team of sales professionals committed to finding the right solution for you",
-    features: ["Equipment selection", "Pump and part sales", "Custom built solutions"]
+    features: ["Equipment selection", "Pump and part sales", "Custom built solutions"],
+    icon: ShoppingCart
   },
   {
     id: 3,
     title: "Consultation",
     description: "Expert advice on equipment selection and optimization",
-    features: ["Technical expertise", "Cost analysis", "Performance optimization"]
+    features: ["Technical expertise", "Cost analysis", "Performance optimization"],
+    icon: MessageSquare
   }
 ];
 import Layout from "@/components/Layout";
@@ -52,7 +54,7 @@ const About = () => {
       <Layout>
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
-            <p className="text-lg text-red-500">{error || 'Company information not found'}</p>
+            <p className="text-lg text-red-500">{error ? error.toString() : 'Company information not found'}</p>
           </div>
         </div>
       </Layout>
@@ -92,27 +94,69 @@ const About = () => {
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="h-8 w-8 text-primary" />
+            <div 
+              className="text-center group cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.05)';
+                e.currentTarget.style.filter = 'drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
+                <Calendar className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">
+              <h3 className="text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">
                 {new Date().getFullYear() - 1981}+
               </h3>
               <p className="text-muted-foreground">Years of Experience</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Users className="h-8 w-8 text-primary" />
+            <div 
+              className="text-center group cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.05)';
+                e.currentTarget.style.filter = 'drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
+                <Users className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">{1000}+</h3>
+              <h3 className="text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">{1000}+</h3>
               <p className="text-muted-foreground">Graduated Students</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Award className="h-8 w-8 text-primary" />
+            <div 
+              className="text-center group cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.05)';
+                e.currentTarget.style.filter = 'drop-shadow(0 15px 30px rgba(0, 0, 0, 0.15))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-primary/20 to-primary/10 rounded-full flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg group-hover:shadow-xl">
+                <Award className="h-10 w-10 text-primary group-hover:scale-110 transition-transform duration-300" />
               </div>
-              <h3 className="text-3xl font-bold text-foreground mb-2">Vendors</h3>
+              <h3 className="text-3xl font-bold text-foreground mb-2 group-hover:text-primary transition-colors duration-300">Vendors</h3>
               <p className="text-muted-foreground">Authorized Representative to Several Key Manufacturers</p>
             </div>
           </div>
@@ -124,20 +168,64 @@ const About = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h2 className="text-3xl font-bold text-foreground mb-6">Our Story</h2>
-              <div className="space-y-4 text-muted-foreground">
-                <p>
+              <h2 
+                className="text-3xl font-bold text-foreground mb-6 cursor-pointer transition-colors duration-300 hover:text-primary"
+                style={{
+                  transition: 'all 0.3s ease-in-out',
+                  transform: 'translateY(0px) scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                  e.currentTarget.style.filter = 'none';
+                }}
+              >
+                Our Story
+              </h2>
+              <div 
+                className="space-y-4 text-muted-foreground cursor-pointer"
+                style={{
+                  transition: 'all 0.3s ease-in-out',
+                  transform: 'translateX(0px) scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateX(-4px) scale(1.01)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateX(0px) scale(1)';
+                  e.currentTarget.style.filter = 'none';
+                }}
+              >
+                <p className="transition-colors duration-300 hover:text-foreground">
                   Rotational Equipment Services (RES) is a trusted supplier of industrial pumps and mechanical seals, serving critical industries such as wastewater treatment, petroleum, steel, and food processing. With over 40 years of hands-on experience and a strong base of repeat business, RES has built a reputation for reliability, technical knowledge, and responsive service.
 
-                  Our founder brings a distinguished background working directly for leading pump and seal manufacturers, where he became a recognized subject matter expert in product development. He has spent years training professionals in hydraulic fundamentals and root cause failure analysis, personally graduating thousands of students across North America. This combination of practical industry expertise and deep technical insight continues to shape RES’s approach—delivering solutions that are not only reliable, but informed by decades of frontline experience and innovation.
+                  Our founder brings a distinguished background working directly for leading pump and seal manufacturers, where he became a recognized subject matter expert in product development. He has spent years training professionals in hydraulic fundamentals and root cause failure analysis, personally graduating thousands of students across North America. This combination of practical industry expertise and deep technical insight continues to shape RES's approach—delivering solutions that are not only reliable, but informed by decades of frontline experience and innovation.
                 </p>
               </div>
             </div>
-            <div className="aspect-video bg-muted rounded-lg overflow-hidden">
+            <div 
+              className="aspect-video bg-muted rounded-lg overflow-hidden cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateX(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateX(8px) scale(1.03)';
+                e.currentTarget.style.filter = 'drop-shadow(0 20px 40px rgba(0, 0, 0, 0.2))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateX(0px) scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
+            >
               <Image
                 src={NewAboutUsImage}
                 alt="Industry professionals talking"
-                className="w-full h-full"
+                className="w-full h-full transition-transform duration-300 hover:scale-110"
                 aspectRatio="16/9"
                 objectFit="cover"
                 lazy={true}
@@ -151,31 +239,37 @@ const About = () => {
       {/* Services Overview */}
       <section className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl font-bold text-foreground mb-4">What We Do</h2>
+          <div 
+            className="text-center mb-16 cursor-pointer"
+            style={{
+              transition: 'all 0.3s ease-in-out',
+              transform: 'translateY(0px) scale(1)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+              e.currentTarget.style.filter = 'drop-shadow(0 10px 20px rgba(0, 0, 0, 0.1))';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+              e.currentTarget.style.filter = 'none';
+            }}
+          >
+            <h2 className="text-3xl font-bold text-foreground mb-4 transition-colors duration-300 hover:text-primary">What We Do</h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               Comprehensive services for all your rotational equipment needs
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {services.map((service) => (
-              <Card key={service.id}>
-                <CardHeader>
-                  <CardTitle>{service.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <CardDescription className="mb-4">
-                    {service.description}
-                  </CardDescription>
-                  <ul className="space-y-2">
-                    {service.features.map((feature, index) => (
-                      <li key={index} className="text-sm text-muted-foreground">
-                        • {feature}
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
+              <ServiceCard
+                key={service.id}
+                id={service.id}
+                title={service.title}
+                description={service.description}
+                features={service.features}
+                icon={service.icon}
+                showFeatures={true}
+              />
             ))}
           </div>
         </div>

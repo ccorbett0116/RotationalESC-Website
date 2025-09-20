@@ -198,8 +198,22 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
             {sections.map((section) => (
               <div key={section.id} className="space-y-8">
                 {/* Section Header */}
-                <div className="text-center">
-                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
+                <div 
+                  className="text-center cursor-pointer"
+                  style={{
+                    transition: 'all 0.3s ease-in-out',
+                    transform: 'translateY(0px) scale(1)',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                    e.currentTarget.style.filter = 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1))';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                    e.currentTarget.style.filter = 'none';
+                  }}
+                >
+                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 transition-colors duration-300 hover:text-primary">
                     {section.label}
                   </h2>
                   <div className="w-24 h-1 bg-primary mx-auto rounded-full"></div>

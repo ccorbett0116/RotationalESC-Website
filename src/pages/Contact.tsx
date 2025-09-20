@@ -120,7 +120,22 @@ const Contact = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
           {/* Contact Information */}
           <div className="space-y-8">
-            <Card>
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0, 0, 0, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <MapPin className="h-5 w-5 text-primary" />
@@ -133,51 +148,100 @@ const Contact = () => {
                 </p>
               </CardContent>
             </Card>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Phone className="h-5 w-5 text-primary" />
-                  Phone
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.phone || "")}
-                </p>
-              </CardContent>
-            </Card>
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0, 0, 0, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Phone className="h-5 w-5 text-primary" />
+                    Phone
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.phone || "")}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Mail className="h-5 w-5 text-primary" />
-                  Email
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.email || "")}
-                </p>
-              </CardContent>
-            </Card>
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0, 0, 0, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Mail className="h-5 w-5 text-primary" />
+                    Email
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.email || "")}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  Business Hours
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.hours || "")}
-                </p>
-                <p className="text-muted-foreground">
-                  {isLoadingCompanyInfo ? "" : (companyInfo?.days || "")}
-                </p>
-              </CardContent>
-            </Card>
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-8px) scale(1.03)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0, 0, 0, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Clock className="h-5 w-5 text-primary" />
+                    Business Hours
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground">
+                    {isLoadingCompanyInfo ? "Loading..." : (companyInfo?.hours || "")}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {isLoadingCompanyInfo ? "" : (companyInfo?.days || "")}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Contact Form */}
@@ -262,7 +326,7 @@ const Contact = () => {
                     />
                   </div>
 
-                  <Button type="submit" size="lg" className="w-full" disabled={isSubmitting}>
+                  <Button type="submit" size="lg" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-lg" disabled={isSubmitting}>
                     {isSubmitting ? "Sending..." : "Send Message"}
                   </Button>
                 </form>

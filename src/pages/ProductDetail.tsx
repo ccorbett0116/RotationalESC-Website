@@ -177,7 +177,7 @@ const ProductDetail = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Breadcrumb */}
         <div className="flex items-center gap-2 mb-8 text-sm text-muted-foreground">
-          <Link to="/shop" className="hover:text-foreground flex items-center gap-1">
+          <Link to="/shop" className="hover:text-foreground flex items-center gap-1 transition-all duration-300 hover:scale-105 hover:shadow-md">
             <ArrowLeft className="h-4 w-4" />
             Back to Shop
           </Link>
@@ -192,7 +192,21 @@ const ProductDetail = () => {
           {/* Product Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="bg-muted rounded-lg overflow-hidden relative group">
+            <div 
+              className="bg-muted rounded-lg overflow-hidden relative group cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-6px) scale(1.02)';
+                e.currentTarget.style.boxShadow = '0 20px 40px -12px rgba(0, 0, 0, 0.25)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
               {product.images && product.images.length > 0 ? (
                 <ImageModal
                   images={product.images.map(img => ({
@@ -252,8 +266,38 @@ const ProductDetail = () => {
                   {product.is_available ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>
-              <h1 className="text-3xl font-bold text-foreground mb-4">{product.name}</h1>
-              <div className="text-3xl font-bold text-primary mb-6">
+              <h1 
+                className="text-3xl font-bold text-foreground mb-4 cursor-pointer transition-colors duration-300 hover:text-primary"
+                style={{
+                  transition: 'all 0.3s ease-in-out',
+                  transform: 'translateY(0px) scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.01)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                  e.currentTarget.style.filter = 'none';
+                }}
+              >
+                {product.name}
+              </h1>
+              <div 
+                className="text-3xl font-bold text-primary mb-6 cursor-pointer"
+                style={{
+                  transition: 'all 0.3s ease-in-out',
+                  transform: 'translateY(0px) scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px) scale(1.05)';
+                  e.currentTarget.style.filter = 'drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15))';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                  e.currentTarget.style.filter = 'none';
+                }}
+              >
                 {formatCAD(Number(product.price))}
               </div>
               <p className="text-muted-foreground text-lg leading-relaxed">
@@ -296,6 +340,7 @@ const ProductDetail = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="transition-all duration-300 hover:scale-110 hover:shadow-md"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={!product.is_available}
                   >
@@ -305,6 +350,7 @@ const ProductDetail = () => {
                   <Button 
                     variant="outline" 
                     size="sm"
+                    className="transition-all duration-300 hover:scale-110 hover:shadow-md"
                     onClick={() => {
                       const currentInCart = getItemQuantity(product.id);
                       const maxAllowed = product.quantity - currentInCart;
@@ -319,7 +365,7 @@ const ProductDetail = () => {
 
               <div className="flex gap-4">
                 <Button 
-                  className="flex-1" 
+                  className="flex-1 transition-all duration-300 hover:scale-105 hover:shadow-lg" 
                   size="lg"
                   disabled={!product.is_available}
                   onClick={handleAddToCart}
@@ -327,7 +373,7 @@ const ProductDetail = () => {
                   <ShoppingCart className="w-4 h-4 mr-2" />
                   {product.is_available ? "Add to Cart" : "Out of Stock"}
                 </Button>
-                <Button variant="outline" size="lg" onClick={handleShare}>
+                <Button variant="outline" size="lg" className="transition-all duration-300 hover:scale-105 hover:shadow-lg" onClick={handleShare}>
                   <Share2 className="w-4 h-4" />
                 </Button>
               </div>
@@ -353,102 +399,150 @@ const ProductDetail = () => {
             )}
           </TabsList>
           <TabsContent value="description" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Product Description</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {product.description}
-                </p>
-              </CardContent>
-            </Card>
-          </TabsContent>
-          <TabsContent value="specifications" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Technical Specifications</CardTitle>
-                <CardDescription>
-                  Detailed technical information for {product.name}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {product.specifications && product.specifications.length > 0 ? (
-                  <div className="grid gap-4">
-                    {product.specifications.map((spec) => (
-                      <div key={spec.id} className="grid grid-cols-2 gap-4 py-3 border-b border-border last:border-0">
-                        <span className="font-medium">{spec.key}</span>
-                        <span className="text-muted-foreground">{spec.value}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No specifications available.</p>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-          {product.attachments && product.attachments.length > 0 && (
-            <TabsContent value="attachments" className="mt-6">
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)';
+                e.currentTarget.style.boxShadow = '0 15px 30px -12px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
               <Card>
                 <CardHeader>
-                  <CardTitle>Product Files & Documents</CardTitle>
+                  <CardTitle>Product Description</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-muted-foreground leading-relaxed">
+                    {product.description}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+          </TabsContent>
+          <TabsContent value="specifications" className="mt-6">
+            <div 
+              className="cursor-pointer"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)';
+                e.currentTarget.style.boxShadow = '0 15px 30px -12px rgba(0, 0, 0, 0.2)';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+              }}
+            >
+              <Card>
+                <CardHeader>
+                  <CardTitle>Technical Specifications</CardTitle>
                   <CardDescription>
-                    Download product documentation, manuals, and related files
+                    Detailed technical information for {product.name}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid gap-3 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-                    {product.attachments
-                      .filter(attachment => attachment.is_public)
-                      .sort((a, b) => a.order - b.order)
-                      .map((attachment) => (
-                      <div
-                        key={attachment.id}
-                        className="flex items-start sm:items-center gap-3 p-4 border border-border rounded-lg hover:bg-accent/50 transition-colors group"
-                      >
-                        <div className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors mt-0.5 sm:mt-0">
-                          {getFileIcon(attachment)}
+                  {product.specifications && product.specifications.length > 0 ? (
+                    <div className="grid gap-4">
+                      {product.specifications.map((spec) => (
+                        <div key={spec.id} className="grid grid-cols-2 gap-4 py-3 border-b border-border last:border-0">
+                          <span className="font-medium">{spec.key}</span>
+                          <span className="text-muted-foreground">{spec.value}</span>
                         </div>
-                        <div className="min-w-0 flex-1 space-y-1">
-                          <div className="flex items-start justify-between gap-2">
-                            <p className="text-sm font-medium text-foreground leading-tight">
-                              {attachment.filename}
-                            </p>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="flex-shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-9"
-                              onClick={() => downloadFile(attachment, toast)}
-                            >
-                              <Download className="h-4 w-4" />
-                              <span className="sr-only">Download {attachment.filename}</span>
-                            </Button>
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <span>{attachment.file_size_human}</span>
-                            <span>•</span>
-                            <span className="capitalize">
-                              {attachment.content_type.split('/')[1] || attachment.content_type}
-                            </span>
-                          </div>
-                          {attachment.description && (
-                            <p className="text-xs text-muted-foreground line-clamp-2 sm:line-clamp-1">
-                              {attachment.description}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {product.attachments.filter(attachment => attachment.is_public).length === 0 && (
-                    <p className="text-muted-foreground text-center py-8">
-                      No public files available for this product.
-                    </p>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-muted-foreground">No specifications available.</p>
                   )}
                 </CardContent>
               </Card>
+            </div>
+          </TabsContent>
+          {product.attachments && product.attachments.length > 0 && (
+            <TabsContent value="attachments" className="mt-6">
+              <div 
+                className="cursor-pointer"
+                style={{
+                  transition: 'all 0.3s ease-in-out',
+                  transform: 'translateY(0px) scale(1)',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-4px) scale(1.01)';
+                  e.currentTarget.style.boxShadow = '0 15px 30px -12px rgba(0, 0, 0, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                  e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+                }}
+              >
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Product Files & Documents</CardTitle>
+                    <CardDescription>
+                      Download product documentation, manuals, and related files
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-3 grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+                      {product.attachments
+                        .filter(attachment => attachment.is_public)
+                        .sort((a, b) => a.order - b.order)
+                        .map((attachment) => (
+                        <div
+                          key={attachment.id}
+                          className="flex items-start sm:items-center gap-3 p-4 border border-border rounded-lg hover:bg-accent/50 transition-all duration-300 hover:scale-105 hover:shadow-md group"
+                        >
+                          <div className="flex-shrink-0 text-muted-foreground group-hover:text-foreground transition-colors mt-0.5 sm:mt-0">
+                            {getFileIcon(attachment)}
+                          </div>
+                          <div className="min-w-0 flex-1 space-y-1">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-medium text-foreground leading-tight">
+                                {attachment.filename}
+                              </p>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="flex-shrink-0 h-8 w-8 p-0 sm:h-9 sm:w-9 transition-all duration-300 hover:scale-110"
+                                onClick={() => downloadFile(attachment, toast)}
+                              >
+                                <Download className="h-4 w-4" />
+                                <span className="sr-only">Download {attachment.filename}</span>
+                              </Button>
+                            </div>
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                              <span>{attachment.file_size_human}</span>
+                              <span>•</span>
+                              <span className="capitalize">
+                                {attachment.content_type.split('/')[1] || attachment.content_type}
+                              </span>
+                            </div>
+                            {attachment.description && (
+                              <p className="text-xs text-muted-foreground line-clamp-2 sm:line-clamp-1">
+                                {attachment.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    
+                    {product.attachments.filter(attachment => attachment.is_public).length === 0 && (
+                      <p className="text-muted-foreground text-center py-8">
+                        No public files available for this product.
+                      </p>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           )}
         </Tabs>
@@ -456,7 +550,23 @@ const ProductDetail = () => {
         {/* Related Products */}
         {relatedProducts.length > 0 && (
           <section>
-            <h2 className="text-2xl font-bold text-foreground mb-8">Related Products</h2>
+            <h2 
+              className="text-2xl font-bold text-foreground mb-8 cursor-pointer transition-colors duration-300 hover:text-primary"
+              style={{
+                transition: 'all 0.3s ease-in-out',
+                transform: 'translateY(0px) scale(1)',
+              }}
+              onMouseEnter={(e) => {
+                e.currentTarget.style.transform = 'translateY(-4px) scale(1.02)';
+                e.currentTarget.style.filter = 'drop-shadow(0 8px 16px rgba(0, 0, 0, 0.1))';
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+                e.currentTarget.style.filter = 'none';
+              }}
+            >
+              Related Products
+            </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {relatedProducts.map((relatedProduct) => (
                 <ProductCard 

@@ -94,7 +94,22 @@ const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   return (
-    <Card className={`h-full flex flex-col ${className}`}>
+    <div 
+      className="h-full cursor-pointer"
+      style={{
+        transition: 'all 0.3s ease-in-out',
+        transform: 'translateY(0px) scale(1)',
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.transform = 'translateY(-12px) scale(1.05)';
+        e.currentTarget.style.boxShadow = '0 25px 50px -12px rgba(0, 0, 0, 0.25)';
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.transform = 'translateY(0px) scale(1)';
+        e.currentTarget.style.boxShadow = '0 1px 3px 0 rgba(0, 0, 0, 0.1)';
+      }}
+    >
+      <Card className={`h-full flex flex-col group border hover:border-primary/50 transition-colors duration-300 ${className}`}>
       <div className="bg-muted rounded-t-lg overflow-hidden p-4">
         {product.primary_image ? (
           <Image
@@ -171,13 +186,13 @@ const ProductCard: React.FC<ProductCardProps> = ({
 
         <div className="space-y-2">
           <Link to={`/product/${product.id}`}>
-            <Button variant="outline" className="w-full">
+            <Button variant="outline" className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md">
               View Details
             </Button>
           </Link>
           {showAddToCart && (
             <Button 
-              className="w-full" 
+              className="w-full transition-all duration-300 hover:scale-105 hover:shadow-md" 
               disabled={!product.is_available}
               onClick={() => onAddToCart?.(product)}
             >
@@ -188,6 +203,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </CardContent>
     </Card>
+    </div>
   );
 };
 

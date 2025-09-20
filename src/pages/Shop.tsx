@@ -250,7 +250,7 @@ const Shop = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent"
+                  className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent transition-all duration-300 hover:scale-110"
                   onClick={() => setSearchTerm("")}
                 >
                   <X className="h-4 w-4" />
@@ -331,7 +331,7 @@ const Shop = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
+                          className="ml-1 h-4 w-4 p-0 hover:bg-transparent transition-all duration-300 hover:scale-110"
                           onClick={() => setSearchTerm("")}
                         >
                           <X className="h-3 w-3" />
@@ -344,7 +344,7 @@ const Shop = () => {
                         <Button
                           variant="ghost"
                           size="sm"
-                          className="ml-1 h-4 w-4 p-0 hover:bg-transparent"
+                          className="ml-1 h-4 w-4 p-0 hover:bg-transparent transition-all duration-300 hover:scale-110"
                           onClick={() => setSelectedCategory("all")}
                         >
                           <X className="h-3 w-3" />
@@ -355,7 +355,7 @@ const Shop = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-xs h-6"
+                        className="text-xs h-6 transition-all duration-300 hover:scale-105 hover:shadow-md"
                         onClick={() => {
                           setSearchTerm("");
                           setSelectedCategory("all");
