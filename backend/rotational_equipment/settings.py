@@ -68,10 +68,12 @@ INSTALLED_APPS = [
     'corsheaders',
     'django_filters',
     'products',
+    'equipment',
     'orders',
     'contact',
     'company',
     'analytics',
+    'galleries',
 ]
 
 MIDDLEWARE = [

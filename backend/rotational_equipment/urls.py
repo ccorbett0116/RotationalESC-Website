@@ -34,8 +34,10 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/csrf-token/', csrf_token_view, name='csrf-token'),
     path('api/', include('products.urls')),
+    path('api/equipment/', include('equipment.urls')),
     path('api/', include('orders.urls')),
     path('api/contact/', include('contact.urls')),
     path('api/company/', include('company.urls')),
     path('api/analytics/', include('analytics.urls')),
+    path('api/galleries/', include('galleries.urls')),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

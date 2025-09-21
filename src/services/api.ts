@@ -397,43 +397,49 @@ export const apiService = {
     return response.data;
   },
 
-  // Sections and Manufacturers
+  // Sections and Manufacturers (moved to equipment app)
   getSections: async (): Promise<Section[]> => {
-    const response = await api.get('/sections/');
+    const response = await api.get('/equipment/sections/');
     return response.data;
   },
 
   getManufacturers: async (sectionId?: number): Promise<Manufacturer[]> => {
     const params = sectionId ? { section: sectionId } : {};
-    const response = await api.get('/manufacturers/', { params });
+    const response = await api.get('/equipment/manufacturers/', { params });
     return response.data;
   },
 
   getSectionsWithManufacturers: async (categorySlug?: string): Promise<SectionWithManufacturers[]> => {
     const params = categorySlug ? { category_slug: categorySlug } : {};
-    const response = await api.get('/sections-with-manufacturers/', { params });
+    const response = await api.get('/equipment/sections/with-manufacturers/', { params });
     return response.data;
   },
 
-  // Equipment Categories
+  // Equipment Categories (moved to equipment app)
   getEquipmentCategories: async (): Promise<EquipmentCategory[]> => {
-    const response = await api.get('/equipment-categories/');
+    const response = await api.get('/equipment/categories/');
     return response.data;
   },
 
   getEquipmentCategoryBySlug: async (slug: string): Promise<EquipmentCategoryDetail> => {
-    const response = await api.get(`/equipment-categories/${slug}/`);
+    const response = await api.get(`/equipment/categories/${slug}/`);
     return response.data;
   },
 
-  // Gallery
+  // Gallery - Updated to use new galleries app
   getGalleryImages: async (): Promise<GalleryImage[]> => {
-    const response = await api.get('/gallery/');
-    return response.data;
+    const response = await api.get('/galleries/service-repair/');
+    return response.data.images; // Extract images array from response
   },
 
   getNewGalleryImages: async (): Promise<GalleryImage[]> => {
-    const response = await api.get('/new-gallery/');
+    const response = await api.get('/galleries/new-equipment/');
+    return response.data.images; // Extract images array from response
+  },
+
+  // Gallery Categories
+  getGalleryCategories: async (): Promise<any[]> => {
+    const response = await api.get('/galleries/categories/');
     return response.data;
   },
 

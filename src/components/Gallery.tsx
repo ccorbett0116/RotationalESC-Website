@@ -200,6 +200,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
                       <GalleryImage
                         imageId={image.id}
                         type={galleryType}
+                        src={image.image_url}
                         alt={image.alt_text || image.title}
                         className="w-full h-full"
                         imgClassName="hover:scale-105 transition-transform duration-300"
@@ -220,7 +221,7 @@ const Gallery = ({ title, description, galleryType }: GalleryProps) => {
               </div>
             </div>
 
-            {images.length > 3 && (
+            {images.length > 1 && (
               <div className="flex justify-center items-center space-x-4">
                 <Button
                   variant="outline"

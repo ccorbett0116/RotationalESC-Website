@@ -18,21 +18,30 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isProductsOpen, setIsProductsOpen] = useState(false);
   const [isMobileProductsOpen, setIsMobileProductsOpen] = useState(false);
   const [equipmentCategories, setEquipmentCategories] = useState<EquipmentCategory[]>([]);
+  const [galleryCategories, setGalleryCategories] = useState<any[]>([]);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
-  // Load equipment categories
+  // Load equipment and gallery categories
   useEffect(() => {
     const loadCategories = async () => {
       try {
-        const categories = await apiService.getEquipmentCategories();
-        setEquipmentCategories(categories);
+        const [equipmentCats, galleryCats] = await Promise.all([
+          apiService.getEquipmentCategories(),
+          apiService.getGalleryCategories()
+        ]);
+        setEquipmentCategories(equipmentCats);
+        setGalleryCategories(galleryCats.filter(cat => cat.active !== false));
       } catch (error) {
-        console.error('Failed to load equipment categories:', error);
+        console.error('Failed to load categories:', error);
         // Fallback to hardcoded categories if API fails
         setEquipmentCategories([
           { id: 1, name: 'Pumps', slug: 'pumps', description: '', order: 1 },
           { id: 2, name: 'Mechanical Seals', slug: 'mechanical-seals', description: '', order: 2 },
           { id: 3, name: 'Packing', slug: 'packing', description: '', order: 3 }
+        ]);
+        setGalleryCategories([
+          { id: 1, name: 'Service & Repair', slug: 'service-repair' },
+          { id: 2, name: 'New Equipment', slug: 'new-equipment' }
         ]);
       }
     };
@@ -48,16 +57,13 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
       categories: [
         ...equipmentCategories.map(category => ({
           title: category.name,
-          href: `/${category.slug}`,
+          href: `/equipment/${category.slug}`,
         })),
-        {
-          title: 'Service & Repair',
-          href: '/service-repair',
-        },
-        {
-          title: 'New Equipment',
-          href: '/new-equipment',
-        },
+        { type: 'separator' },
+        ...galleryCategories.map(category => ({
+          title: category.name,
+          href: `/gallery/${category.slug}`,
+        })),
       ]
     },
     { name: 'Shop', href: '/shop' },
@@ -67,9 +73,10 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
 
   const isActive = (path: string, isDropdown?: boolean) => {
     if (isDropdown) {
-      // For Products dropdown, check if we're on any equipment category or service pages
-      const equipmentPaths = equipmentCategories.map(cat => `/${cat.slug}`);
-      const allProductPaths = [...equipmentPaths, '/service-repair', '/new-equipment'];
+      // For Products dropdown, check if we're on any equipment category or gallery pages
+      const equipmentPaths = equipmentCategories.map(cat => `/equipment/${cat.slug}`);
+      const galleryPaths = galleryCategories.map(cat => `/gallery/${cat.slug}`);
+      const allProductPaths = [...equipmentPaths, ...galleryPaths];
       return allProductPaths.includes(location.pathname);
     }
     return location.pathname === path;
@@ -135,14 +142,18 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       }`}
                     >
                       <div className="flex flex-col py-2">
-                        {item.categories.map((category) => (
-                          <Link
-                            key={category.title}
-                            to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                            className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-                          >
-                            {category.title}
-                          </Link>
+                        {item.categories.map((category, index) => (
+                          category.type === 'separator' ? (
+                            <div key={`separator-${index}`} className="border-t border-border my-1" />
+                          ) : (
+                            <Link
+                              key={category.title}
+                              to={category.href}
+                              className="px-4 py-2 text-sm text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
+                            >
+                              {category.title}
+                            </Link>
+                          )
                         ))}
                       </div>
                     </div>
@@ -216,18 +227,22 @@ const Layout = ({ children }: { children: React.ReactNode }) => {
                       
                       {isMobileProductsOpen && (
                         <div className="bg-muted/50 py-2 relative z-50">
-                          {item.categories.map((category) => (
-                            <Link
-                              key={category.title}
-                              to={`/${category.title.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')}`}
-                              className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
-                              onClick={() => {
-                                setIsMobileProductsOpen(false);
-                                setIsMobileMenuOpen(false);
-                              }}
-                            >
-                              {category.title}
-                            </Link>
+                          {item.categories.map((category, index) => (
+                            category.type === 'separator' ? (
+                              <div key={`mobile-separator-${index}`} className="border-t border-border my-1 mx-4" />
+                            ) : (
+                              <Link
+                                key={category.title}
+                                to={category.href}
+                                className="block px-8 py-2 text-sm text-muted-foreground hover:text-foreground transition-colors cursor-pointer touch-manipulation"
+                                onClick={() => {
+                                  setIsMobileProductsOpen(false);
+                                  setIsMobileMenuOpen(false);
+                                }}
+                              >
+                                {category.title}
+                              </Link>
+                            )
                           ))}
                         </div>
                       )}

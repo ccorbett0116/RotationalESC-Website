@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Category, Product, ProductImage, ProductSpecification, Section, Manufacturer, Gallery, NewGallery, ProductAttachment
+from .models import Category, Product, ProductImage, ProductSpecification, ProductAttachment
 import base64
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -110,96 +110,5 @@ class ProductDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class SectionSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Section
-        fields = ['id', 'label', 'description', 'created_at', 'updated_at']
 
 
-class ManufacturerSerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    sections = SectionSerializer(many=True, read_only=True)
-    section_ids = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Section.objects.all(), 
-        write_only=True, 
-        source='sections'
-    )
-    
-    class Meta:
-        model = Manufacturer
-        fields = [
-            'id', 'label', 'url', 'image_url', 'filename', 
-            'sections', 'section_ids', 'created_at', 'updated_at'
-        ]
-        extra_kwargs = {
-            'image_data': {'write_only': True}
-        }
-    
-    def get_image_url(self, obj):
-        return obj.data_url
-
-
-class ManufacturerUploadSerializer(serializers.ModelSerializer):
-    image_file = serializers.ImageField(write_only=True)
-    section_ids = serializers.PrimaryKeyRelatedField(
-        many=True, 
-        queryset=Section.objects.all(), 
-        write_only=True, 
-        source='sections'
-    )
-    
-    class Meta:
-        model = Manufacturer
-        fields = ['label', 'url', 'image_file', 'section_ids']
-    
-    def create(self, validated_data):
-        image_file = validated_data.pop('image_file')
-        sections = validated_data.pop('sections', [])
-        
-        # Read the image file and convert to bytes
-        image_data = image_file.read()
-        
-        # Create the Manufacturer instance
-        manufacturer = Manufacturer.objects.create(
-            image_data=image_data,
-            filename=image_file.name,
-            content_type=image_file.content_type,
-            **validated_data
-        )
-        
-        # Set the sections
-        manufacturer.sections.set(sections)
-        
-        return manufacturer
-
-
-class SectionWithManufacturersSerializer(serializers.ModelSerializer):
-    manufacturers = ManufacturerSerializer(many=True, read_only=True)
-    
-    class Meta:
-        model = Section
-        fields = ['id', 'label', 'description', 'page', 'manufacturers', 'created_at', 'updated_at']
-
-
-class GallerySerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = Gallery
-        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
-    
-    def get_image_url(self, obj):
-        # Always return URL endpoint - let the image view handle 404 if no data
-        return f"/api/gallery/{obj.id}/image/"
-
-class NewGallerySerializer(serializers.ModelSerializer):
-    image_url = serializers.SerializerMethodField()
-    
-    class Meta:
-        model = NewGallery
-        fields = ['id', 'title', 'description', 'filename', 'content_type', 'alt_text', 'order', 'created_at', 'updated_at', 'image_url']
-    
-    def get_image_url(self, obj):
-        # Always return URL endpoint - let the image view handle 404 if no data  
-        return f"/api/new-gallery/{obj.id}/image/"

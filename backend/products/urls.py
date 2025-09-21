@@ -11,21 +11,5 @@ urlpatterns = [
     path('products/<uuid:product_id>/upload-image/', views.upload_product_image, name='upload-product-image'),
     path('products/import-csv/', views.import_products_csv, name='import-products-csv'),
     
-    # Equipment Categories (new dynamic system)
-    path('equipment-categories/', views.equipment_categories, name='equipment-categories'),
-    path('equipment-categories/<slug:slug>/', views.equipment_category_detail, name='equipment-category-detail'),
     
-    # Sections and Manufacturers
-    path('sections/', views.SectionListView.as_view(), name='section-list'),
-    path('sections/<int:pk>/', views.SectionDetailView.as_view(), name='section-detail'),
-    path('manufacturers/', views.ManufacturerListView.as_view(), name='manufacturer-list'),
-    path('manufacturers/<int:pk>/', views.ManufacturerDetailView.as_view(), name='manufacturer-detail'),
-    path('manufacturers/upload/', views.upload_manufacturer, name='upload-manufacturer'),
-    path('sections-with-manufacturers/', views.sections_with_manufacturers, name='sections-with-manufacturers'),
-    
-    # Gallery
-    path('gallery/', views.GalleryListView.as_view(), name='gallery-list'),
-    path('gallery/<int:image_id>/image/', views.GalleryImageView.as_view(), name='gallery-image'),
-    path('new-gallery/', views.NewGalleryListView.as_view(), name='new-gallery-list'),
-    path('new-gallery/<int:image_id>/image/', views.NewGalleryImageView.as_view(), name='new-gallery-image'),
 ]

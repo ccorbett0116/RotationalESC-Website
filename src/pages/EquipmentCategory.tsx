@@ -1,21 +1,29 @@
 import { useEffect, useState } from "react";
-import { useParams, Navigate } from "react-router-dom";
+import { useParams, Navigate, useLocation } from "react-router-dom";
 import Layout from "@/components/Layout";
 import SectionsWithManufacturers from "@/components/SectionsWithManufacturers";
 import { useCanonical } from "@/hooks/useCanonical";
 import apiService, { EquipmentCategoryDetail } from "@/services/api";
 
-const EquipmentCategory = () => {
-  const { slug } = useParams<{ slug: string }>();
+interface EquipmentCategoryProps {
+  slug?: string;
+}
+
+const EquipmentCategory = ({ slug: propSlug }: EquipmentCategoryProps) => {
+  const { slug: paramSlug } = useParams<{ slug: string }>();
+  const location = useLocation();
   const [categoryData, setCategoryData] = useState<EquipmentCategoryDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useCanonical(`/${slug}`);
+  // Get slug from prop, params, or URL pathname
+  const actualSlug = propSlug || paramSlug;
+
+  useCanonical(`/equipment/${actualSlug}`);
 
   useEffect(() => {
     const fetchCategoryData = async () => {
-      if (!slug) {
+      if (!actualSlug) {
         setError("No category slug provided");
         setLoading(false);
         return;
@@ -23,9 +31,16 @@ const EquipmentCategory = () => {
 
       try {
         setLoading(true);
-        const data = await apiService.getEquipmentCategoryBySlug(slug);
+        const data = await apiService.getEquipmentCategoryBySlug(actualSlug);
         setCategoryData(data);
         setError(null);
+        
+        // Update document title and meta description
+        document.title = data.meta_title || `${data.name} | Rotational Equipment Services`;
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription && data.meta_description) {
+          metaDescription.setAttribute('content', data.meta_description);
+        }
       } catch (err: any) {
         console.error("Error fetching category data:", err);
         if (err.response?.status === 404) {
@@ -39,7 +54,7 @@ const EquipmentCategory = () => {
     };
 
     fetchCategoryData();
-  }, [slug]);
+  }, [actualSlug]);
 
   // Show loading state
   if (loading) {
@@ -61,18 +76,6 @@ const EquipmentCategory = () => {
     return <Navigate to="/404" replace />;
   }
 
-  // Update document title and meta description if provided
-  useEffect(() => {
-    if (categoryData) {
-      document.title = categoryData.meta_title || `${categoryData.name} | Rotational Equipment Services`;
-      
-      // Update meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription && categoryData.meta_description) {
-        metaDescription.setAttribute('content', categoryData.meta_description);
-      }
-    }
-  }, [categoryData]);
 
   return (
     <Layout>
