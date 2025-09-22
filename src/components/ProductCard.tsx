@@ -135,10 +135,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
       <CardHeader className={showSpecifications ? "flex-1" : "flex-grow pb-2"}>
         {showAvailabilityBadge && (
           <div className="flex justify-between items-start mb-2">
-            <Badge 
-              variant={product.is_available ? "default" : "secondary"}
-              className={product.is_available ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}
-            >
+            <Badge variant={product.is_available ? "success" : "secondary"}>
               {product.is_available ? "In Stock" : "Out of Stock"}
             </Badge>
             <Badge variant="outline">

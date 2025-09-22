@@ -262,7 +262,7 @@ const ProductDetail = () => {
             <div>
               <div className="flex gap-2 mb-4">
                 <Badge variant="outline">{product.category.name}</Badge>
-                <Badge variant={product.is_available ? "default" : "secondary"}>
+                <Badge variant={product.is_available ? "success" : "secondary"}>
                   {product.is_available ? "In Stock" : "Out of Stock"}
                 </Badge>
               </div>

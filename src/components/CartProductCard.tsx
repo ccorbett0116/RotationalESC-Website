@@ -59,10 +59,7 @@ const CartProductCard: React.FC<CartProductCardProps> = ({
 
       <CardHeader className="flex-1 pb-2 pr-12">
         <div className="flex justify-between items-start mb-2">
-          <Badge 
-            variant={product.is_available ? "default" : "secondary"}
-            className={product.is_available ? "bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400" : ""}
-          >
+          <Badge variant={product.is_available ? "success" : "secondary"}>
             {product.is_available ? `${product.quantity} in stock` : "Out of Stock"}
           </Badge>
           <Badge variant="outline">
