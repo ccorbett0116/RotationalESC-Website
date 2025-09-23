@@ -32,17 +32,8 @@ class SectionAdmin(admin.ModelAdmin):
 
 @admin.register(Manufacturer)
 class ManufacturerAdmin(admin.ModelAdmin):
-    list_display = ['label', 'url', 'image_preview', 'order', 'created_at']
+    list_display = ['label', 'url', 'order', 'created_at']
     list_filter = ['sections', 'created_at']
     search_fields = ['label', 'url']
     filter_horizontal = ['sections']
     ordering = ['label']
-    
-    def image_preview(self, obj):
-        if obj.image_data:
-            return format_html(
-                '<img src="{}" width="50" height="50" style="object-fit: contain;" />',
-                obj.data_url
-            )
-        return "No image"
-    image_preview.short_description = "Image Preview"

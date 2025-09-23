@@ -74,7 +74,7 @@ class GalleryImageAdminForm(forms.ModelForm):
 @admin.register(GalleryImage)
 class GalleryImageAdmin(admin.ModelAdmin):
     form = GalleryImageAdminForm
-    list_display = ['title', 'category', 'order', 'image_preview', 'created_at']
+    list_display = ['title', 'category', 'order', 'created_at']
     list_filter = ['category', 'created_at']
     search_fields = ['title', 'description', 'alt_text', 'category__name']
     fields = ['category', 'title', 'description', 'image_file', 'alt_text', 'order', 'image_preview']
