@@ -38,8 +38,8 @@ const Image: React.FC<ImageProps> = ({
   const [imageError, setImageError] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   
-  // Use optimized intersection observer
-  const { isInView, elementRef } = useIntersectionObserver(lazy, priority);
+  // Use optimized intersection observer - bypass for priority or non-lazy images
+  const { isInView, elementRef } = useIntersectionObserver(lazy && !priority, priority);
 
   const handleImageLoad = () => {
     setImageLoaded(true);
