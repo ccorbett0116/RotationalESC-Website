@@ -63,6 +63,7 @@ const ProductDetail = () => {
   const [relatedProducts, setRelatedProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   // Initialize analytics for this product
   const analytics = useProductAnalytics(id || '', product?.name || '');
@@ -88,6 +89,14 @@ const ProductDetail = () => {
 
     fetchProduct();
   }, [id]);
+
+  const handleImageClick = () => {
+    setIsModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsModalOpen(false);
+  };
 
   const handleAddToCart = () => {
     if (!product) return;
@@ -208,20 +217,10 @@ const ProductDetail = () => {
               }}
             >
               {product.images && product.images.length > 0 ? (
-                <ImageModal
-                  images={product.images.map(img => ({
-                    id: img.id,
-                    src: img.image_url,
-                    alt: img.alt_text || product.name,
-                    title: `${product.name} - Image ${product.images.indexOf(img) + 1}`,
-                  }))}
-                  initialIndex={currentImageIndex}
-                  trigger={
-                    <ImageWithHover
-                      src={product.images[currentImageIndex]?.image_url}
-                      alt={product.images[currentImageIndex]?.alt_text || product.name}
-                    />
-                  }
+                <ImageWithHover
+                  src={product.images[currentImageIndex]?.image_url}
+                  alt={product.images[currentImageIndex]?.alt_text || product.name}
+                  onClick={handleImageClick}
                 />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-primary/20 to-accent/20 flex items-center justify-center">
@@ -598,6 +597,21 @@ const ProductDetail = () => {
           </section>
         )}
       </div>
+
+      {/* Image Modal - only render when open */}
+      {isModalOpen && product && product.images && product.images.length > 0 && (
+        <ImageModal
+          images={product.images.map(img => ({
+            id: img.id,
+            src: img.image_url,
+            alt: img.alt_text || product.name,
+            title: `${product.name} - Image ${product.images.indexOf(img) + 1}`,
+          }))}
+          initialIndex={currentImageIndex}
+          onClose={handleModalClose}
+          isOpen={true}
+        />
+      )}
     </Layout>
   );
 };
