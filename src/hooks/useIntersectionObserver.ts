@@ -57,7 +57,13 @@ export const useIntersectionObserver = (
   const elementRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (!enabled || isInView || priority) return;
+    // If not enabled or priority is true, immediately set to in view
+    if (!enabled || priority) {
+      setIsInView(true);
+      return;
+    }
+    
+    if (isInView) return;
 
     const element = elementRef.current;
     if (!element) return;

@@ -42,6 +42,8 @@ class ManufacturerAdminForm(forms.ModelForm):
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        # Make URL field explicitly optional
+        self.fields['url'].required = False
         # If this is an existing instance with image data, show a preview
         if self.instance and self.instance.pk and self.instance.image_data:
             self.fields['current_image'] = forms.CharField(

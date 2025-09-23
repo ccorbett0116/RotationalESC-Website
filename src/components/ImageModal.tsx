@@ -201,12 +201,15 @@ export const ImageModal = ({
             )}
 
             <div className="flex flex-col items-center">
-              <img
+              <Image
                 src={currentImage.src}
                 alt={currentImage.alt || currentImage.title || `Image ${currentIndex + 1}`}
-                className="max-w-full max-h-[80vh] object-contain"
-                loading="eager"
-                decoding="async"
+                className="max-w-full max-h-[80vh]"
+                imgClassName="max-w-full max-h-[80vh]"
+                objectFit="contain"
+                lazy={false}
+                priority={true}
+                placeholder="none"
               />
               {(currentImage.title || currentImage.description || images.length > 1) && (
                 <div className="text-center mt-4 px-4">

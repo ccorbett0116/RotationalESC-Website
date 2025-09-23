@@ -34,6 +34,7 @@ class ManufacturerSerializer(serializers.ModelSerializer):
 
 class ManufacturerUploadSerializer(serializers.ModelSerializer):
     image_file = serializers.ImageField(write_only=True)
+    url = serializers.URLField(required=False, allow_blank=True, allow_null=True)
     sections = serializers.ListField(
         child=serializers.IntegerField(),
         write_only=True,
