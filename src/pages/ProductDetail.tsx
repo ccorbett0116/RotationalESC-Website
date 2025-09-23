@@ -211,7 +211,7 @@ const ProductDetail = () => {
                 <ImageModal
                   images={product.images.map(img => ({
                     id: img.id,
-                    url: img.image_url,
+                    src: img.image_url,
                     alt: img.alt_text || product.name,
                     title: `${product.name} - Image ${product.images.indexOf(img) + 1}`,
                   }))}
