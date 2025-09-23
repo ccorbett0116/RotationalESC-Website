@@ -28,7 +28,8 @@ admin.site.index_title = "Welcome to RES Administration"
 
 @ensure_csrf_cookie
 def csrf_token_view(request):
-    return JsonResponse({'csrfToken': 'token'})
+    from django.middleware.csrf import get_token
+    return JsonResponse({'csrfToken': get_token(request)})
 
 urlpatterns = [
     path('admin/', admin.site.urls),
