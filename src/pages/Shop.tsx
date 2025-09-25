@@ -3,7 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { apiService, Product, Category, ProductSpecification } from "@/services/api";
 import { useCart } from "@/contexts/CartContext";
 import { useToast } from "@/hooks/use-toast";
@@ -11,7 +11,16 @@ import { useCanonical } from "@/hooks/useCanonical";
 import { useSearchAnalytics } from "@/hooks/useAnalytics";
 import Layout from "@/components/Layout";
 import ProductCard from "@/components/ProductCard";
-import ShopImage from "@/assets/shop-banner.jpg"; 
+import ShopImage from "@/assets/shop-banner.jpg";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination"; 
 
 const Shop = () => {
   useCanonical('/shop');
@@ -22,21 +31,44 @@ const Shop = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [searchInput, setSearchInput] = useState(""); // Separate input state for debouncing
   const [selectedCategory, setSelectedCategory] = useState("all");
   const [sortBy, setSortBy] = useState("featured");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
-  // Fetch data on component mount
+  // Fetch data on component mount and when filters change
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
-        const [categoriesData, productsData] = await Promise.all([
-          apiService.getCategories(),
-          apiService.getProducts()
-        ]);
+        const categoriesData = await apiService.getCategories();
         setCategories(Array.isArray(categoriesData) ? categoriesData : []);
-        const products = Array.isArray(productsData?.results) ? productsData.results : [];
-        setAllProducts(products);
+
+        // If there's a search term, use the search API to get all matching results
+        // Search ignores pagination and shows all results
+        if (searchTerm.trim()) {
+          const searchResults = await apiService.searchProducts(
+            searchTerm,
+            selectedCategory !== "all" ? selectedCategory : undefined
+          );
+          setAllProducts(searchResults);
+          setTotalCount(searchResults.length);
+          setTotalPages(1); // Search shows all results on one "page"
+          setCurrentPage(1);
+        } else {
+          // For browsing (no search), use paginated results
+          const productsData = await apiService.getProducts({
+            page: currentPage,
+            category_name: selectedCategory !== "all" ? selectedCategory : undefined
+          });
+
+          setAllProducts(productsData.results || []);
+          setTotalCount(productsData.count || 0);
+          // Calculate total pages (15 items per page as set in Django settings)
+          setTotalPages(Math.ceil((productsData.count || 0) / 15));
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
         setCategories([]);
@@ -52,7 +84,7 @@ const Shop = () => {
     };
 
     fetchData();
-  }, [toast]);
+  }, [toast, searchTerm, selectedCategory, currentPage]);
 
   // Helper function to check if search matches specifications
   const getSpecificationMatches = useCallback((product: Product, searchTerm: string): ProductSpecification[] => {
@@ -104,20 +136,10 @@ const Shop = () => {
     });
   }, []);
 
-  // Filter and sort products based on current selections
+  // Sort products based on current selection (filtering now handled by API)
   const filteredAndSortedProducts = useMemo(() => {
-    let filtered = allProducts;
-
-    // Apply category filter
-    if (selectedCategory !== "all") {
-      filtered = filtered.filter(product => product.category.name === selectedCategory);
-    }
-
-    // Apply search filter
-    filtered = searchProducts(filtered, searchTerm);
-
-    // Apply sorting
-    const sorted = [...filtered].sort((a, b) => {
+    // Apply sorting (category filtering and search are now handled by the API)
+    const sorted = [...allProducts].sort((a, b) => {
       switch (sortBy) {
         case "featured":
           // Products with order values first (ascending), then products without order (null) sorted by name
@@ -150,7 +172,23 @@ const Shop = () => {
     });
 
     return sorted;
-  }, [allProducts, selectedCategory, searchTerm, sortBy, searchProducts]);
+  }, [allProducts, sortBy]);
+
+  // Debounce search input - only search after user stops typing for 500ms and has at least 3 characters
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (searchInput.length >= 3 || searchInput.length === 0) {
+        setSearchTerm(searchInput);
+      }
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchInput]);
+
+  // Reset to page 1 when search or category changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, selectedCategory]);
 
   // Track search queries
   useEffect(() => {
@@ -158,7 +196,7 @@ const Shop = () => {
       const timer = setTimeout(() => {
         trackSearchQuery(searchTerm, filteredAndSortedProducts);
       }, 500); // Debounce search tracking
-      
+
       return () => clearTimeout(timer);
     }
   }, [searchTerm, filteredAndSortedProducts, trackSearchQuery]);
@@ -241,20 +279,32 @@ const Shop = () => {
             <div className="relative flex-1 max-w-md w-full">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search products, categories, specs..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 pr-10"
+                placeholder="Search products, categories, specs... (min 3 chars)"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                className={`pl-10 pr-10 ${
+                  searchInput.length > 0 && searchInput.length < 3
+                    ? "border-amber-300 focus:border-amber-400"
+                    : ""
+                }`}
               />
-              {searchTerm && (
+              {searchInput && (
                 <Button
                   variant="ghost"
                   size="sm"
                   className="absolute right-2 top-1/2 transform -translate-y-1/2 h-6 w-6 p-0 hover:bg-transparent transition-all duration-300 hover:scale-110"
-                  onClick={() => setSearchTerm("")}
+                  onClick={() => {
+                    setSearchInput("");
+                    setSearchTerm("");
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
+              )}
+              {searchInput.length > 0 && searchInput.length < 3 && (
+                <p className="text-xs text-amber-600 mt-1">
+                  Type at least 3 characters to search
+                </p>
               )}
             </div>
 
@@ -319,8 +369,17 @@ const Shop = () => {
               <div className="flex justify-between items-center mb-8">
                 <div className="space-y-2">
                   <p className="text-muted-foreground">
-                    Showing {filteredAndSortedProducts.length} product{filteredAndSortedProducts.length !== 1 ? 's' : ''}
-                    {allProducts.length > 0 && ` of ${allProducts.length} total`}
+                    {searchTerm.trim() ? (
+                      // Search results - show total results
+                      `Showing ${filteredAndSortedProducts.length} result${filteredAndSortedProducts.length !== 1 ? 's' : ''} for "${searchTerm}"`
+                    ) : (
+                      // Browsing with pagination - show page info
+                      totalPages > 1 ? (
+                        `Showing ${filteredAndSortedProducts.length} product${filteredAndSortedProducts.length !== 1 ? 's' : ''} (page ${currentPage} of ${totalPages}, ${totalCount} total)`
+                      ) : (
+                        `Showing ${filteredAndSortedProducts.length} product${filteredAndSortedProducts.length !== 1 ? 's' : ''}`
+                      )
+                    )}
                   </p>
                   
                   {/* Active filters */}
@@ -332,7 +391,10 @@ const Shop = () => {
                           variant="ghost"
                           size="sm"
                           className="ml-1 h-4 w-4 p-0 hover:bg-transparent transition-all duration-300 hover:scale-110"
-                          onClick={() => setSearchTerm("")}
+                          onClick={() => {
+                          setSearchInput("");
+                          setSearchTerm("");
+                        }}
                         >
                           <X className="h-3 w-3" />
                         </Button>
@@ -357,6 +419,7 @@ const Shop = () => {
                         size="sm"
                         className="text-xs h-6 transition-all duration-300 hover:scale-105 hover:shadow-md"
                         onClick={() => {
+                          setSearchInput("");
                           setSearchTerm("");
                           setSelectedCategory("all");
                         }}
@@ -370,7 +433,7 @@ const Shop = () => {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 stagger-children">
                 {filteredAndSortedProducts.map((product) => (
-                  <ProductCard 
+                  <ProductCard
                     key={product.id}
                     product={product}
                     showAddToCart={true}
@@ -381,6 +444,78 @@ const Shop = () => {
                   />
                 ))}
               </div>
+
+              {/* Pagination Controls - only show if not searching and there are multiple pages */}
+              {!searchTerm.trim() && totalPages > 1 && (
+                <div className="flex justify-center mt-12">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage > 1) {
+                              setCurrentPage(currentPage - 1);
+                            }
+                          }}
+                          className={currentPage <= 1 ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+
+                      {/* Page numbers */}
+                      {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
+                        let pageNumber;
+                        if (totalPages <= 7) {
+                          pageNumber = i + 1;
+                        } else if (currentPage <= 4) {
+                          pageNumber = i + 1;
+                        } else if (currentPage >= totalPages - 3) {
+                          pageNumber = totalPages - 6 + i;
+                        } else {
+                          pageNumber = currentPage - 3 + i;
+                        }
+
+                        if (pageNumber < 1 || pageNumber > totalPages) return null;
+
+                        return (
+                          <PaginationItem key={pageNumber}>
+                            <PaginationLink
+                              href="#"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(pageNumber);
+                              }}
+                              isActive={currentPage === pageNumber}
+                            >
+                              {pageNumber}
+                            </PaginationLink>
+                          </PaginationItem>
+                        );
+                      })}
+
+                      {totalPages > 7 && currentPage < totalPages - 3 && (
+                        <PaginationItem>
+                          <PaginationEllipsis />
+                        </PaginationItem>
+                      )}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          href="#"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            if (currentPage < totalPages) {
+                              setCurrentPage(currentPage + 1);
+                            }
+                          }}
+                          className={currentPage >= totalPages ? "pointer-events-none opacity-50" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </>
           )}
         </div>

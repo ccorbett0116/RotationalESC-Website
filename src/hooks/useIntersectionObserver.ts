@@ -20,8 +20,8 @@ class IntersectionObserverManager {
           });
         },
         {
-          rootMargin: '50px',
-          threshold: 0.01
+          rootMargin: '5px',
+          threshold: 0.1
         }
       );
     }
