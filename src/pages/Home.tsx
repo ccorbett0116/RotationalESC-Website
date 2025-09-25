@@ -47,24 +47,9 @@ const Home = () => {
       try {
         setLoading(true);
         
-        // Fetch products only - company info handled by hook
-        const productsResponse = await apiService.getProducts({ page: 1, ordering: 'order' });
-
-        // Filter and sort to prioritize products with order values (featured products)
-        const sortedProducts = productsResponse.results.sort((a, b) => {
-          // Products with order values first (ascending), then products without order (null) sorted by name
-          if (a.order !== null && b.order !== null) {
-            return a.order - b.order; // Both have order - sort by order ascending
-          } else if (a.order !== null && b.order === null) {
-            return -1; // a has order, b doesn't - a comes first
-          } else if (a.order === null && b.order !== null) {
-            return 1; // b has order, a doesn't - b comes first
-          } else {
-            return a.name.localeCompare(b.name); // Both null - sort by name
-          }
-        });
-
-        setProducts(sortedProducts);
+        // Fetch the 3 featured products (lowest order values)
+        const featuredProducts = await apiService.getFeaturedProducts();
+        setProducts(featuredProducts);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Failed to load data');

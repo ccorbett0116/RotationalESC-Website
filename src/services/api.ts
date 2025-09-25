@@ -306,6 +306,11 @@ export const apiService = {
     return response.data;
   },
 
+  getFeaturedProducts: async (): Promise<Product[]> => {
+    const response = await api.get('/products/featured/');
+    return response.data;
+  },
+
   searchProducts: async (query: string, category?: string): Promise<Product[]> => {
     const response = await api.get('/products/search/', {
       params: { q: query, category }

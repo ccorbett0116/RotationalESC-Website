@@ -24,7 +24,7 @@ const ManufacturerImage: React.FC<{
     const tempImg = new window.Image();
     tempImg.onload = () => {
       const aspectRatio = tempImg.naturalWidth / tempImg.naturalHeight;
-      
+
       // Dynamically adjust height based on aspect ratio
       if (aspectRatio > 3) {
         setImageHeight("h-32");
@@ -231,7 +231,7 @@ const SectionsWithManufacturersComponent: React.FC<SectionsWithManufacturersProp
                 ) : (
                   /* Improved Grid Layout */
                   <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-6 lg:gap-8">
-                    {section.manufacturers.map((manufacturer) => (
+                    {section.manufacturers.map((manufacturer, index) => (
                       <Card
                         key={manufacturer.id}
                         className={`group relative hover:shadow-xl transition-all duration-300 bg-card border-2 border-transparent 

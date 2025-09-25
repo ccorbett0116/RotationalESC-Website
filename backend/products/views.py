@@ -78,6 +78,35 @@ class ProductDetailView(generics.RetrieveAPIView):
     serializer_class = ProductDetailSerializer
 
 @api_view(['GET'])
+def featured_products(request):
+    """
+    Get the 3 products with the lowest order values (featured products for homepage)
+    """
+    from django.db.models import F
+
+    # Get products with order values first (ascending), then limit to 3
+    featured = Product.objects.filter(
+        active=True,
+        order__isnull=False  # Only products with order values
+    ).select_related('category').prefetch_related('images').order_by('order')[:3]
+
+    # If we don't have 3 products with order values, fill with products without order
+    if featured.count() < 3:
+        remaining_count = 3 - featured.count()
+        additional = Product.objects.filter(
+            active=True,
+            order__isnull=True
+        ).select_related('category').prefetch_related('images').order_by('name')[:remaining_count]
+
+        # Combine the results
+        featured_list = list(featured) + list(additional)
+    else:
+        featured_list = list(featured)
+
+    serializer = ProductListSerializer(featured_list, many=True, context={'request': request})
+    return Response(serializer.data)
+
+@api_view(['GET'])
 def related_products(request, product_id):
     """
     Get related products from the same category as the specified product

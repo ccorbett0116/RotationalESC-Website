@@ -36,16 +36,27 @@ const Image: React.FC<ImageProps> = ({
 }) => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [showSkeleton, setShowSkeleton] = useState(true);
   const imgRef = useRef<HTMLImageElement>(null);
   
   // Use optimized intersection observer - bypass for priority or non-lazy images
   const { isInView, elementRef } = useIntersectionObserver(lazy && !priority, priority);
 
+
   const handleImageLoad = () => {
     setImageLoaded(true);
     setImageError(false);
+    // Keep skeleton visible for minimum 300ms to make lazy loading visible
+    setTimeout(() => setShowSkeleton(false), 300);
     onLoad?.();
   };
+
+  // Reset skeleton when coming into view
+  useEffect(() => {
+    if (isInView && lazy) {
+      setShowSkeleton(true);
+    }
+  }, [isInView, lazy]);
 
   const handleImageError = () => {
     setImageError(true);
@@ -53,7 +64,7 @@ const Image: React.FC<ImageProps> = ({
     onError?.();
   };
 
-  const showPlaceholder = !isInView || (!imageLoaded && !imageError);
+  const showPlaceholder = !isInView || (isInView && showSkeleton && !imageError);
   const showError = imageError && !imageLoaded;
 
   const containerStyles = {
@@ -110,7 +121,7 @@ const Image: React.FC<ImageProps> = ({
       )}
 
       {/* Show loading state while image loads */}
-      {isInView && !showError && !imageLoaded && (
+      {isInView && !showError && showSkeleton && (
         <div className="absolute inset-0">
           <Placeholder />
         </div>
@@ -125,17 +136,17 @@ const Image: React.FC<ImageProps> = ({
           sizes={sizes}
           className={`
             w-full h-full transition-opacity duration-300
-            ${imageLoaded ? 'opacity-100' : 'opacity-0'}
-            ${objectFit === 'cover' ? 'object-cover' : 
-              objectFit === 'contain' ? 'object-contain' : 
-              objectFit === 'fill' ? 'object-fill' : 
+            ${imageLoaded && !showSkeleton ? 'opacity-100' : 'opacity-0'}
+            ${objectFit === 'cover' ? 'object-cover' :
+              objectFit === 'contain' ? 'object-contain' :
+              objectFit === 'fill' ? 'object-fill' :
               'object-scale-down'}
             ${onClick ? 'cursor-pointer' : ''}
             ${imgClassName}
           `}
           onLoad={handleImageLoad}
           onError={handleImageError}
-          loading="eager"
+          loading={lazy && !priority ? "lazy" : "eager"}
           decoding="async"
         />
       )}
